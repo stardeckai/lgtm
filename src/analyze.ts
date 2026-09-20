@@ -64,6 +64,8 @@ export type Finding = {
   probability: number;
   /** the threshold this finding was judged against, so the report can rank it */
   threshold: number;
+  /** the check's own high-confidence line, when it overrides the standard margin */
+  high?: number;
 };
 
 export type AnalyzeOptions = {
@@ -181,7 +183,7 @@ function resolveAlias(fromFile: string, spec: string): string | null {
       middle = spec.slice(head.length, spec.length - tail.length);
     }
     for (const target of targets) {
-      const hit = resolveBase(star < 0 ? target : target.replace("*", middle));
+      const hit = resolveBase(star < 0 ? target : target.replaceAll("*", middle));
       if (hit) return hit;
     }
   }
@@ -593,8 +595,9 @@ export async function analyze(jobs: Job[], opts: AnalyzeOptions, client: Client)
       });
     }
     for (const check of checks) {
-      const probability = answers[check.id]?.noul;
-      if (probability === undefined) continue;
+      const raw = answers[check.id]?.noul;
+      if (raw === undefined) continue;
+      const probability = check.invert ? Math.round((1 - raw) * 100) / 100 : raw;
       const threshold = opts.threshold ?? check.threshold;
       if (probability >= (opts.verbose ? Math.min(0.5, threshold) : threshold)) {
         findings.push({
@@ -604,6 +607,8 @@ export async function analyze(jobs: Job[], opts: AnalyzeOptions, client: Client)
           checkId: check.id,
           probability,
           threshold,
+          // a pinned high line belongs to the check's own threshold; under --threshold the standard margin applies
+          ...(check.high !== undefined && opts.threshold === undefined ? { high: check.high } : {}),
         });
       }
     }

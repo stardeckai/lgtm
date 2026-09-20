@@ -6,7 +6,7 @@
 
 Prove that your tests actually test something. Powered by Jev and your own TypeSafe API key.
 
-<img src="public/findings.png" alt="lgtm findings: file:line, the check, its probability and a one-line reason">
+<img src="public/findings.png" alt="lgtm findings: file:line, the check and a one-line reason">
 
 Your agent wrote 40 tests. They're all green. What do they prove? lgtm reads every test block with its
 implementation and tells you which ones are useless.
@@ -15,8 +15,8 @@ It runs on [Jev by TypeSafe](https://typesafe.ai), with your own `TYPESAFE_API_K
 
 With this, you can prove that your agent actually wrote code that actually works, so you can say it lgtm 😐👍.
 
-_Evaluated on real live apps built by [Stardeck](https://stardeck.ai), 15,000+ test blocks scored and 262 read against their
-implementation and labelled, and optimized for precision: when lgtm points at a test, the test is worth your time. [Evals](#evals)._
+_Evaluated on real code: 16,000+ test blocks scored across real codebases, 347 read against their implementation and
+labelled, thresholds fitted so a finding on real code is worth your time. The held-out numbers are in [Evals](#evals)._
 
 ## What you get
 
@@ -88,10 +88,10 @@ For a one-off run without installing: `npx @stardeckai/lgtm --dry-run src`.
 
 ```
 test/payment.test.ts:42  "rejects expired cards"
-  😐👏 mocks-seam-under-test 0.93 — The collaborator that decides this behaviour is a mock, so the test only proves the mock works.
+  😐👏 mocks-seam-under-test 0.93 — The collaborator that decides this behaviour is a mock, so the test proves the mock's script, not the code; use the real one here.
 
 test/refund.test.ts:17  "refunds a captured charge"
-  😐🤏 swallowed-error-as-success 0.88 — The test stays green whether the error is caught, logged, or never thrown; it never pins the specific failure.
+  😐🤏 swallowed-error-as-success 0.88 — The test passes whether the error is thrown, caught or never raised; assert the specific failure by class, code or message.
 
 😐🫵  2 tests prove nothing.
 4 contract-integration · 19 mocked-seam · 8 pure-logic
@@ -101,9 +101,11 @@ test/refund.test.ts:17  "refunds a captured charge"
 ```
 
 Four faces, one per family: `😐🤏` the assertion proves this much, `😐👏` you tested the mock, `😐🤌` what
-exactly are we doing here, `😐🫸` do not merge this. Colour is severity (red at 0.9 and above, yellow at or over
-the check's threshold, dim for `--verbose` suspects). The verdict is one line, `😐👍  N tests. fine. allegedly.`
-or `😐🫵  N tests prove nothing.` `--format github` and `--format json` stay plain.
+exactly are we doing here, `😐🫸` do not merge this. A finding within 0.15 of its check's threshold is `😐🤞`,
+"Worth a look.", and does not count against the test; one clear of that margin is red and does. `--verbose` also
+shows suspects under the threshold, dim. The verdict is one line, `😐👍  N tests. fine...lgtm?`,
+`😐🤞  N tests worth a look. nothing proven, nothing disproven.` or `😐🫵  N tests prove nothing.` `--format github`
+emits a warning for a proven finding and a notice for one worth a look; `--format json` stays plain.
 
 ### /actually-test
 
@@ -143,18 +145,18 @@ you decided not to build. Nobody reads those files. The PR says "added tests" an
 one of them to agree. No linter catches that. It's a judgment call, and judgment used to cost a senior engineer's
 afternoon per PR.
 
-**Reads like a review, runs like a linter.** Every finding is one test, one smell, one probability, one sentence
+**Reads like a review, runs like a linter.** Every finding is one test, one smell, one sentence
 you can act on. `😐👏 mocks-seam-under-test` means you tested the mock. `😐👏 reimplements-logic` means the test
 and the implementation share the same bug. The summary tells you how much of your suite actually crosses a seam.
 
 **Opinionated by design.** Few wide tests with real collaborators beat a hundred mocked units. Delete with
 confidence: a good audit shrinks the suite. And when the suite is clean, it says so.
 
-<img src="public/success.png" alt="lgtm clean run: 36 tests. fine. allegedly.">
+<img src="public/success.png" alt="lgtm clean run: 36 tests. fine...lgtm?">
 
 **Now it costs a cent.** Jev bills $0.042 per million input tokens and answers in under a second. lgtm shows you
-the bill and the runtime before it spends, and caches every answer. Every check holds precision 1.00 on the
-held-out slice of the corpus ([`evals/`](evals/RESULTS.md)).
+the bill and the runtime before it spends, and caches every answer. Thresholds are fitted so that no labelled
+real test fires wrongly; the held-out numbers are in [Evals](#evals).
 
 ## What lgtm likes
 
@@ -174,62 +176,36 @@ Retiring three unit tests for one wider test that really fails is a win, not a c
 <!-- checks:start -->
 | | check | |
 |---|---|---|
-| 😐&#8288;🤏 | `would-pass-if-broken` | Break the behaviour the name describes and this test still passes; the fixture never reaches it. |
-| 😐&#8288;🤏 | `vacuous-assertion` | The assertion accepts almost any output, so it cannot fail for a real bug. |
-| 😐&#8288;🤏 | `assertion-weaker-than-name` | The name promises a behaviour the assertions never check. |
-| 😐&#8288;👏 | `reimplements-logic` | The expected value is computed with the same logic as production, so both can be wrong together. |
-| 😐&#8288;👏 | `mocks-seam-under-test` | The collaborator that decides this behaviour is a mock, so the test only proves the mock works. |
-| 😐&#8288;👏 | `mock-mirrors-implementation` | The mock re-encodes the production logic; any implementation that agrees with the copy passes. |
-| 😐&#8288;🤏 | `tests-calls-not-outcomes` | It asserts that a function was called, not what happened as a result. |
-| 😐&#8288;🤌 | `tests-internals` | It asserts private state, class names or call order instead of observable behaviour; a refactor breaks it, a bug does not. |
-| 😐&#8288;🤌 | `setup-dominates` | Most of the setup never reaches the assertion. It is scenery. |
-| 😐&#8288;🤏 | `broad-snapshot` | The snapshot pins everything and explains nothing, so it will be re-recorded on the next change. |
-| 😐&#8288;🤏 | `swallowed-error-as-success` | The test stays green whether the error is caught, logged, or never thrown; it never pins the specific failure. |
-| 😐&#8288;🤌 | `impossible-fixture` | The fixture builds a state production validation could never produce. |
-| 😐&#8288;🤌 | `happy-path-only-of-risky-boundary` | The refusal path this code exists for, the one that pages you, has no test here or among its siblings. |
-| 😐&#8288;🤌 | `trivial-primitive` | A one-line helper tested in isolation; any real test of the feature that uses it would catch the same break. |
-| 😐&#8288;👏 | `over-mocked` | So many collaborators are faked that only glue is left to fail. |
-| 😐&#8288;🫸 | `regression-does-not-distinguish` | This regression test also passes on the buggy code, so it does not lock the fix. *(needs `--diff`)* |
-| 😐&#8288;🫸 | `changed-in-lockstep` | Implementation and expected values changed together, so the test may only mirror the new behaviour. *(needs `--diff`)* |
+| 😐&#8288;🤏 | `would-pass-if-broken` | Remove the behaviour in the name and every assertion stays green: the fixture never reaches that branch. Move it to the failing side. |
+| 😐&#8288;🤏 | `vacuous-assertion` | The assertion (toBeDefined, truthy, length ≥ 0) accepts wrong output too; pin the exact value a bug would change. |
+| 😐&#8288;🤏 | `assertion-weaker-than-name` | The name promises a behaviour the assertions never check; assert it, or rename the test to what it proves. |
+| 😐&#8288;👏 | `reimplements-logic` | The expected value is computed with the same logic as production, so both can be wrong together; write the expected value by hand. |
+| 😐&#8288;👏 | `mocks-seam-under-test` | The collaborator that decides this behaviour is a mock, so the test proves the mock's script, not the code; use the real one here. |
+| 😐&#8288;👏 | `mock-mirrors-implementation` | The mock re-encodes the production logic, so an implementation that agrees with the copy passes even when both are wrong; use the real collaborator or fixed data. |
+| 😐&#8288;🤏 | `tests-calls-not-outcomes` | It checks that a function was called, not what the call changed; assert the resulting state or output. |
+| 😐&#8288;🤌 | `tests-internals` | It asserts private state, class names or call order rather than observable behaviour, so a refactor breaks it and a bug does not; assert the output. |
+| 😐&#8288;🤌 | `setup-dominates` | Most of the setup never reaches the assertion; cut it to what the assertion depends on, or assert more of it. |
+| 😐&#8288;🤏 | `broad-snapshot` | The assertion is a snapshot of the whole output, so any change re-records it and nobody reads what changed; pin the fields that matter. |
+| 😐&#8288;🤏 | `swallowed-error-as-success` | The test passes whether the error is thrown, caught or never raised; assert the specific failure by class, code or message. |
+| 😐&#8288;🤌 | `impossible-fixture` | The fixture is a state production validation could never produce, so the branch it exercises cannot happen; build it through the real constructor or validator. |
+| 😐&#8288;🤌 | `happy-path-only-of-risky-boundary` | The refusal path this code exists for (the reject, the limit, the wrong tenant) has no test here or among its siblings; add one. |
+| 😐&#8288;🤌 | `trivial-primitive` | A one-line helper tested on its own; any real test of the feature that uses it would catch the same break. Delete it, or test the feature. |
+| 😐&#8288;👏 | `over-mocked` | Every asserted value came out of a fake; the only real code left is glue between stubs. Fake fewer collaborators, or test the integration. |
+| 😐&#8288;🫸 | `regression-does-not-distinguish` | This regression test also passes on the pre-fix code, so it does not lock the fix; assert the value the bug got wrong. *(needs `--diff`)* |
+| 😐&#8288;🫸 | `changed-in-lockstep` | The expected values changed in the same diff as the code that produces them, so the test may only mirror the new behaviour; derive them from the requirement. *(needs `--diff`)* |
 <!-- checks:end -->
 
 <!-- evals:start -->
 ## Evals
 
-**Precision first, by construction.** Each check's threshold is fitted to the lowest point where precision stays at or above 0.95, so high precision is what the fit buys, not something the model earned on its own; the honest numbers are the false-positive count and recall. At those thresholds lgtm raises 315 findings across 1482 scored (check, case) pairs, 4 of them wrong, and misses 148 of 459 labelled smells (recall 0.68). Thresholds are fitted on every case including holdout, since a one-parameter fit cannot overfit; holdout guards the prompt wording, and 2 of 69 holdout findings are wrong there. A linter you can ignore is a linter you will ignore, so recall is the number we trade away.
+Numbers on the held-out test set, which nothing was fitted or tuned on. lgtm prints two kinds of finding: a **high-confidence** one sits at or above its check's high-confidence line (0.15 above the threshold unless the check pins its own) and is what the verdict counts and `--fail` blocks on; a **worth a look** one sits between the threshold and that margin. "All flagged" below means both together, everything lgtm prints.
 
-The corpus is 521 public + 262 private labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. 283 of them are real tests, from production apps and from this repo, read against their implementation and labelled. The ground truth is kept in `expect.json` so it never reaches the model.
+| held-out | high-confidence findings | all flagged findings |
+|---|---|---|
+| precision | **0.97** (67 findings, 2 wrong) | 0.93 (112 findings, 8 wrong) |
+| recall | **0.46** | 0.74 |
 
-The 262 private cases come from real Stardeck customer apps and from Stardeck's own codebase, harvested by scoring 15,000+ real test blocks and sampling around each check's threshold. That harvest is what set the thresholds: synthetic negatives were too easy, and several checks that scored 1.00 on synthetic cases were 0–30% precise on real code until they were rewritten against it. The private cases are scored in these numbers but not published, because anonymization removes names, not shape. The 521 public cases in `evals/cases` reproduce with `pnpm eval` alone.
-
-Scores are at each check's own threshold. 165 of the cases are holdout: thresholds are fitted on every case, prompts are never tuned against these.
-
-| check | cases | threshold | precision (holdout) | recall (holdout) | precision (all) | recall (all) |
-|---|---|---|---|---|---|---|
-| `would-pass-if-broken` | 99 | 0.60 | 0.83 | 0.36 | 0.96 | 0.47 |
-| `vacuous-assertion` | 179 | 0.70 | 1.00 | 0.63 | 1.00 | 0.69 |
-| `assertion-weaker-than-name` | 82 | 0.60 | 1.00 | 1.00 | 0.98 | 0.95 |
-| `reimplements-logic` | 206 | 0.85 | 1.00 | 0.50 | 1.00 | 0.67 |
-| `mocks-seam-under-test` | 121 | 0.80 | 1.00 | 0.33 | 1.00 | 0.23 |
-| `mock-mirrors-implementation` | 36 | 0.60 | 1.00 | 0.50 | 1.00 | 0.83 |
-| `tests-calls-not-outcomes` | 74 | 0.65 | 1.00 | 1.00 | 1.00 | 0.87 |
-| `tests-internals` | 64 | 0.65 | 0.80 | 0.80 | 0.94 | 0.70 |
-| `setup-dominates` | 60 | 0.60 | 1.00 | 1.00 | 1.00 | 0.94 |
-| `broad-snapshot` | 51 | 0.35 | 1.00 | 1.00 | 1.00 | 0.94 |
-| `swallowed-error-as-success` | 76 | 0.80 | 1.00 | 0.80 | 1.00 | 0.46 |
-| `impossible-fixture` | 63 | 0.55 | 1.00 | 1.00 | 1.00 | 0.75 |
-| `happy-path-only-of-risky-boundary` | 88 | 0.70 | 1.00 | 0.50 | 1.00 | 0.50 |
-| `trivial-primitive` | 122 | 0.85 | 1.00 | 0.71 | 1.00 | 0.66 |
-| `over-mocked` | 84 | 0.55 | 1.00 | 0.20 | 0.90 | 0.38 |
-| `regression-does-not-distinguish` | 41 | 0.35 | 1.00 | 0.75 | 1.00 | 0.82 |
-| `changed-in-lockstep` | 36 | 0.75 | 1.00 | 1.00 | 1.00 | 0.94 |
-| **all checks** | 1482 | | 0.97 | 0.68 | 0.99 | 0.68 |
-
-Test class accuracy: 668/783 (0.85) on all cases, 140/165 (0.85) on holdout.
-
-A full cold run of the corpus is about 3,909,061 input tokens ≈ $0.1642 (estimated from the states; the last run spent $0.0301 after cache hits).
-
-Every miss and false positive is listed in [`evals/RESULTS.md`](evals/RESULTS.md). The public cases reproduce with `pnpm eval`.
+Per-check numbers on the same held-out set, every miss and false positive, the corpus composition and the class confusion matrix are in [`evals/RESULTS.md`](evals/RESULTS.md); every scored case is a dot in [`evals/atlas.html`](evals/atlas.html), per check, with both lines drawn. The public cases reproduce with `pnpm eval`.
 <!-- evals:end -->
 
 ## CI
@@ -265,7 +241,7 @@ above it. `--lean` cuts that back to an 8,000-char implementation and no test fi
 | a PR touching 20 tests (`--diff`) | 20 | ~100k | ~$0.004 |
 | a mid-sized suite | 500 | ~2.5M | ~$0.11 |
 | a large monorepo suite | 5,000 | ~25M | ~$1.05 |
-| the eval corpus (`pnpm eval`, cold) | 768 | see the Evals section | |
+| the eval corpus (`pnpm eval`, cold) | 868 | see the Evals section | |
 
 Answers are cached by state hash under `node_modules/.cache/lgtm`, so a re-run after editing one test only pays for
 that test. The implementation source is the main cost lever: `--no-impl` cuts the bulk of each request at the price
@@ -286,11 +262,13 @@ lgtm init                    # both steps again
 
 ## Thresholds
 
-Each check has its own threshold, fitted on the eval corpus to the lowest probability that still gives zero
-false positives (the `threshold` column above). That trades recall for precision on purpose: a finding should
-be worth your time. To see what sits just under the line, run `--verbose`, or `--threshold 0.5 --format json`
-on a suite you know well and pick your own number. A check that is consistently wrong for your codebase belongs
-in `--skip`.
+Each check has two lines. The threshold is fitted on the train cases to the lowest probability that fires on
+no real negative and keeps precision at or above 0.95, then one step up; a finding at or above it is worth a
+look. The high-confidence line sits 0.15 above that unless the check pins its own, and only findings above it
+count in the verdict and trip `--fail`. A few checks are pinned by hand where the fit would switch them off; each
+pin carries a comment saying why. That trades recall for precision on purpose: a finding should be worth your
+time. To see what sits just under the line, run `--verbose`, or `--threshold 0.5 --format json` on a suite you
+know well and pick your own number. A check that is consistently wrong for your codebase belongs in `--skip`.
 
 ## Development
 

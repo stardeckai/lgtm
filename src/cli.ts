@@ -8,7 +8,7 @@ import { AuthenticationError, TypeSafeClient } from "@typesafe-ai/sdk";
 import { analyze, buildStates, checksFor, diffSelection, isCached, normalizeDiffFlag, TEST_FILE, type AnalyzeOptions, type Job } from "./analyze.js";
 import { CATEGORY_OF, CHECKS, GESTURE, usd } from "./checks/index.js";
 import { askKey, askSkillMode, init, installSkill, resolveApiKey, saveKey, SKILL_MODES, type SkillMode } from "./init.js";
-import { c, formatClasses, formatReport, real, tests, type Format } from "./report.js";
+import { c, certain, formatClasses, formatReport, tests, type Format } from "./report.js";
 import { ignoreMatcher } from "./ignore.js";
 import { recordRun, usageReport, worktreeRoot } from "./usage.js";
 import readline from "node:readline/promises";
@@ -35,7 +35,7 @@ const USAGE = `lgtm <files|dirs...>   (e.g. lgtm .)
   --no-impl            don't send implementation source
   --lean               smaller states (8k of implementation, no test file or guidelines); ~3x cheaper, many more false positives
   --no-cache           ignore the answer cache
-  --fail               exit 1 if there are findings
+  --fail               exit 1 if any finding is well clear of its threshold (not the "worth a look" band)
   --fail-on-error      exit 1 if any test block was skipped by an API error
   --ignore <pattern>   skip matching paths (repeatable; also read from .lgtmignore, one gitignore-style pattern per line)
   --dry-run            list the blocks and state sizes that would be sent, call nothing
@@ -308,10 +308,11 @@ async function main(): Promise<number> {
       skipped: result.skipped,
       inputTokens: result.inputTokens,
       durationMs,
+      verbose: Boolean(values.verbose),
     }),
   );
 
-  if (values.fail && result.findings.some(real)) return 1;
+  if (values.fail && result.findings.some(certain)) return 1;
   if (values["fail-on-error"] && result.skipped > 0) return 1;
   return 0;
 }
