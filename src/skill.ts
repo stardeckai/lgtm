@@ -7,7 +7,7 @@ export function checksTable(): string {
     "|---|---|---|",
     ...CHECKS.map(
       (c) =>
-        `| ${GESTURE[CATEGORY_OF[c.id] ?? "scope"].replace("😐", "😐&#8288;")} | \`${c.id}\` | ${c.blurb}${c.diffOnly ? " *(needs `--diff`)*" : ""} |`,
+        `| ${GESTURE[CATEGORY_OF[c.id] ?? "scope"].replace("😐", "😐&#8288;")} | \`${c.id}\` | ${c.blurb}${c.diffOnly ? " *(needs `--diff`)*" : ""}${c.optIn ? " *(off by default; name it in `--only`)*" : ""} |`,
     ),
   ].join("\n");
 }

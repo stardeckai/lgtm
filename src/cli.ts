@@ -176,7 +176,7 @@ async function main(): Promise<number> {
 
   if (values["list-checks"]) {
     for (const check of CHECKS) {
-      console.log(`${GESTURE[CATEGORY_OF[check.id] ?? "scope"]} ${check.id} — ${check.blurb}${check.diffOnly ? "  [--diff only]" : ""}`);
+      console.log(`${GESTURE[CATEGORY_OF[check.id] ?? "scope"]} ${check.id} — ${check.blurb}${check.diffOnly ? "  [--diff only]" : ""}${check.optIn ? "  [off by default; --only to run]" : ""}`);
     }
     return 0;
   }

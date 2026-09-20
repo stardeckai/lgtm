@@ -199,7 +199,7 @@ async function runLive(cases: Case[], only?: string[]): Promise<{ answers: Map<s
   const jobs = [...new Map(cases.map((c) => [`${c.job.block.file}:${c.job.block.line}`, c.job])).values()];
   const result = await analyze(
     jobs,
-    { threshold: 0, verbose: false, cacheDir: path.join(ROOT, "evals", ".cache"), concurrency: 8, ...(only ? { only } : {}) },
+    { threshold: 0, verbose: false, optIn: true, cacheDir: path.join(ROOT, "evals", ".cache"), concurrency: 8, ...(only ? { only } : {}) },
     client,
   );
 

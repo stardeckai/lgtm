@@ -18,3 +18,6 @@ Deferred work, with the evidence that put it here. Newest at the top. Remove an 
   under it would give recall back at the line that counts.
 - **Batching several blocks of one file into a request** is the only lever left on token cost; it changes the
   question shape and needs a live corpus rerun.
+- **The diff checks are off by default** (`optIn` on `regression-does-not-distinguish` and
+  `changed-in-lockstep`) until the PR-based harvest above gives them real cases. On a 584-test customer branch
+  they were 102 of 187 flagged findings and 42 of 54 high-confidence ones, with a median score at the threshold.
