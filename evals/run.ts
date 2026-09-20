@@ -9,6 +9,7 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import { TypeSafeClient } from "@typesafe-ai/sdk";
 import { analyze, buildStates, type Job } from "../src/analyze.js";
+import { CERTAIN_MARGIN, highLine } from "../src/report.js";
 import { CHECKS, TEST_CLASSES, type TestClass } from "../src/checks/index.js";
 import { DEFAULT_THRESHOLD } from "../src/checks/types.js";
 import { extractTests } from "../src/extract.js";
@@ -22,7 +23,8 @@ const RESULTS = path.join(ROOT, "evals", "results");
 const PRIVATE_PREFIX = "private/";
 const ITERATIONS = path.join(ROOT, "evals", "iterations.json");
 /** Every 5th case of each (check, side) group is held out. */
-const HOLDOUT_EVERY = 5;
+/** Test set: every 2nd real case and every 10th synthetic one, so the held-out numbers are mostly about real code. */
+const HOLDOUT_EVERY = { real: 2, synthetic: 10 };
 /** Threshold grid for --fit-thresholds: 0.30, 0.35, … 0.95. */
 const GRID = Array.from({ length: 14 }, (_, i) => Math.round((0.3 + i * 0.05) * 100) / 100);
 /** one grid step above the lowest clean threshold */
@@ -128,15 +130,15 @@ const slugHash = (slug: string) => createHash("sha256").update(slug).digest("hex
 let HOLDOUT: Set<string> = new Set();
 
 /**
- * Stratified per (check, side): each group is sorted by slug hash and every 5th member held out.
- * A case is holdout if ANY of its memberships holds it out, so it is never train here and holdout there.
+ * The test set. One draw per case, stratified by its primary label (first `fire` id, or "clean") and by whether it
+ * was read from production code, sorted by slug hash: every 2nd real case and every 10th synthetic one is held out,
+ * so the set is mostly real and a case is never train for one check and holdout for another. Thresholds are fitted
+ * on train only; the test set is reported, never fitted or tuned against.
  */
 export function computeSplit(cases: Case[]): Set<string> {
-  // One draw per case, stratified by its primary label (first `fire` id, or "clean"), so ~20% of each
-  // group is held out and a case is never train for one check and holdout for another.
   const groups = new Map<string, Case[]>();
   for (const c of cases) {
-    const key = c.expect.fire[0] ?? "clean";
+    const key = `${isReal(c) ? "real" : "synthetic"}:${c.expect.fire[0] ?? "clean"}`;
     const g = groups.get(key);
     if (g) g.push(c);
     else groups.set(key, [c]);
@@ -144,8 +146,9 @@ export function computeSplit(cases: Case[]): Set<string> {
   const holdout = new Set<string>();
   for (const members of [...groups.keys()].sort().map((k) => groups.get(k)!)) {
     members.sort((a, b) => slugHash(path.basename(a.id)).localeCompare(slugHash(path.basename(b.id))));
+    const every = isReal(members[0]!) ? HOLDOUT_EVERY.real : HOLDOUT_EVERY.synthetic;
     members.forEach((c, i) => {
-      if (i % HOLDOUT_EVERY === 0) holdout.add(c.id);
+      if (i % every === 0) holdout.add(c.id);
     });
   }
   return holdout;
@@ -247,7 +250,10 @@ async function runLive(cases: Case[], only?: string[]): Promise<{ answers: Map<s
 
 // ---------------------------------------------------------------- scoring
 
-type Scored = { checkId: string; caseId: string; label: boolean; p: number | undefined; why: string; split: Split };
+type Scored = { checkId: string; caseId: string; label: boolean; p: number | undefined; why: string; split: Split; real: boolean };
+
+/** A case read from production code: the private corpus and this repo's own dogfood tests. Synthetic cases are not. */
+const isReal = (c: Case) => c.root.private || c.id.startsWith("dogfood/");
 
 function scoreAt(rows: { label: boolean; p: number | undefined }[], t: number) {
   const tp = rows.filter((r) => r.label && (r.p ?? -1) >= t).length;
@@ -268,17 +274,25 @@ const bestBy = (scores: Score[], key: "recall" | "f1" | "precision") =>
 /**
  * The one threshold rule lives in fitThreshold. Returns undefined when there is nothing to fit on (no positives).
  *
- * Precision first. The threshold is the lowest grid point whose precision on all labelled cases is at least
- * MIN_PRECISION, plus one grid step of margin so a negative sitting just under the line does not flip on a rerun;
- * recall is whatever that leaves. A floor rather than zero false positives: with hundreds of real negatives one
- * contested label would otherwise switch a check off. When no grid point reaches the floor, take the
- * highest-precision point with the most recall, again plus the margin.
+ * Precision first, on real code. The threshold is the lowest grid point that (a) keeps precision on all labelled
+ * cases at or above MIN_PRECISION and (b) fires on no negative read from production code (`realNeg`: the private
+ * corpus and dogfood), plus one grid step of margin so a negative sitting just under the line does not flip on a
+ * rerun; recall is whatever that leaves. (a) is a floor rather than zero because the synthetic negatives are
+ * hundreds and one contested label would otherwise switch a check off; (b) is zero because a wrong finding on a
+ * real test is the one cost a linter cannot recover from, and there are few enough real negatives to read every
+ * one. When no grid point satisfies both, take the highest-precision point with the most recall, plus the margin.
  */
-export function fitThreshold(pos: (number | undefined)[], neg: (number | undefined)[]): number | undefined {
+export function fitThreshold(
+  pos: (number | undefined)[],
+  neg: (number | undefined)[],
+  realNeg: (number | undefined)[] = [],
+): number | undefined {
   if (pos.length === 0) return undefined;
   const rows = [...pos.map((p) => ({ label: true, p })), ...neg.map((p) => ({ label: false, p }))];
   const scores = GRID.map((t) => scoreAt(rows, t));
-  const clean = scores.filter((s) => s.tp > 0 && (s.precision ?? 0) >= MIN_PRECISION);
+  const clean = scores.filter(
+    (s) => s.tp > 0 && (s.precision ?? 0) >= MIN_PRECISION && !realNeg.some((p) => (p ?? -1) >= s.t),
+  );
   // clean thresholds: the lowest one has the most recall (grid is ascending, so take the first)
   const pick = clean.length > 0 ? clean[0]! : bestBy(scores.filter((s) => s.tp > 0), "precision");
   return Math.min(GRID[GRID.length - 1]!, Math.round((pick.t + MARGIN) * 100) / 100);
@@ -292,8 +306,9 @@ function scoreRows(cases: Case[], answers: Map<string, Answered>): Scored[] {
   for (const c of cases) {
     const a = answers.get(c.id);
     const split = splitOf(c);
-    for (const id of c.expect.fire) rows.push({ checkId: id, caseId: c.id, label: true, p: a?.probabilities[id], why: c.expect.why, split });
-    for (const id of c.expect.not_fire) rows.push({ checkId: id, caseId: c.id, label: false, p: a?.probabilities[id], why: c.expect.why, split });
+    const real = isReal(c);
+    for (const id of c.expect.fire) rows.push({ checkId: id, caseId: c.id, label: true, p: a?.probabilities[id], why: c.expect.why, split, real });
+    for (const id of c.expect.not_fire) rows.push({ checkId: id, caseId: c.id, label: false, p: a?.probabilities[id], why: c.expect.why, split, real });
   }
   return rows;
 }
@@ -333,28 +348,29 @@ function writeThreshold(id: string, t: number): boolean {
 
 function fitThresholds(rows: Scored[], write: boolean): void {
   const lines = [
-    "| check | current | fitted (all cases) | train P/R @fitted | holdout P/R @fitted |",
-    "|---|---|---|---|---|",
+    "| check | current | fitted (all cases) | train P/R @fitted | holdout P/R @fitted | real P/R @fitted |",
+    "|---|---|---|---|---|---|",
   ];
   for (const check of CHECKS) {
     const mine = rows.filter((r) => r.checkId === check.id);
     if (mine.length === 0) continue;
-    // Thresholds are fitted on EVERY labelled case, holdout included: a one-parameter fit cannot overfit,
-    // and a negative left out of the fit is a real-world false positive waiting to happen. The holdout split
-    // still guards the prompt rewrites, which are the part that can overfit.
+    // Thresholds are fitted on train only. The test set is the number we publish, so nothing may be tuned on it.
     const train = mine.filter((r) => r.split === "train");
     const fitted = fitThreshold(
-      mine.filter((r) => r.label).map((r) => r.p),
-      mine.filter((r) => !r.label).map((r) => r.p),
+      train.filter((r) => r.label).map((r) => r.p),
+      train.filter((r) => !r.label).map((r) => r.p),
+      train.filter((r) => !r.label && r.real).map((r) => r.p),
     );
     const t = fitted ?? check.threshold;
     const trainAt = scoreAt(train, t);
     const holdAt = scoreAt(mine.filter((r) => r.split === "holdout"), t);
+    const realAt = scoreAt(mine.filter((r) => r.real), t);
     lines.push(
       `| \`${check.id}\` | ${check.threshold.toFixed(2)} | ${fitted === undefined ? "— (no train positives)" : fitted.toFixed(2)} | ` +
-        `${pct(trainAt.precision)}/${pct(trainAt.recall)} | ${pct(holdAt.precision)}/${pct(holdAt.recall)} |`,
+        `${pct(trainAt.precision)}/${pct(trainAt.recall)} | ${pct(holdAt.precision)}/${pct(holdAt.recall)} | ${pct(realAt.precision)}/${pct(realAt.recall)} |`,
     );
-    if (write && fitted !== undefined && fitted !== check.threshold) writeThreshold(check.id, fitted);
+    if (write && fitted !== undefined && fitted !== check.threshold && !check.pinned) writeThreshold(check.id, fitted);
+    if (write && check.pinned && fitted !== undefined && fitted !== check.threshold) console.log(`  (${check.id} is pinned at ${check.threshold}; the fit would say ${fitted.toFixed(2)})`);
   }
   console.log(lines.join("\n"));
   console.log(write ? "\nthresholds written to src/checks/*" : "\ndry run — pass --write to rewrite src/checks/*");
@@ -390,6 +406,7 @@ function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inpu
   const countedReadme = nPrivate === 0 ? `${cases.length}` : `${cases.length - nPrivate} public + ${nPrivate} private`;
   const holdoutCases = cases.filter((c) => splitOf(c) === "holdout");
 
+  const provenOf = new Map(CHECKS.map((c) => [c.id, highLine(c.threshold, c.high)]));
   const perCheck = CHECKS.map((check) => {
     const mine = rows.filter((r) => r.checkId === check.id);
     if (mine.length === 0) return undefined;
@@ -404,6 +421,9 @@ function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inpu
       trainOwn: scoreAt(train, check.threshold),
       holdoutOwn: scoreAt(holdout, check.threshold),
       allOwn: scoreAt(mine, check.threshold),
+      // the proven line: what the verdict counts, --fail blocks on and GitHub warns about
+      holdoutProven: scoreAt(holdout, provenOf.get(check.id)!),
+      allProven: scoreAt(mine, provenOf.get(check.id)!),
       at50: scoreAt(mine, 0.5),
       best,
     };
@@ -423,12 +443,33 @@ function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inpu
   const misses = rows.filter((r) => r.label && (r.p ?? -1) < (own.get(r.checkId) ?? DEFAULT_THRESHOLD));
   const falsePositives = rows.filter((r) => !r.label && (r.p ?? -1) >= (own.get(r.checkId) ?? DEFAULT_THRESHOLD));
 
+  // Pooled over every scored (check, case) pair at each check's own threshold: the number a PR reviewer feels.
+  const pooledAt = (subset: Scored[], line: (t: number) => number) =>
+    scoreAt(subset.map((r) => ({ label: r.label, p: (r.p ?? -1) - line(own.get(r.checkId) ?? DEFAULT_THRESHOLD) })), 0);
+  const pooled = (subset: Scored[]) => pooledAt(subset, (t) => t);
+  const pooledAll = pooled(rows);
+  const pooledHold = pooled(rows.filter((r) => r.split === "holdout"));
+  const nReal = cases.filter(isReal).length;
+  const provenHold = scoreAt(rows.filter((r) => r.split === "holdout").map((r) => ({ label: r.label, p: (r.p ?? -1) - (provenOf.get(r.checkId) ?? 1) })), 0);
   const md = [
     "# lgtm eval results",
     "",
     `${counted} · ${rows.length} scored (check, case) pairs · model \`${meta.model ?? "cached/offline"}\``,
     "",
-    `Split: ${cases.length - holdoutCases.length} train · ${holdoutCases.length} holdout.`,
+    `Split: ${cases.length - holdoutCases.length} train · ${holdoutCases.length} holdout (${holdoutCases.filter(isReal).length} real).`,
+    "",
+    `Corpus: ${countedReadme} labelled cases (${nReal} real), ${holdoutCases.length} held out (${holdoutCases.filter(isReal).length} real). Each check's threshold is fitted on the train cases to the lowest point that fires on no real negative and keeps precision at or above 0.95, plus one step of margin; recall is what that leaves. Ground truth lives only in \`expect.json\`, never in the files the model sees.${nPrivate === 0 ? "" : ` The ${nPrivate} real cases were harvested by scoring every test block in real codebases, sampling around each threshold, and reading each block against its implementation; they are anonymized and kept private because anonymization removes names, not shape.`}`,
+    "",
+    "## Held out, per check",
+    "",
+    "High-confidence findings sit at or above the check's high-confidence line; all flagged includes the worth-a-look band from the threshold up.",
+    "",
+    "| check | threshold | high-confidence precision/recall | all flagged precision/recall | cases |",
+    "|---|---|---|---|---|",
+    ...perCheck.map(
+      (r) => `| \`${r.check.id}\` | ${r.check.threshold.toFixed(2)} | ${pct(r.holdoutProven.precision)}/${pct(r.holdoutProven.recall)} | ${pct(r.holdoutOwn.precision)}/${pct(r.holdoutOwn.recall)} | ${r.nPos + r.nNeg} |`,
+    ),
+    `| **all** | | ${pct(provenHold.precision)}/${pct(provenHold.recall)} | ${pct(pooledHold.precision)}/${pct(pooledHold.recall)} | ${rows.length} |`,
     "",
     "## Per check",
     "",
@@ -438,7 +479,7 @@ function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inpu
       `| \`${r.check.id}\` | ${r.nPos} | ${r.nNeg} | ${r.check.threshold.toFixed(2)} | ${prf(r.trainOwn)} | ${prf(r.holdoutOwn)} | ${prf(r.at50)} | ${pct(r.best.f1)} @ ${r.best.t.toFixed(2)} |`,
     ),
     "",
-    `Holdout is one stratified draw per case, ~20% (${holdoutCases.length}); with ~3 held-out positives per check its numbers are a sanity check against overfitting, not a precise estimate.`,
+    `Holdout is the test set: every 2nd real case and every 10th synthetic one (${holdoutCases.length}, ${holdoutCases.filter(isReal).length} real). Thresholds are fitted on train only and prompts are never tuned against holdout, so its numbers are the ones to trust; with a handful of held-out positives per check they are still coarse.`,
     "",
     "Checks with no labelled case are omitted.",
     "",
@@ -476,43 +517,46 @@ function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inpu
   // what the cache did not have.
   const questionChars = JSON.stringify(CHECKS.map((c) => [c.instructions, c.criteria])).length;
   const coldTokens = Math.round(cases.reduce((n, c) => n + JSON.stringify(c.job.state).length + questionChars, 0) / 4);
-  // Pooled over every scored (check, case) pair at each check's own threshold: the number a PR reviewer feels.
-  const pooled = (subset: Scored[]) => scoreAt(subset.map((r) => ({ label: r.label, p: (r.p ?? -1) - (own.get(r.checkId) ?? DEFAULT_THRESHOLD) })), 0);
-  const pooledAll = pooled(rows);
-  const pooledHold = pooled(rows.filter((r) => r.split === "holdout"));
-  const nReal = cases.filter((c) => c.root.private || c.id.startsWith("dogfood/")).length;
   const readme = [
     "## Evals",
     "",
-    `**Precision first, by construction.** Each check's threshold is fitted to the lowest point where precision stays at or above 0.95, so high precision is what the fit buys, not something the model earned on its own; the honest numbers are the false-positive count and recall. At those thresholds lgtm raises ${pooledAll.tp + pooledAll.fp} findings across ${rows.length} scored (check, case) pairs, ${pooledAll.fp} of them wrong, and misses ${pooledAll.fn} of ${pooledAll.tp + pooledAll.fn} labelled smells (recall ${pct(pooledAll.recall)}). Thresholds are fitted on every case including holdout, since a one-parameter fit cannot overfit; holdout guards the prompt wording, and ${pooledHold.fp} of ${pooledHold.tp + pooledHold.fp} holdout findings are wrong there. A linter you can ignore is a linter you will ignore, so recall is the number we trade away.`,
+    `Numbers on the held-out test set, which nothing was fitted or tuned on. lgtm prints two kinds of finding: a **high-confidence** one sits at or above its check's high-confidence line (${CERTAIN_MARGIN.toFixed(2)} above the threshold unless the check pins its own) and is what the verdict counts and \`--fail\` blocks on; a **worth a look** one sits between the threshold and that margin. "All flagged" below means both together, everything lgtm prints.`,
     "",
-    `The corpus is ${countedReadme} labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. ${nReal} of them are real tests, from production apps and from this repo, read against their implementation and labelled. The ground truth is kept in \`expect.json\` so it never reaches the model.`,
+    "| held-out | high-confidence findings | all flagged findings |",
+    "|---|---|---|",
+    `| precision | **${pct(provenHold.precision)}** (${provenHold.tp + provenHold.fp} findings, ${provenHold.fp} wrong) | ${pct(pooledHold.precision)} (${pooledHold.tp + pooledHold.fp} findings, ${pooledHold.fp} wrong) |`,
+    `| recall | **${pct(provenHold.recall)}** | ${pct(pooledHold.recall)} |`,
     "",
-    ...(nPrivate === 0
-      ? []
-      : [
-          `The ${nPrivate} private cases come from real Stardeck customer apps and from Stardeck's own codebase, harvested by scoring 15,000+ real test blocks and sampling around each check's threshold. That harvest is what set the thresholds: synthetic negatives were too easy, and several checks that scored 1.00 on synthetic cases were 0–30% precise on real code until they were rewritten against it. The private cases are scored in these numbers but not published, because anonymization removes names, not shape. The ${cases.length - nPrivate} public cases in \`evals/cases\` reproduce with \`pnpm eval\` alone.`,
-          "",
-        ]),
-    `Scores are at each check's own threshold. ${holdoutCases.length} of the cases are holdout: thresholds are fitted on every case, prompts are never tuned against these.`,
-    "",
-    "| check | cases | threshold | precision (holdout) | recall (holdout) | precision (all) | recall (all) |",
-    "|---|---|---|---|---|---|---|",
-    ...perCheck.map(
-      (r) =>
-        `| \`${r.check.id}\` | ${r.nPos + r.nNeg} | ${r.check.threshold.toFixed(2)} | ${pct(r.holdoutOwn.precision)} | ${pct(r.holdoutOwn.recall)} | ${pct(r.allOwn.precision)} | ${pct(r.allOwn.recall)} |`,
-    ),
-    `| **all checks** | ${rows.length} | | ${pct(pooledHold.precision)} | ${pct(pooledHold.recall)} | ${pct(pooledAll.precision)} | ${pct(pooledAll.recall)} |`,
-    "",
-    `Test class accuracy: ${acc(classAll)} on all cases, ${acc(classHold)} on holdout.`,
-    "",
-    `A full cold run of the corpus is about ${coldTokens.toLocaleString("en-US")} input tokens ≈ ${usd(coldTokens)} (estimated from the states; the last run spent ${usd(meta.inputTokens ?? 0)} after cache hits).`,
-    "",
-    "Every miss and false positive is listed in [`evals/RESULTS.md`](evals/RESULTS.md). The public cases reproduce with `pnpm eval`.",
+    `Per-check numbers on the same held-out set, every miss and false positive, the corpus composition and the class confusion matrix are in [\`evals/RESULTS.md\`](evals/RESULTS.md); every scored case is a dot in [\`evals/atlas.html\`](evals/atlas.html), per check, with both lines drawn. The public cases reproduce with \`pnpm eval\`.`,
     "",
   ].join("\n");
 
   return { md, readme };
+}
+
+/**
+ * evals/atlas.html: every scored (check, case) pair as a dot at its probability, per check, with the threshold and
+ * high-confidence lines. Built from evals/atlas.template.html. The page carries check, label, origin, split and
+ * probability only: private cases are numbered, never named, and no label reason is embedded.
+ */
+export function writeAtlas(cases: Case[], answers: Map<string, Answered>, hasPrivate: boolean, file = path.join(ROOT, "evals", "atlas.html")): void {
+  if (!hasPrivate) return;
+  const template = fs.readFileSync(path.join(ROOT, "evals", "atlas.template.html"), "utf8");
+  const checks = CHECKS.map((c) => ({ id: c.id, t: c.threshold, high: highLine(c.threshold, c.high), blurb: c.blurb }));
+  const rows: { id: string; check: string; label: number; p: number | null; real: boolean; holdout: boolean }[] = [];
+  const classes: { id: string; expected: string; predicted: string | null; real: boolean; holdout: boolean }[] = [];
+  let n = 0;
+  for (const c of cases) {
+    const a = answers.get(c.id);
+    if (!a) continue;
+    const id = c.root.private ? `private/${String(++n).padStart(3, "0")}` : c.id;
+    const base = { id, real: isReal(c), holdout: splitOf(c) === "holdout" };
+    classes.push({ ...base, expected: c.expect.class, predicted: a.class ?? null });
+    for (const check of c.expect.fire) rows.push({ ...base, check, label: 1, p: a.probabilities[check] ?? null });
+    for (const check of c.expect.not_fire) rows.push({ ...base, check, label: 0, p: a.probabilities[check] ?? null });
+  }
+  const data = JSON.stringify({ checks, rows, classes }).replace(/<\//g, "<\\/");
+  fs.writeFileSync(file, template.replace("/*DATA*/", data));
 }
 
 /**
@@ -579,6 +623,7 @@ async function main(): Promise<void> {
 
   fs.writeFileSync(path.join(ROOT, "evals", "RESULTS.md"), md);
   writeReadme(readme, hasPrivate);
+  writeAtlas(cases, answers, hasPrivate);
   console.log(`${cases.length} cases, ${answers.size} with answers → evals/RESULTS.md`);
 }
 

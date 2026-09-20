@@ -772,5 +772,235 @@
     "holdout_f1": 1.0,
     "fitted_t": 0.75,
     "kept": true
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "deciding-statement procedure (round 3, harvested corpus, train-only fit)",
+    "instructions": "Find the one statement in implementation that decides the behaviour\u2026 did it run for real\u2026",
+    "train_f1": 0.79,
+    "holdout_f1": 0.0,
+    "fitted_t": 0.85,
+    "kept": false,
+    "note": "best train F1 0.79 @0.27 vs baseline 0.85 @0.63; positives dropped"
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "baseline + spy-only-write yes arm + stateful-fake rule-out (round 3)",
+    "instructions": "\u2026Also yes when the claimed behaviour is a write or a call and the only evidence is expect(mock).toHaveBeenCalledWith on a bare vi.fn\u2026 rule out: the fake has state or behaviour of its own\u2026",
+    "train_f1": 0.83,
+    "holdout_f1": 0.67,
+    "fitted_t": 0.8,
+    "kept": false,
+    "note": "stateful-fake negatives down (0.81\u21920.64, 0.74\u21920.56), spy positive up (0.70\u21920.88), but route-stub/module-mock positives down (0.72\u21920.58, 0.69\u21920.55)"
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "v2 + route-stub/module-mock-is-the-seam clause (round 3)",
+    "instructions": "\u2026A route stub, a fetch mock or a mocked first-party module is not a neighbour when the asserted text or status is the value it returned unchanged: then it is the seam.",
+    "train_f1": 0.87,
+    "holdout_f1": 0.29,
+    "fitted_t": 0.85,
+    "kept": true,
+    "note": "real-train AUC 0.74\u21920.91, real-holdout AUC 0.50\u21920.51: the wording separates the cases that were read, not unseen ones"
+  },
+  {
+    "check": "impossible-fixture",
+    "variant": "first decide where the fixture goes: refused by the rule under test \u2192 no; past the rule \u2192 yes (round 3)",
+    "instructions": "First decide where the fixture goes. If it is handed to the validator \u2026 and the assertion is that refusal \u2026 no. Answer yes only when the state gets past that rule without the rule running\u2026",
+    "train_f1": 0.87,
+    "holdout_f1": 0.5,
+    "fitted_t": 0.55,
+    "kept": true,
+    "note": "7 real negatives 0.70\u20130.93 \u2192 0.08\u20130.11; holdout P at fit 0.25 \u2192 1.00; corpus AUC 0.79 \u2192 0.94; synthetic positives mean 0.68 \u2192 0.55"
+  },
+  {
+    "check": "impossible-fixture",
+    "variant": "v1 + seeded/literal row the writer would refuse counts as past the rule (round 3)",
+    "instructions": "\u2026A beforeEach, a seed helper, a raw insert or a literal row that the writer would have refused counts as past the rule even though the writer is never called\u2026",
+    "train_f1": 0.92,
+    "holdout_f1": 0.5,
+    "fitted_t": 0.8,
+    "kept": true,
+    "note": "synthetic positives mean 0.55 \u2192 0.73 (\u22650.7: 5 \u2192 11), real negatives stay \u22640.13, corpus AUC 0.98, real holdout AUC 0.88; one synthetic legacy-data negative 0.14 \u2192 0.73"
+  },
+  {
+    "check": "impossible-fixture",
+    "variant": "v2 + declared legacy/corrupt rows are the subject \u2192 no (round 3)",
+    "instructions": "\u2026The one exception: when the test name or the code under test says the point is tolerating legacy, migrated or corrupt rows, that row is the declared subject and the answer is no.",
+    "train_f1": 0.96,
+    "holdout_f1": 0.5,
+    "fitted_t": 0.5,
+    "kept": true,
+    "note": "corpus AUC 0.99, real holdout AUC 0.94; the legacy-data negative back to 0.12; the one real held-out positive still at 0.23"
+  },
+  {
+    "check": "over-mocked",
+    "variant": "list first-party collaborators; yes when the deciding ones are all fakes and only glue runs (round 3)",
+    "instructions": "List the first-party collaborators the entry point calls on the asserted path\u2026 Answer yes when the collaborators that make the decisions the test name promises are all fakes, so that what still runs for real is only glue\u2026 Trivial real glue on the path does not make it a no\u2026",
+    "train_f1": 0.92,
+    "holdout_f1": 0.71,
+    "fitted_t": 0.8,
+    "kept": true,
+    "note": "calibration: real positives mean 0.44\u21920.66, synthetic 0.49\u21920.69; AUC all 0.91\u21920.95, real holdout 0.56\u21920.83; two real negatives now \u22650.7 so the fit moved to 0.80"
+  },
+  {
+    "check": "over-mocked",
+    "variant": "v1 minus try/catch-as-glue, plus error-from-a-fake handled by real code is a decision (round 3)",
+    "instructions": "\u2026or what real code does with an error a fake threw \u2014 inspecting it, rethrowing it, swallowing it. One fake at the edge with everything else real is never over-mocked\u2026",
+    "train_f1": 0.94,
+    "holdout_f1": 0.77,
+    "fitted_t": 0.55,
+    "kept": true,
+    "note": "real train AUC 0.93\u21920.99, real holdout 0.56\u21920.84, all 0.91\u21920.97; real positives mean 0.44\u21920.64; one held-out real negative at 0.71 (external-edge fake with real re-validation), not tuned on"
+  },
+  {
+    "check": "would-pass-if-broken",
+    "variant": "simulate the break: write the broken version, run the fixture through it, compare (round 3)",
+    "instructions": "Simulate the break. 1. name the one thing the test promises\u2026 2. write down the obvious broken version\u2026 3. run the fixture through it\u2026 4. compare with the assertions\u2026",
+    "train_f1": 0.82,
+    "holdout_f1": 0.7,
+    "fitted_t": 0.65,
+    "kept": false,
+    "note": "synthetic positives up (deep-merge 0.44\u21920.82), real holdout AUC 0.81\u21920.89, all 0.90\u21920.92; but real train AUC 0.79\u21920.76: blocks with no expect and if-guarded assertions dropped 0.8\u21920.5"
+  },
+  {
+    "check": "would-pass-if-broken",
+    "variant": "v1 + no-assertion / if-guarded / off-promise assertions are yes outright (round 3)",
+    "instructions": "\u2026A block with no assertion at all, or whose only assertions sit inside an if, a loop or a catch the fixture may skip, or that asserts only things the name does not promise\u2026, passes under any break: answer yes\u2026",
+    "train_f1": 0.81,
+    "holdout_f1": 0.67,
+    "fitted_t": 0.55,
+    "kept": true,
+    "note": "best train F1 0.92 unchanged; real holdout AUC 0.81\u21920.86, all 0.90\u21920.91, real train 0.79\u21920.78; the no-expect blocks recover only to ~0.58; gains are modest, this check is limited by how obvious the break is"
+  },
+  {
+    "check": "would-pass-if-broken",
+    "variant": "inverted: 'would an obvious break make an assertion fail?', score = 1 \u2212 answer (round 3)",
+    "instructions": "Would an obvious break of the behaviour this test names make at least one of its assertions fail? 1\u2026 4. Answer yes when at least one assertion now fails\u2026 Answer no when every assertion still holds, and name why\u2026",
+    "train_f1": 0.84,
+    "holdout_f1": 0.65,
+    "fitted_t": 0.35,
+    "kept": true,
+    "note": "real negatives mean 0.35\u21920.16, real positives 0.56\u21920.45: the whole scale drops, the gap widens. real train AUC 0.79\u21920.90, real holdout 0.81\u21920.87, corpus 0.90\u21920.94. Jev is conservative on yes either way; put the confident answers on the sound tests."
+  },
+  {
+    "check": "reimplements-logic",
+    "variant": "expected-side only; inputs built by production code, parity, property and drift guards are no (round 3)",
+    "instructions": "Look only at the expected side of each assertion\u2026 Answer no when the expected side is a literal or a requirement-derived example, however the input was built\u2026",
+    "train_f1": 0.65,
+    "holdout_f1": 0.46,
+    "fitted_t": 0.9,
+    "kept": false,
+    "note": "real negatives \u22650.7: 9\u21922, mean 0.51\u21920.23, real holdout AUC 0.69\u21921.00; but the checksum-digits positive (input built from the validator's own table) 0.92\u21920.35, and two dogfood drift guards rose to 0.81/0.75 because the generator is called in the test"
+  },
+  {
+    "check": "reimplements-logic",
+    "variant": "v1 + manufactured-from-the-rule input is yes + committed artifact vs generator is always no (round 3)",
+    "instructions": "\u2026except when the input is manufactured by running the rule under test itself\u2026 a committed generated file compared against the generator's current output is a drift guard and always no\u2026",
+    "train_f1": 0.65,
+    "holdout_f1": 0.57,
+    "fitted_t": 0.9,
+    "kept": true,
+    "note": "real negatives \u22650.7: 9\u21921, mean 0.51\u21920.21; real holdout AUC 0.69\u21920.97, train 0.91\u21920.93, all 1.00; three real positives where the expected string is assembled from the same template dropped to 0.21\u20130.48"
+  },
+  {
+    "check": "reimplements-logic",
+    "variant": "v2 + expected string/key/row set assembled from the same template or helper composition is yes (round 3)",
+    "instructions": "\u2026That includes an expected string, key, label or row set assembled in the test from the same template, separator, namespace prefix or composition of helpers the implementation uses\u2026",
+    "train_f1": 0.83,
+    "holdout_f1": 0.75,
+    "fitted_t": 0.85,
+    "kept": true,
+    "note": "real negatives mean 0.51\u21920.20 (\u22650.7: 9\u21921, a dogfood drift guard at 0.77); real positives back to mean 0.78; real train AUC 0.91\u21920.97, real holdout 0.69\u21921.00, corpus 1.00; best train F1 0.85\u21920.95"
+  },
+  {
+    "check": "tests-internals",
+    "variant": "a returned string is a return value even when it is source/script/HTML/SQL; 'own source text' means the unit's file (round 3)",
+    "instructions": "\u2026a string the unit returns is a return value even when that string is program source, a shell script, HTML, SQL or a template\u2026; the source text of the unit under test read from its own file (not a string it returns)\u2026",
+    "train_f1": 0.97,
+    "holdout_f1": 0.86,
+    "fitted_t": 0.35,
+    "kept": true,
+    "note": "real negatives mean 0.33\u21920.12 (\u22650.7: 4\u21920); real train AUC 0.94\u21921.00, real holdout 0.83\u21920.98, corpus 0.93\u21920.99; fit 0.95\u21920.35, holdout P/R 0.86/0.86; positives softened (real mean 0.82\u21920.71) but rank above every negative"
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "inverted: does the real deciding code run here? score = 1 \u2212 answer (round 3, 4th)",
+    "instructions": "Does the real code that decides the behaviour this test names actually run here, with an assertion depending on its result?\u2026",
+    "train_f1": 0.31,
+    "holdout_f1": 0.5,
+    "fitted_t": 0.9,
+    "kept": false,
+    "note": "real holdout AUC 0.51\u21920.85 (4 positives) but real train AUC 0.91\u21920.79, best train F1 0.87\u21920.78; reverted to v3 per the rule; worth retrying inversion on v3's exact wording after a harvest of real positives"
+  },
+  {
+    "check": "vacuous-assertion",
+    "variant": "+ table-loop, if-guarded, undefined-on-every-path, later-clock yes arms; validate-and-throw call success is no (round 3)",
+    "instructions": "\u2026generic properties \u2026 checked in a loop over a table or dictionary\u2026; assertions that sit inside an if or loop this fixture may skip\u2026; a call that validates or parses its own input or response and throws on a bad one, so that reaching a defined or non-empty result after the awaited call is exactly the success the name promises\u2026",
+    "train_f1": 0.52,
+    "holdout_f1": 0.29,
+    "fitted_t": 0.85,
+    "kept": true,
+    "note": "real train AUC 0.82\u21920.92, corpus 0.98\u21920.99, holdout 0.97 unchanged; the two validate-and-throw negatives only 0.83/0.82 \u2192 0.75/0.69"
+  },
+  {
+    "check": "vacuous-assertion",
+    "variant": "validate-and-throw success as the first decision (round 3)",
+    "instructions": "First decide what the call under test does on a bad input or a bad response. If it validates\u2026 and throws on failure, then an awaited call that returned at all is the success the name promises\u2026 answer no\u2026",
+    "train_f1": 0.89,
+    "holdout_f1": 0.67,
+    "fitted_t": 0.6,
+    "kept": false,
+    "note": "real train AUC 0.92\u21920.97, fit 0.85\u21920.60, but real holdout AUC 0.97\u21920.91: the rule also exonerates e2e blocks whose name promises content and whose assertion is only non-empty"
+  },
+  {
+    "check": "vacuous-assertion",
+    "variant": "v2 + the success rule applies only when the name promises no more than success (round 3)",
+    "instructions": "\u2026and test_name promises no more than that the call succeeds, parses, streams without error or completes\u2026 If the name promises content, a value, a shape, a count or a behaviour beyond success, that rule does not apply; go on.",
+    "train_f1": 0.85,
+    "holdout_f1": 0.8,
+    "fitted_t": 0.65,
+    "kept": true,
+    "note": "real train AUC 0.82\u21920.99, real holdout 0.97\u21920.98, corpus 1.00; real negatives mean 0.30\u21920.21, none \u22650.7; fit 0.90\u21920.65, holdout P/R 1.00/0.67"
+  },
+  {
+    "check": "happy-path-only-of-risky-boundary",
+    "variant": "inverted: is the riskiest refusal exercised here, by a sibling, or is there none? (round 3)",
+    "instructions": "Is the riskiest refusal in implementation exercised somewhere in this file, or is there none to exercise? \u2026 Answer yes when this block drives it\u2026, or a sibling name drives that exact condition, or implementation has no refusal branch at all\u2026",
+    "train_f1": 0.2,
+    "holdout_f1": 0.0,
+    "fitted_t": 0.8,
+    "kept": true,
+    "note": "real train AUC 0.94\u21921.00, corpus 0.94\u21920.97, real holdout 0.81 unchanged; self-driven refusal negatives 0.75/0.62\u21920.45; one real negative (it.each sibling drives each clause) at 0.71 pins the fit at 0.80"
+  },
+  {
+    "check": "happy-path-only-of-risky-boundary",
+    "variant": "v1 + it.each template / refusing-consequence sibling names count (round 3)",
+    "instructions": "\u2026including an it.each or test.each whose name is a template over a table of the refusing clauses, and a sibling name that states the refusing condition or its consequence\u2026",
+    "train_f1": 0.2,
+    "holdout_f1": 0.0,
+    "fitted_t": 0.8,
+    "kept": false,
+    "note": "the it.each negative stays at 0.73: sibling_tests carries names only, the table rows never reach the model; real holdout AUC 0.81\u21920.79; reverted to v1"
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "v3 wording, polarity flipped only (round 3, 5th, over cap at the user's request)",
+    "instructions": "Does the real collaborator that decides the behaviour this test claims run here\u2026? [v3 body with yes/no swapped]",
+    "train_f1": 0.86,
+    "holdout_f1": 0.73,
+    "fitted_t": 0.95,
+    "kept": true,
+    "note": "real train AUC 0.91 unchanged, real holdout 0.51\u21920.70, corpus 0.97, best train F1 0.87\u21920.91; the whole scale rises (real negatives mean 0.50\u21920.57, up to 0.88) so the fit is 0.95 and a pin is needed; the check still interleaves 'stub decides' with 'stub feeds a fact the real code branches on'"
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "inverted + break simulation: stub the deciding statement, does an assertion fail? (round 3, 6th)",
+    "instructions": "\u20263. Simulate the break: replace that statement with a stub that returns a constant\u2026 4. Re-run test_code\u2026 Answer yes when at least one assertion now fails\u2026",
+    "train_f1": 0.0,
+    "holdout_f1": 0.0,
+    "fitted_t": 0.85,
+    "kept": false,
+    "note": "everything compresses toward 0.5: corpus AUC 0.97\u21920.89, real train 0.91\u21920.89, real holdout 0.70\u21920.64; reverted to v5"
   }
 ]

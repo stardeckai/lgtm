@@ -16,7 +16,7 @@ const finding = (over: Partial<Finding> = {}): Finding => ({
   line: 3,
   name: "name",
   checkId: "mocks-seam-under-test",
-  probability: 0.87,
+  probability: 0.96,
   threshold: 0.8,
   ...over,
 });
@@ -28,7 +28,7 @@ describe("formatReport", () => {
     const two = formatReport([finding(), finding({ line: 9 })], "text", summary);
     expect(two).toContain("😐🫵  2 tests prove nothing.");
     const clean = formatReport([], "text", { ...summary, tests: 1, skipped: 1 });
-    expect(clean).toContain("😐👍  1 test. fine. allegedly.");
+    expect(clean).toContain("😐👍  1 test. fine...lgtm?");
     expect(clean).toContain("1 test skipped (API errors).");
   });
 
@@ -43,24 +43,28 @@ describe("formatReport", () => {
   });
 
   it("emits github annotations in the exact annotation syntax", () => {
-    const out = formatReport([finding({ checkId: "id", probability: 0.91 })], "github", summary);
-    expect(out).toBe("::warning file=a.test.ts,line=3::[id] name (0.91)");
+    const out = formatReport([finding({ checkId: "id", probability: 0.96 })], "github", summary);
+    expect(out).toBe("::warning file=a.test.ts,line=3::[id] name");
+    const band = formatReport([finding({ checkId: "id", probability: 0.85 })], "github", summary);
+    expect(band).toBe("::notice file=a.test.ts,line=3::[id] name");
   });
 
-  it("writes a finding as location and name, then face, check id, probability and blurb", () => {
+  it("writes a finding as location and name, then face, check id and blurb, with the probability only under --verbose", () => {
     const out = formatReport(
-      [finding({ file: "test/payment.test.ts", line: 42, name: "rejects expired cards", probability: 0.93 })],
+      [finding({ file: "test/payment.test.ts", line: 42, name: "rejects expired cards", probability: 0.96 })],
       "text",
       summary,
     );
     expect(out.split("\n").slice(0, 2)).toEqual([
       'test/payment.test.ts:42  "rejects expired cards"',
-      "  😐👏 mocks-seam-under-test 0.93 — The collaborator that decides this behaviour is a mock, so the test only proves the mock works.",
+      "  😐👏 mocks-seam-under-test — The collaborator that decides this behaviour is a mock, so the test proves the mock's script, not the code; use the real one here.",
     ]);
+    const loud = formatReport([finding({ probability: 0.96 })], "text", { ...summary, verbose: true });
+    expect(loud.split("\n")[1]!.startsWith("  😐👏 mocks-seam-under-test 0.96 — ")).toBe(true);
   });
 
   it("prints the blurb, and marks a sub-threshold finding as suspicious", () => {
-    const lines = (over: Partial<Finding>) => formatReport([finding(over)], "text", summary).split("\n");
+    const lines = (over: Partial<Finding>) => formatReport([finding(over)], "text", { ...summary, verbose: true }).split("\n");
 
     expect(lines({ checkId: "swallowed-error-as-success" })[1]!.startsWith("  😐🤏")).toBe(true);
     expect(lines({ checkId: "changed-in-lockstep" })[1]!.startsWith("  😐🫸")).toBe(true);
@@ -71,17 +75,25 @@ describe("formatReport", () => {
   });
 
   it("closes with the pointing finger when there are findings and the thumb when there are none", () => {
-    const accusing = formatReport([finding(), finding({ line: 9 })], "text", summary);
+    const accusing = formatReport([finding({ probability: 0.95 }), finding({ line: 9, probability: 0.96 })], "text", summary);
     expect(accusing.split("\n").slice(-5, -4)).toEqual(["😐🫵  2 tests prove nothing."]);
     expect(accusing.split("\n").at(-1)).toBe("6.0s (1.5s per test)");
 
     const suspicionOnly = formatReport([finding({ probability: 0.6, threshold: 0.8 })], "text", summary);
-    expect(suspicionOnly).toContain("😐👍  4 tests. fine. allegedly.");
+    expect(suspicionOnly).toContain("😐👍  4 tests. fine...lgtm?");
     expect(suspicionOnly).not.toContain("prove nothing");
     expect(formatReport([finding({ probability: 0.6, threshold: 0.8 })], "github", summary)).toBe("");
 
+    // 0.87 is over the 0.80 threshold but inside the 0.15 margin: worth a look, not an accusation
+    const bandOnly = formatReport([finding({ probability: 0.87 }), finding({ line: 9, probability: 0.81 })], "text", summary);
+    expect(bandOnly).toContain("😐🤞  2 tests worth a look. nothing proven, nothing disproven.");
+    expect(bandOnly).toContain("😐🤞 mocks-seam-under-test — Worth a look. The collaborator");
+    expect(bandOnly).not.toContain("prove nothing");
+    const mixed = formatReport([finding({ probability: 0.95 }), finding({ line: 9, probability: 0.81 })], "text", summary);
+    expect(mixed).toContain("😐🫵  1 test proves nothing. 1 test more worth a look.");
+
     const clean = formatReport([], "text", { ...summary, skipped: 2 });
-    expect(clean.split("\n")[0]).toBe("😐👍  4 tests. fine. allegedly.");
+    expect(clean.split("\n")[0]).toBe("😐👍  4 tests. fine...lgtm?");
     expect(clean).toContain("2 tests skipped (API errors).");
   });
 

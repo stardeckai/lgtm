@@ -56,9 +56,18 @@ function fakeClient(probability: number, testClass: TestClass = "mocked_seam_uni
 }
 
 describe("analyze", () => {
+  it("flips the answer of an inverted check, so a confident 'the break is caught' scores low", async () => {
+    // would-pass-if-broken asks whether the test would go red; a 0.2 there means 0.8 of smell
+    const result = await analyze([job()], { only: ["would-pass-if-broken"], threshold: 0.5 }, fakeClient(0.2).client);
+    expect(result.findings.map((f) => [f.checkId, f.probability])).toEqual([["would-pass-if-broken", 0.8]]);
+    const sound = await analyze([job()], { only: ["would-pass-if-broken"], threshold: 0.5 }, fakeClient(0.9).client);
+    expect(sound.findings).toEqual([]);
+  });
+
   it("reports answers at or above the threshold and nothing below it", async () => {
     const at = await analyze([job()], { only: ["vacuous-assertion"], threshold: 0.8 }, fakeClient(0.8).client);
-    expect(at.findings).toEqual([
+    // toMatchObject: the finding also carries the check's own high line when it has one
+    expect(at.findings).toMatchObject([
       {
         file: "a.test.ts",
         line: 3,

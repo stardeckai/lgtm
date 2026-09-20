@@ -64,6 +64,8 @@ export type Finding = {
   probability: number;
   /** the threshold this finding was judged against, so the report can rank it */
   threshold: number;
+  /** the check's own high-confidence line, when it overrides the standard margin */
+  high?: number;
 };
 
 export type AnalyzeOptions = {
@@ -593,8 +595,9 @@ export async function analyze(jobs: Job[], opts: AnalyzeOptions, client: Client)
       });
     }
     for (const check of checks) {
-      const probability = answers[check.id]?.noul;
-      if (probability === undefined) continue;
+      const raw = answers[check.id]?.noul;
+      if (raw === undefined) continue;
+      const probability = check.invert ? Math.round((1 - raw) * 100) / 100 : raw;
       const threshold = opts.threshold ?? check.threshold;
       if (probability >= (opts.verbose ? Math.min(0.5, threshold) : threshold)) {
         findings.push({
@@ -604,6 +607,7 @@ export async function analyze(jobs: Job[], opts: AnalyzeOptions, client: Client)
           checkId: check.id,
           probability,
           threshold,
+          ...(check.high !== undefined ? { high: check.high } : {}),
         });
       }
     }

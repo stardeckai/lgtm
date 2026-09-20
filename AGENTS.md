@@ -79,11 +79,15 @@ and reports the ones that come back confident. Read `README.md` first; this file
 - **Changing any check's `instructions`/`criteria`, `TEST_CLASSES`, or the package version invalidates every cached
   answer** (they are part of the cache key). After such a change run the full `LGTM_EVALS_EXTRA=… pnpm eval` before quoting numbers.
 - **Thresholds are fitted, not hand-picked.** `pnpm eval --fit-thresholds --write` rewrites `threshold:` in each check
-  file from ALL labelled cases (holdout included; a one-parameter fit cannot overfit): the lowest grid point
-  (0.30–0.95) with precision ≥ 0.95, plus one step of margin; recall is whatever that leaves, because precision
-  on real code is the product. (A floor, not zero false positives: with hundreds of real negatives one contested
-  label would otherwise switch a check off.) Holdout still guards prompt rewrites. Do not edit
-  thresholds by hand; refit after changing wording. Fit thresholds last, after prompt changes.
+  file from the TRAIN cases: the lowest grid point (0.30–0.95) that fires on no real negative (private + dogfood)
+  and keeps precision ≥ 0.95 over all train cases, plus one step of margin; recall is whatever that leaves,
+  because precision on real code is the product. (Zero on real negatives because a wrong finding on a real test
+  is the one unrecoverable cost; a 0.95 floor on the synthetic ones because there are hundreds and one contested
+  label would otherwise switch a check off.) Do not edit thresholds by hand; refit after changing wording. Fit
+  thresholds last, after prompt changes.
+- **The holdout is a test set, mostly real.** Every 2nd real case and every 10th synthetic one, by slug hash.
+  Nothing is fitted or tuned on it: not thresholds, not prompts. Its numbers are the ones the README leads with.
+  When the real corpus grows, the test set grows with it; do not move a case between sides by hand.
 - **Labels never go in fixture `.ts` files.** Ground truth lives only in `expect.json`; the `.ts` files are sent to
   the model verbatim. No comments, names or strings that hint at the smell.
 - **Unscored is the default.** A case scores a check only if that id is in its `fire` or `not_fire` list. Do not add

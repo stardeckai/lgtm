@@ -34,6 +34,13 @@ describe("fitThreshold", () => {
   it("has nothing to fit without positives", () => {
     expect(fitThreshold([], [0.1, 0.2])).toBeUndefined();
   });
+
+  it("never fires on a real negative, whatever the synthetic precision says", () => {
+    const pos = Array.from({ length: 10 }, () => 0.9);
+    // 0.95 precision is met from 0.50 up; one real negative at 0.72 pushes the pick to 0.75 and then the margin
+    expect(fitThreshold(pos, [0.45, 0.45])).toBe(0.55);
+    expect(fitThreshold(pos, [0.45, 0.45, 0.72], [0.72])).toBe(0.8);
+  });
 });
 
 describe("extra (private) corpus root", () => {

@@ -1,5 +1,5 @@
 {
-  "test": "src/report.test.ts::writes a finding as location and name, then face, check id, probability and blurb",
+  "test": "src/report.test.ts::writes a finding as location and name, then face, check id and blurb, with the probability only under --verbose",
   "fire": [],
   "not_fire": [
     "assertion-weaker-than-name",

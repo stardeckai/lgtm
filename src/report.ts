@@ -21,6 +21,9 @@ export type Summary = {
   /** wall-clock time spent in analyze(); 0 when nothing ran */
   durationMs: number;
   classes: Classified[];
+  /** --verbose: also print each finding's probability. Off by default: a 0.64 next to a smell reads as a
+   *  confidence, but it is a score against a fitted cut-off that moves ±0.1 between runs of the same state. */
+  verbose?: boolean;
 };
 
 const count = (classes: Classified[], of: string) => classes.filter((c) => c.testClass === of).length;
@@ -57,19 +60,31 @@ export const tests = (n: number, verb?: [singular: string, plural: string]) =>
 /** A finding at or above its threshold — as opposed to a --verbose "suspicious" one. */
 export const real = (f: Finding) => f.probability >= f.threshold;
 
-/** One line per finding: the family's gesture (🤏 assertions, 👏 mocks, 🤌 scope, 🫸 diff), then id, probability, blurb. */
-function line(f: Finding): string {
+/**
+ * How far above its threshold a finding must sit to count as proven. Measured on identical states sent five
+ * times, 97% of answers move less than 0.10 between runs, so the band just over the line is where a keeper
+ * can land on a bad draw; three steps up it cannot.
+ */
+export const CERTAIN_MARGIN = 0.15;
+/** A finding well clear of its threshold: the ones the verdict counts and --fail blocks on. */
+export const highLine = (threshold: number, high?: number) => high ?? Math.min(0.95, threshold + CERTAIN_MARGIN);
+export const certain = (f: Finding) => f.probability >= highLine(f.threshold, f.high);
+
+/** One line per finding: the family's gesture (🤏 assertions, 👏 mocks, 🤌 scope, 🫸 diff), then id, blurb. */
+function line(f: Finding, verbose: boolean): string {
   const check = BY_ID.get(f.checkId);
   const suspicious = !real(f);
-  const blurb = (suspicious ? "Suspicious. " : "") + (check?.blurb ?? "");
-  // severity colour: red = certain, yellow = over threshold, dim = only suspicious
-  const tone: Style = suspicious ? "dim" : f.probability >= 0.9 ? "red" : "yellow";
-  const gesture = suspicious ? "😐" : GESTURE[CATEGORY_OF[f.checkId] ?? "scope"];
-  return `  ${gesture} ${c([tone, "bold"], f.checkId)} ${c(tone, p(f.probability))} ${c("dim", "— " + blurb)}`;
+  const probable = !suspicious && !certain(f);
+  const blurb = (suspicious ? "Suspicious. " : probable ? "Worth a look. " : "") + (check?.blurb ?? "");
+  // severity colour: red = certain, yellow = over threshold but within noise of it, dim = only suspicious
+  const tone: Style = suspicious ? "dim" : probable ? "yellow" : "red";
+  const gesture = suspicious ? "😐" : probable ? "😐🤞" : GESTURE[CATEGORY_OF[f.checkId] ?? "scope"];
+  const score = verbose ? ` ${c(tone, p(f.probability))}` : "";
+  return `  ${gesture} ${c([tone, "bold"], f.checkId)}${score} ${c("dim", "— " + blurb)}`;
 }
 
 /** Findings grouped per test: one header (location + name), one line per check, a blank line between tests. */
-function blocks(rows: Finding[]): string[] {
+function blocks(rows: Finding[], verbose: boolean): string[] {
   const out: string[] = [];
   let key = "";
   for (const f of rows) {
@@ -79,7 +94,7 @@ function blocks(rows: Finding[]): string[] {
       out.push(`${loc(f.file, f.line)}  ${name(f.name)}`);
       key = k;
     }
-    out.push(line(f));
+    out.push(line(f, verbose));
   }
   return out;
 }
@@ -100,18 +115,24 @@ export function formatReport(findings: Finding[], format: Format, summary: Summa
   if (format === "github") {
     return rows
       .filter(real)
-      .map((f) => `::warning file=${f.file},line=${f.line}::[${f.checkId}] ${f.name} (${p(f.probability)})`)
+      .map((f) => `::${certain(f) ? "warning" : "notice"} file=${f.file},line=${f.line}::[${f.checkId}] ${f.name}`)
       .join("\n");
   }
 
-  // Sub-threshold (--verbose) rows are shown but do not accuse anyone.
-  const accused = new Set(rows.filter(real).map((f) => `${f.file}:${f.line}`));
-  const out = blocks(rows);
+  // Only findings well clear of the line accuse anyone; the band just over it is worth a look, and
+  // sub-threshold (--verbose) rows are shown but count for nothing.
+  const accused = new Set(rows.filter(certain).map((f) => `${f.file}:${f.line}`));
+  const lookAt = new Set(rows.filter((f) => real(f) && !certain(f)).map((f) => `${f.file}:${f.line}`));
+  for (const k of accused) lookAt.delete(k);
+  const out = blocks(rows, summary.verbose ?? false);
   if (out.length > 0) out.push("");
-  if (accused.size === 0) {
-    out.push(`😐👍  ${c("green", `${tests(summary.tests)}. fine. allegedly.`)}`);
+  if (accused.size > 0) {
+    const more = lookAt.size > 0 ? c("yellow", ` ${tests(lookAt.size)} more worth a look.`) : "";
+    out.push(`😐🫵  ${c(["red", "bold"], `${tests(accused.size, ["proves", "prove"])} nothing.`)}${more}`);
+  } else if (lookAt.size > 0) {
+    out.push(`😐🤞  ${c(["yellow", "bold"], `${tests(lookAt.size)} worth a look.`)} ${c("dim", "nothing proven, nothing disproven.")}`);
   } else {
-    out.push(`😐🫵  ${c(["red", "bold"], `${tests(accused.size, ["proves", "prove"])} nothing.`)}`);
+    out.push(`😐👍  ${c("green", `${tests(summary.tests)}. fine...lgtm?`)}`);
   }
   out.push(distribution(summary.classes));
   if (summary.skipped > 0) out.push(c("magenta", `${tests(summary.skipped)} skipped (API errors).`));
