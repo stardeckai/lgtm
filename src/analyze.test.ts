@@ -4,6 +4,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { APIError, AuthenticationError, type Questions } from "@typesafe-ai/sdk";
 import { analyze, buildStates, fitBudget, implFiles, type Client, type Job, type State } from "./analyze.js";
+import { certain } from "./report.js";
 import { CHECKS, type TestClass } from "./checks/index.js";
 
 const tmpDirs: string[] = [];
@@ -62,6 +63,16 @@ describe("analyze", () => {
     expect(result.findings.map((f) => [f.checkId, f.probability])).toEqual([["would-pass-if-broken", 0.8]]);
     const sound = await analyze([job()], { only: ["would-pass-if-broken"], threshold: 0.5 }, fakeClient(0.9).client);
     expect(sound.findings).toEqual([]);
+  });
+
+  it("drops a check's pinned high line under --threshold, so --fail follows the override", async () => {
+    // vacuous-assertion pins high at 0.75; with --threshold 0.9 a 0.8 is a --verbose suspect, not a certain finding
+    const at = await analyze([job()], { only: ["vacuous-assertion"], threshold: 0.9, verbose: true }, fakeClient(0.8).client);
+    expect(at.findings).toMatchObject([{ checkId: "vacuous-assertion", probability: 0.8, threshold: 0.9 }]);
+    expect(at.findings[0]!.high).toBeUndefined();
+    expect(at.findings.some(certain)).toBe(false);
+    const own = await analyze([job()], { only: ["vacuous-assertion"] }, fakeClient(0.8).client);
+    expect(own.findings[0]!.high).toBe(0.75);
   });
 
   it("reports answers at or above the threshold and nothing below it", async () => {

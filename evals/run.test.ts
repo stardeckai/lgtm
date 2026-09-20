@@ -40,6 +40,10 @@ describe("fitThreshold", () => {
     // 0.95 precision is met from 0.50 up; one real negative at 0.72 pushes the pick to 0.75 and then the margin
     expect(fitThreshold(pos, [0.45, 0.45])).toBe(0.55);
     expect(fitThreshold(pos, [0.45, 0.45, 0.72], [0.72])).toBe(0.8);
+    // the fallback keeps the rule too: a real negative above every positive means no fit, not a threshold that fires on it
+    expect(fitThreshold([0.9], [0.3], [0.95])).toBeUndefined();
+    // no grid point reaches 0.95 precision; the fallback still steps over the real negative at 0.60
+    expect(fitThreshold([0.7], [0.7, 0.7], [0.6])).toBe(0.75);
   });
 });
 

@@ -94,6 +94,7 @@ function curves(rows,t,hi){const CW=380,CH=118,cx=v=>8+(CW-16)*v,cy=v=>CH-26-(CH
  const at=score(rows,t),ah=score(rows,hi);
  s+=`<text class="tlabel" x="8" y="${CH-30}">at t: P ${fmt(at.precision)} R ${fmt(at.recall)} · at high: P ${fmt(ah.precision)} R ${fmt(ah.recall)}</text>`;
  return s+'</svg>'}
+const esc=v=>String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const auc=rs=>{const P=rs.filter(r=>r.label).map(r=>r.p),N=rs.filter(r=>!r.label).map(r=>r.p);if(!P.length||!N.length)return NaN;let s=0;for(const p of P)for(const n of N)s+=p>n?1:p===n?.5:0;return s/(P.length*N.length)};
 const CLS=['pure_logic','mocked_seam_unit','contract_integration'],CLSN={pure_logic:'pure-logic',mocked_seam_unit:'mocked-seam',contract_integration:'contract-integration'};
 function renderClasses(){const cs=selClasses();const hits=cs.filter(c=>c.expected===c.predicted).length;const acc=cs.length?hits/cs.length:NaN;
@@ -108,12 +109,12 @@ function render(){D.rows.forEach((r,i)=>r._i=i);const rows=sel();const classAcc=
  const under=rows.filter(r=>r.label).length, missed=rows.filter(r=>r.label&&r.p<D.checks.find(c=>c.id===r.check).t).length;
  document.getElementById('summary').innerHTML=[
   [`${rows.length}`,'scored pairs in view'],[`${fmt(pr(all))}`,`high-confidence precision (${all.fp} wrong of ${all.tp+all.fp})`],[`${fmt(rc(all))}`,'high-confidence recall'],[`${fmt(pr(alt))} / ${fmt(rc(alt))}`,'all flagged precision / recall'],[`${missed} of ${under}`,'positives under their threshold'],[fmt(per.filter(p=>!Number.isNaN(p.auc)).reduce((s,p)=>s+p.auc,0)/per.filter(p=>!Number.isNaN(p.auc)).length),'mean AUC across checks'],[fmt(classAcc),'test-class accuracy']
- ].map(([b,s])=>`<div class="tile"><b class="mono">${b}</b><small>${s}</small></div>`).join('');
- document.getElementById('checks').innerHTML=per.map(({c,rs,a,h,auc})=>`<section class="check"><h2><span class="mono">${c.id}</span><span class="stat mono">AUC ${fmt(auc)} · t ${c.t.toFixed(2)} · ${rs.filter(r=>r.label).length}+ / ${rs.filter(r=>!r.label).length}− · high P ${fmt(h.precision)} R ${fmt(h.recall)} · flagged P ${fmt(a.precision)} R ${fmt(a.recall)}</span></h2><p class="blurb">${c.blurb}</p><div>${strip(rs,c.t,c.high)}</div><div>${curves(rs,c.t,c.high)}</div></section>`).join('');
+ ].map(([b,s])=>`<div class="tile"><b class="mono">${esc(b)}</b><small>${esc(s)}</small></div>`).join('');
+ document.getElementById('checks').innerHTML=per.map(({c,rs,a,h,auc})=>`<section class="check"><h2><span class="mono">${esc(c.id)}</span><span class="stat mono">AUC ${fmt(auc)} · t ${c.t.toFixed(2)} · ${rs.filter(r=>r.label).length}+ / ${rs.filter(r=>!r.label).length}− · high P ${fmt(h.precision)} R ${fmt(h.recall)} · flagged P ${fmt(a.precision)} R ${fmt(a.recall)}</span></h2><p class="blurb">${esc(c.blurb)}</p><div>${strip(rs,c.t,c.high)}</div><div>${curves(rs,c.t,c.high)}</div></section>`).join('');
 }
 document.querySelectorAll('.seg').forEach(seg=>seg.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));state[seg.dataset.f]=b.dataset.v;render()}));
 const tip=document.getElementById('tip');
-document.addEventListener('mouseover',e=>{const d=e.target.closest('.dot');if(!d){tip.style.display='none';return}const r=D.rows[+d.dataset.i];tip.innerHTML=`<b>${r.id}</b><br>${r.check} · ${r.label?'labelled fire':'labelled not_fire'} · p <b>${r.p.toFixed(2)}</b><br>${r.real?'real':'synthetic'} · ${r.holdout?'held out':'train'}`;tip.style.display='block'});
+document.addEventListener('mouseover',e=>{const d=e.target.closest('.dot');if(!d){tip.style.display='none';return}const r=D.rows[+d.dataset.i];tip.innerHTML=`<b>${esc(r.id)}</b><br>${esc(r.check)} · ${r.label?'labelled fire':'labelled not_fire'} · p <b>${r.p.toFixed(2)}</b><br>${r.real?'real':'synthetic'} · ${r.holdout?'held out':'train'}`;tip.style.display='block'});
 document.addEventListener('mousemove',e=>{if(tip.style.display!=='block')return;const w=tip.offsetWidth,h=tip.offsetHeight;tip.style.left=Math.min(e.clientX+14,innerWidth-w-8)+'px';tip.style.top=Math.min(e.clientY+14,innerHeight-h-8)+'px'});
 render();
 </script>

@@ -68,7 +68,7 @@ export const real = (f: Finding) => f.probability >= f.threshold;
 export const CERTAIN_MARGIN = 0.15;
 /** A finding well clear of its threshold: the ones the verdict counts and --fail blocks on. */
 export const highLine = (threshold: number, high?: number) => high ?? Math.min(0.95, threshold + CERTAIN_MARGIN);
-export const certain = (f: Finding) => f.probability >= highLine(f.threshold, f.high);
+export const certain = (f: Finding) => real(f) && f.probability >= highLine(f.threshold, f.high);
 
 /** One line per finding: the family's gesture (🤏 assertions, 👏 mocks, 🤌 scope, 🫸 diff), then id, blurb. */
 function line(f: Finding, verbose: boolean): string {

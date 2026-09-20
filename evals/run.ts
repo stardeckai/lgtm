@@ -293,8 +293,12 @@ export function fitThreshold(
   const clean = scores.filter(
     (s) => s.tp > 0 && (s.precision ?? 0) >= MIN_PRECISION && !realNeg.some((p) => (p ?? -1) >= s.t),
   );
-  // clean thresholds: the lowest one has the most recall (grid is ascending, so take the first)
-  const pick = clean.length > 0 ? clean[0]! : bestBy(scores.filter((s) => s.tp > 0), "precision");
+  // clean thresholds: the lowest one has the most recall (grid is ascending, so take the first). The fallback
+  // relaxes the precision floor, never the real-negative rule; when no grid point clears the real negatives there
+  // is no fit, and the check keeps its threshold.
+  const fallback = scores.filter((s) => s.tp > 0 && !realNeg.some((p) => (p ?? -1) >= s.t));
+  if (clean.length === 0 && fallback.length === 0) return undefined;
+  const pick = clean.length > 0 ? clean[0]! : bestBy(fallback, "precision");
   return Math.min(GRID[GRID.length - 1]!, Math.round((pick.t + MARGIN) * 100) / 100);
 }
 
@@ -366,7 +370,7 @@ function fitThresholds(rows: Scored[], write: boolean): void {
     const holdAt = scoreAt(mine.filter((r) => r.split === "holdout"), t);
     const realAt = scoreAt(mine.filter((r) => r.real), t);
     lines.push(
-      `| \`${check.id}\` | ${check.threshold.toFixed(2)} | ${fitted === undefined ? "— (no train positives)" : fitted.toFixed(2)} | ` +
+      `| \`${check.id}\` | ${check.threshold.toFixed(2)} | ${fitted === undefined ? "— (no fit)" : fitted.toFixed(2)} | ` +
         `${pct(trainAt.precision)}/${pct(trainAt.recall)} | ${pct(holdAt.precision)}/${pct(holdAt.recall)} | ${pct(realAt.precision)}/${pct(realAt.recall)} |`,
     );
     if (write && fitted !== undefined && fitted !== check.threshold && !check.pinned) writeThreshold(check.id, fitted);

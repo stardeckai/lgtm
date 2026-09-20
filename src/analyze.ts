@@ -607,7 +607,8 @@ export async function analyze(jobs: Job[], opts: AnalyzeOptions, client: Client)
           checkId: check.id,
           probability,
           threshold,
-          ...(check.high !== undefined ? { high: check.high } : {}),
+          // a pinned high line belongs to the check's own threshold; under --threshold the standard margin applies
+          ...(check.high !== undefined && opts.threshold === undefined ? { high: check.high } : {}),
         });
       }
     }
