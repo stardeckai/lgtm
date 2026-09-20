@@ -18,6 +18,7 @@ const USAGE = `lgtm [files|dirs...]
 
   init                 save your TypeSafe API key, then install the /lgtm agent skill
   key [value]          swap the saved API key (prompts when no value is given)
+  clear-cache          delete cached answers for this project (node_modules/.cache/lgtm)
   skill                install the /lgtm skill again (to add more agents)
   --key <value>        (init) use this key instead of prompting
   --skill <where>      (init/skill) global | project | claude | none — skip the prompt
@@ -153,6 +154,14 @@ async function main(): Promise<number> {
   if (positionals[0] === "skill") {
     const file = installSkill(skill ?? (values.yes ? "global" : await askSkillMode()));
     if (file) console.log(`wrote ${file}`);
+    return 0;
+  }
+
+  if (positionals[0] === "clear-cache") {
+    const dir = cacheDir();
+    const count = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(".json")).length : 0;
+    fs.rmSync(dir, { recursive: true, force: true });
+    console.log(`😐🗑️  cleared ${count} cached answer(s) from ${path.relative(process.cwd(), dir) || dir}`);
     return 0;
   }
 
