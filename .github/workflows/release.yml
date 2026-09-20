@@ -99,11 +99,13 @@ jobs:
         run: git push "https://x-access-token:$TOKEN@github.com/${{ github.repository }}.git" "HEAD:main"
 
       # prepack runs gen:skill && build, so no separate build step. A publish
-      # that fails because the version already exists (a previous run published
-      # and then died pushing the tag) is fine: fall through to push the tag.
+      # that fails because this very commit was already published (a previous
+      # run died pushing the tag) is fine: fall through to push the tag. npm
+      # records the publishing commit as gitHead, so a different commit is not.
       - name: publish
         if: steps.check.outputs.publish == 'true'
-        run: npm publish || npm view "@stardeckai/lgtm@${{ steps.check.outputs.version }}" version
+        run: |
+          npm publish || [ "$(npm view "@stardeckai/lgtm@${{ steps.check.outputs.version }}" gitHead)" = "$(git rev-parse HEAD)" ]
 
       - name: push the tag
         if: steps.check.outputs.publish == 'true'
