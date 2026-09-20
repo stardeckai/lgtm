@@ -1,0 +1,10 @@
+# Shapes what `gh release create --generate-notes` writes. Matching is by label:
+# dependabot applies `dependencies` itself, and the author login is
+# `dependabot[bot]`, which is why an `authors: [dependabot]` rule matched nothing.
+# First matching category wins, so the catch-all goes last.
+changelog:
+  categories:
+    - title: Dependencies
+      labels: [dependencies]
+    - title: Changes
+      labels: ["*"]

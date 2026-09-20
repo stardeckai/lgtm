@@ -82,6 +82,23 @@ jobs:
         if: steps.check.outputs.publish == 'true'
         run: npm publish
 
+      # Not gated on publishing: it releases whatever tag is current and has no
+      # release yet, so a run that published but died here is repaired by the
+      # next push to main. Idempotent, so it needs no continue-on-error — a real
+      # failure goes red instead of hiding behind a green job.
+      - name: create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.check.outputs.version }}
+        run: |
+          if ! git ls-remote --exit-code --tags origin "v$VERSION" >/dev/null 2>&1; then
+            echo "no v$VERSION tag on the remote; nothing to release"
+          elif gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "release v$VERSION already exists"
+          else
+            gh release create "v$VERSION" --title "v$VERSION" --verify-tag --generate-notes
+          fi
+
       - name: comment on the released PR
         if: steps.check.outputs.publish == 'true'
         continue-on-error: true  # a missing comment must not fail a shipped release
