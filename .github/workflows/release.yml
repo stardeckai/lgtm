@@ -1,0 +1,97 @@
+name: release
+
+# Two ways in, one guard: publish only when package.json's version is not on the
+# registry yet. A dispatch bump pushes a version commit to main, which fires the
+# push run, which then sees the version already published and skips.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: version bump
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+permissions:
+  contents: write
+  id-token: write  # npm trusted publishing
+  pull-requests: write  # "shipped in vX" comment
+
+# Serialized so two releases cannot race the tag. GitHub keeps at most one
+# running plus one pending run per group, so a burst of pushes drops the
+# intermediate pending runs — harmless here, because every run does the same
+# guarded publish off main's HEAD, and the last one always executes.
+concurrency: release
+
+jobs:
+  release:
+    # A dispatch can name any ref, and this job holds npm publish rights.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - name: remember the pre-bump commit
+        id: head
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1  # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@11.19.1  # trusted publishing needs npm >= 11.5.1
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+
+      - name: bump version
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          npm version ${{ inputs.bump }} -m "chore: release v%s"
+
+      - name: is this version already on npm?
+        id: check
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if npm view "@stardeckai/lgtm@$version" version >/dev/null 2>&1; then
+            publish=false
+          else
+            publish=true
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          echo "v$version — publish=$publish" >> "$GITHUB_STEP_SUMMARY"
+
+      # Push BEFORE publish. A rejected push (main advanced, branch protection)
+      # then costs nothing, and a failed publish after it is retried by the run
+      # this very push triggers. Publishing first is the one unrecoverable order:
+      # npm versions are immutable, so the guard would skip the retry forever.
+      - name: push the version commit and tag
+        if: steps.check.outputs.publish == 'true'
+        run: |
+          version="${{ steps.check.outputs.version }}"
+          git tag -a "v$version" -m "v$version" 2>/dev/null || true  # dispatch's npm version already made one
+          git push origin "HEAD:main" "v$version"
+
+      # prepack runs gen:skill && build, so no separate build step.
+      - name: publish
+        if: steps.check.outputs.publish == 'true'
+        run: npm publish
+
+      - name: comment on the released PR
+        if: steps.check.outputs.publish == 'true'
+        continue-on-error: true  # a missing comment must not fail a shipped release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ steps.head.outputs.sha }}
+          VERSION: ${{ steps.check.outputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          body="📦 Shipped in [\`v$VERSION\`](https://www.npmjs.com/package/@stardeckai/lgtm/v/$VERSION) — \`npm i @stardeckai/lgtm@$VERSION\`"
+          for pr in $(gh api "repos/$REPO/commits/$SHA/pulls" --jq '.[].number'); do
+            gh pr comment "$pr" --body "$body"
+          done

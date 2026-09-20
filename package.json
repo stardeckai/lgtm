@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "A Jev-powered linter for tests that pass but prove nothing.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stardeckai/lgtm.git"
+  },
   "type": "module",
   "bin": {
     "lgtm": "dist/cli.js"
