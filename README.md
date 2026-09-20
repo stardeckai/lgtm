@@ -1,20 +1,17 @@
 # 😐👍...lgtm?
 
-A Jev-powered linter for tests that pass but prove nothing.
+A Jev-powered linter for tests that pass but prove nothing. BYO TypeSafe API key.
 
 <img src="public/findings.png" alt="lgtm findings: file:line, the check, its probability and a one-line reason">
 
 Your agent wrote 40 tests. They're all green. What do they prove? lgtm reads every test block with its
-implementation and tells you which ones would still pass if the code were broken: the mocked seam, the vacuous
-assertion, the expected value computed with the code under test. One line per finding: `file:line`, the check,
-a probability, and why.
+implementation and tells you which ones would still pass if the code were broken.
 
-It runs on [TypeSafe](https://typesafe.ai)'s Jev model, so a whole suite costs cents and a PR costs nothing you
-would notice. Bring your own key.
+It runs on [TypeSafe](https://typesafe.ai)'s Jev model, so a whole suite costs cents and a PR costs nothing you would notice.
 
 ## What you get
 
-- the `lgtm` CLI: run it on a file, a directory or `--diff origin/main`, in your terminal or in CI
+- the `lgtm` CLI: run it on a file, a directory or `--diff`, in your terminal or in CI
 - a `/lgtm` skill for your coding agents, so the agent that wrote the tests runs the audit and fixes what it finds
 
 ## Install
@@ -36,13 +33,10 @@ pnpm add -D @stardeckai/lgtm   # then: pnpm lgtm ...   (npm: npx lgtm ...)
 lgtm init                    # paste your API key, then install the /lgtm skill
 ```
 
-`init` does two things.
+It asks for your TypeSafe API key (get one at <https://typesafe.ai>), then asks whether to install the
+`/lgtm` skill with `npx skills`.
 
-1. Saves the key to `~/.config/lgtm/config.json` (mode 0600). `TYPESAFE_API_KEY` in the environment always
-   wins over it. Get a key at <https://typesafe.ai>.
-2. Offers to install the `/lgtm` skill, which teaches your coding agents to run `lgtm` and act on the
-   findings. It hands the bundled skill to the [`skills`](https://www.npmjs.com/package/skills) CLI, which
-   asks which agents you want it in, globally or in this project only.
+The key lands in `~/.config/lgtm/config.json` (mode 0600); `TYPESAFE_API_KEY` in the environment wins over it.
 
 Skip the prompts with `--skill <where>`:
 
@@ -63,6 +57,7 @@ Running `lgtm` before setup exits with `😐✋  No API key. Run: lgtm init`.
 lgtm                       # every *.test.* / *.spec.* file under the cwd
 lgtm src/user.test.ts      # one file, or a directory
 lgtm --diff origin/main    # only tests changed vs a base, with the diff as evidence
+lgtm --diff                # just what you're working on: changed and new tests, plus tests of changed code, vs the default branch
 lgtm --dry-run src         # only the plan: files, estimated cost and runtime; no key needed
 ```
 
@@ -100,7 +95,8 @@ or `😐🫵  N tests prove nothing.` `--format github` and `--format json` stay
 
 | flag | |
 |---|---|
-| `--diff <base>` | only test files changed vs `<base>` (two-dot, so uncommitted edits count), and put the diff in the state |
+| `--diff [base]` | only the tests your change touches, with the diff in the state. Without a base it uses the repo's default branch (`origin/HEAD`, else `origin/main`, else `main`, else `master`), and always compares against `git merge-base <base> HEAD`, so a branch that is behind does not report the base's own commits. Counts uncommitted and untracked files, keeps only the test blocks that overlap a changed line, and adds any test whose imports include a changed source file (all of its blocks). The two diff checks only run on blocks the diff touched |
+| `--diff-all-blocks` | with `--diff`, audit every block of a changed file instead of only the changed ones |
 | `--threshold <0..1>` | override every check's threshold |
 | `--only <ids,…>` / `--skip <ids,…>` | pick checks |
 | `--format text\|github\|json` | `github` emits `::warning` annotations |

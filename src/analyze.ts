@@ -34,6 +34,7 @@ const MODEL_TAG = "jev-latest";
 // Reword a check and the cached answers for it must not be reused.
 const VERSION: string = createRequire(import.meta.url)("../package.json").version;
 const SOURCE_EXTS = [".ts", ".tsx", ".js", ".jsx", ".mts", ".cts"];
+export const TEST_FILE = /\.(test|spec)\.(ts|tsx|js|jsx|mts|cts)$/;
 
 export type State = {
   test_name: string;
@@ -49,7 +50,13 @@ export type State = {
   diff?: string;
 };
 
-export type Job = { block: TestBlock; state: State };
+export type Job = {
+  block: TestBlock;
+  state: State;
+  /** false for a block the diff did not touch (an old block of a touched file, or a test pulled in by changed
+   *  implementation): it still gets the diff and every other check, but not the diff-only ones. */
+  touched?: boolean;
+};
 
 export type Finding = {
   file: string;
@@ -182,7 +189,7 @@ function resolveAlias(fromFile: string, spec: string): string | null {
 }
 
 /** Resolve an import to a file on disk: relative specifiers, plus tsconfig path aliases. */
-function resolveImport(fromFile: string, spec: string): string | null {
+export function resolveImport(fromFile: string, spec: string): string | null {
   if (spec.startsWith(".") || path.isAbsolute(spec)) {
     return resolveBase(path.resolve(path.dirname(fromFile), spec));
   }
@@ -282,9 +289,134 @@ export function fitBudget(state: State, budget = STATE_BUDGET): { field: string;
   return trims;
 }
 
+export type Range = [number, number];
+
+/** Runs git and returns trimmed stdout; throws when git does. Probes fail on purpose, so stderr is dropped. */
+export type GitRun = (args: string[]) => string;
+const gitRun: GitRun = (args) =>
+  execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+
+const tryGit = (run: GitRun, args: string[]): string | null => {
+  try {
+    return run(args);
+  } catch {
+    return null;
+  }
+};
+
+/** The branch a bare `--diff` compares against: origin's HEAD, else origin/main, else main, else master. */
+export function defaultDiffBase(run: GitRun = gitRun): string {
+  const head = tryGit(run, ["symbolic-ref", "-q", "refs/remotes/origin/HEAD"]);
+  if (head) return head.trim().replace(/^refs\/remotes\//, "");
+  for (const ref of ["origin/main", "main", "master"]) {
+    if (tryGit(run, ["rev-parse", "--verify", "--quiet", ref])) return ref;
+  }
+  throw new Error("--diff: no default branch found (tried origin/HEAD, origin/main, main, master) — pass --diff <ref>");
+}
+
+/** New-side line ranges of a `git diff -U0` output. A pure deletion (`+c,0`) counts as touching line c. */
+export function changedRanges(hunks: string): Range[] {
+  const out: Range[] = [];
+  for (const m of hunks.matchAll(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/gm)) {
+    const start = Number(m[1]);
+    const count = m[2] === undefined ? 1 : Number(m[2]);
+    out.push([start, count === 0 ? start : start + count - 1]);
+  }
+  return out;
+}
+
+export function blockTouched(block: { line: number; endLine: number }, ranges: Range[]): boolean {
+  return ranges.some(([from, to]) => block.line <= to && block.endLine >= from);
+}
+
+/** Does this test file import any of `changed`, one hop, through the same resolver the states use? */
+function importsAny(file: string, changed: Set<string>): boolean {
+  let source: string;
+  try {
+    source = fs.readFileSync(file, "utf8");
+  } catch {
+    return false;
+  }
+  return extractTests(source, file).imports.some((spec) => {
+    const resolved = resolveImport(file, spec);
+    return resolved !== null && changed.has(resolved);
+  });
+}
+
+export type DiffSelection = {
+  /** the ref as printed in the plan, e.g. "origin/main" */
+  label: string;
+  /** what everything is actually compared against: the merge base of `label` and HEAD */
+  base: string;
+  /** absolute paths of the test files to audit */
+  files: string[];
+  /** keeps only blocks that intersect a changed range; absent with allBlocks */
+  blockFilter?: (file: string, block: TestBlock) => boolean;
+  /** whether this block is itself new or changed — the diff-only checks are meaningless otherwise */
+  touched: (file: string, block: TestBlock) => boolean;
+};
+
+/**
+ * The tests affected by the work in progress: test files changed vs the merge base (tracked or untracked),
+ * plus tests whose one-hop imports include a changed implementation file. `candidates` is only walked when
+ * there is a changed implementation file to match against.
+ */
+export function diffSelection(
+  ref: string | undefined,
+  candidates: () => string[],
+  opts: { allBlocks?: boolean } = {},
+  run: GitRun = gitRun,
+): DiffSelection {
+  const label = ref ?? defaultDiffBase(run);
+  // git's own stderr is swallowed, so say what is wrong instead of failing inside the next command.
+  if (!tryGit(run, ["rev-parse", "--verify", "--quiet", label])) throw new Error(`--diff: unknown ref ${label}`);
+  // A branch behind origin/main must not report main's own commits as its changes.
+  const base = tryGit(run, ["merge-base", label, "HEAD"]) ?? label;
+  const root = run(["rev-parse", "--show-toplevel"]);
+  const changed = [
+    ...run(["diff", "--name-only", base]).split("\n"),
+    ...run(["ls-files", "--others", "--exclude-standard"]).split("\n"),
+  ]
+    .filter(Boolean)
+    .map((f) => path.resolve(root, f))
+    .filter((f) => fs.existsSync(f));
+
+  const changedTests = changed.filter((f) => TEST_FILE.test(f));
+  const changedImpl = new Set(changed.filter((f) => !TEST_FILE.test(f) && SOURCE_EXTS.includes(path.extname(f))));
+  // The test did not move but the code under it did, so the whole file is back in scope.
+  const viaImpl =
+    changedImpl.size === 0
+      ? []
+      : candidates().filter((f) => !changedTests.includes(f) && importsAny(f, changedImpl));
+  const files = [...changedTests, ...viaImpl];
+
+  const ranges = new Map<string, Range[]>();
+  // Untracked files diff to nothing; an empty range list means the whole file is new.
+  for (const file of changedTests) ranges.set(file, changedRanges(run(["diff", "-U0", base, "--", file])));
+  const touched = (file: string, block: TestBlock) => {
+    const hit = ranges.get(path.resolve(file));
+    return hit !== undefined && (hit.length === 0 || blockTouched(block, hit));
+  };
+  // A file pulled in by its changed implementation has no ranges: keep all of its blocks, touched or not.
+  const blockFilter = (file: string, block: TestBlock) => !ranges.has(path.resolve(file)) || touched(file, block);
+  return { label, base, files, touched, ...(opts.allBlocks ? {} : { blockFilter }) };
+}
+
 function gitDiff(base: string, files: string[]): string | undefined {
   try {
-    return cap(execFileSync("git", ["diff", base, "--", ...files], { encoding: "utf8" }), DIFF_CAP);
+    const tracked = execFileSync("git", ["diff", base, "--", ...files], { encoding: "utf8" });
+    // An untracked file has no diff against any base; show it as wholly added so the diff checks can see it.
+    const known = new Set(execFileSync("git", ["ls-files", "--", ...files], { encoding: "utf8" }).split("\n").filter(Boolean));
+    const added = files
+      .filter((f) => !known.has(path.relative(process.cwd(), path.resolve(f)))) // ls-files prints cwd-relative paths
+      .map((f) => {
+        try {
+          return execFileSync("git", ["diff", "--no-index", "--", "/dev/null", f], { encoding: "utf8" });
+        } catch (err) {
+          return String((err as { stdout?: string }).stdout ?? ""); // exits 1 when the file is non-empty
+        }
+      });
+    return cap([tracked, ...added].join(""), DIFF_CAP);
   } catch (err) {
     console.warn(`[lgtm] git diff ${base} failed: ${(err as Error).message}`);
     return undefined;
@@ -292,7 +424,16 @@ function gitDiff(base: string, files: string[]): string | undefined {
 }
 
 /** Read test files and build one state per test block. */
-export function buildStates(files: string[], opts: { impl: boolean; diffBase?: string; lean?: boolean }): Job[] {
+export function buildStates(
+  files: string[],
+  opts: {
+    impl: boolean;
+    diffBase?: string;
+    lean?: boolean;
+    blockFilter?: (file: string, block: TestBlock) => boolean;
+    touched?: (file: string, block: TestBlock) => boolean;
+  },
+): Job[] {
   const jobs: Job[] = [];
   const guidelineCache = new Map<string, string | undefined>();
   for (const file of files) {
@@ -328,12 +469,14 @@ export function buildStates(files: string[], opts: { impl: boolean; diffBase?: s
     const guidelines = guidelineCache.get(path.dirname(path.resolve(file)));
 
     for (const block of tests) {
+      if (opts.blockFilter && !opts.blockFilter(file, block)) continue;
       const siblings = tests
         .filter((t) => t !== block)
         .map((t) => `${t.line}: ${[...t.describePath, t.name].join(" > ")}`)
         .join("\n");
       jobs.push({
         block,
+        ...(opts.touched ? { touched: opts.touched(file, block) } : {}),
         state: {
           test_name: block.name,
           describe_path: block.describePath.join(" > "),
@@ -357,11 +500,14 @@ export function buildStates(files: string[], opts: { impl: boolean; diffBase?: s
   return jobs;
 }
 
-/** The checks to send for a given state, honoring --only/--skip and diff availability. */
-export function checksFor(state: State, opts: AnalyzeOptions) {
+/**
+ * The checks to send for a given state, honoring --only/--skip and diff availability. The diff-only checks
+ * also need the block itself to be new or changed; on an untouched block they only ever misfire.
+ */
+export function checksFor(state: State, opts: AnalyzeOptions, touched = true) {
   return CHECKS.filter(
     (c) =>
-      (!c.diffOnly || state.diff !== undefined) &&
+      (!c.diffOnly || (state.diff !== undefined && touched)) &&
       (!opts.only || opts.only.includes(c.id)) &&
       !(opts.skip ?? []).includes(c.id),
   );
@@ -370,7 +516,7 @@ export function checksFor(state: State, opts: AnalyzeOptions) {
 /** Whether a block's answer is already on disk for these options — the plan uses it to estimate only the misses. */
 export function isCached(job: Job, opts: AnalyzeOptions): boolean {
   if (!opts.cacheDir) return false;
-  const checks = checksFor(job.state, opts);
+  const checks = checksFor(job.state, opts, job.touched);
   return checks.length > 0 && fs.existsSync(cachePath(opts.cacheDir, job.state, checks));
 }
 
@@ -390,7 +536,7 @@ export async function analyze(jobs: Job[], opts: AnalyzeOptions, client: Client)
   let model: string | undefined;
 
   const run = async (job: Job) => {
-    const checks = checksFor(job.state, opts);
+    const checks = checksFor(job.state, opts, job.touched);
     const file = opts.cacheDir ? cachePath(opts.cacheDir, job.state, checks) : undefined;
 
     let answers: Answers | undefined;

@@ -5,14 +5,13 @@ import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { AuthenticationError, TypeSafeClient } from "@typesafe-ai/sdk";
-import { analyze, buildStates, checksFor, isCached, type AnalyzeOptions, type Job } from "./analyze.js";
+import { analyze, buildStates, checksFor, diffSelection, isCached, TEST_FILE, type AnalyzeOptions, type Job } from "./analyze.js";
 import { CATEGORY_OF, CHECKS, GESTURE, usd } from "./checks/index.js";
 import { askKey, askSkillMode, init, installSkill, resolveApiKey, saveKey, SKILL_MODES, type SkillMode } from "./init.js";
 import { c, formatClasses, formatReport, real, tests, type Format } from "./report.js";
 import { ignoreMatcher } from "./ignore.js";
 import readline from "node:readline/promises";
 
-const TEST_FILE = /\.(test|spec)\.(ts|tsx|js|jsx|mts|cts)$/;
 const IGNORED_DIRS = new Set(["node_modules", "dist", "build", ".git"]);
 
 const USAGE = `lgtm [files|dirs...]
@@ -24,7 +23,8 @@ const USAGE = `lgtm [files|dirs...]
   --key <value>        (init) use this key instead of prompting
   --skill <where>      (init/skill) global | project | claude | none — skip the prompt
   --yes                run without the confirmation prompt (also: init/skill defaults)
-  --diff <base>        only test files changed vs base, and include the diff in the state
+  --diff [base]        only the tests your change touches (base defaults to the repo's default branch)
+  --diff-all-blocks    with --diff, audit whole changed files instead of only the changed test blocks
   --threshold <0..1>   override every check's threshold
   --only <ids,...>     run only these checks
   --skip <ids,...>     skip these checks
@@ -53,15 +53,7 @@ function walkDir(dir: string, out: string[]): void {
   }
 }
 
-function discover(targets: string[], diffBase?: string, ignore: (file: string) => boolean = () => false): string[] {
-  if (diffBase) {
-    const root = execFileSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8" }).trim();
-    const changed = execFileSync("git", ["diff", "--name-only", diffBase], { encoding: "utf8" })
-      .split("\n")
-      .filter((l) => TEST_FILE.test(l))
-      .map((l) => path.relative(process.cwd(), path.join(root, l)));
-    return changed.filter((f) => fs.existsSync(f) && !ignore(f));
-  }
+function discover(targets: string[], ignore: (file: string) => boolean = () => false): string[] {
   const files: string[] = [];
   for (const target of targets.length > 0 ? targets : ["."]) {
     if (fs.statSync(target).isDirectory()) walkDir(target, files);
@@ -70,10 +62,15 @@ function discover(targets: string[], diffBase?: string, ignore: (file: string) =
   return files.map((f) => path.relative(process.cwd(), path.resolve(f))).filter((f) => !ignore(f));
 }
 
-type PlanFlags = { lean?: boolean; "no-impl"?: boolean; diff?: string };
+/** node:util parseArgs has no optional-value type: a bare `--diff` throws, and `--diff --yes` eats the next flag. */
+function normalizeDiffFlag(argv: string[]): string[] {
+  // Bare when nothing follows, a flag follows, or a path follows (`lgtm --diff src` means "default base, under src").
+  const bare = (next: string | undefined) => next === undefined || next.startsWith("-") || fs.existsSync(next);
+  return argv.map((a, i) => (a === "--diff" && bare(argv[i + 1]) ? "--diff=" : a));
+}
 
 /** The plan for a run: files, checks, estimated cost and runtime. Printed before every run and by --dry-run. */
-function printPlan(jobs: Job[], files: string[], values: PlanFlags, opts: AnalyzeOptions, log = console.log): void {
+function printPlan(jobs: Job[], files: string[], diffLabel: string | undefined, opts: AnalyzeOptions, log = console.log): void {
   const byFile = [...new Set(jobs.map((j) => j.block.file))];
   const fresh = jobs.filter((j) => !isCached(j, opts));
   const cached = jobs.length - fresh.length;
@@ -92,7 +89,13 @@ function printPlan(jobs: Job[], files: string[], values: PlanFlags, opts: Analyz
   if (byFile.length > 8) listed.push(`  … and ${byFile.length - 8} more`);
   const runtime = seconds < 60 ? `${seconds.toFixed(0)}s` : `${(seconds / 60).toFixed(1)} min`;
   const cachedNote = cached > 0 ? c("dim", ` · ${cached} already cached, ${fresh.length} to send`) : "";
-  log(`will run on ${c("bold", tests(jobs.length))} in ${c("bold", `${byFile.length} ${byFile.length === 1 ? "file" : "files"}`)}, ${checksFor(jobs[0]!.state, opts).length} checks each${cachedNote}`);
+  // Blocks a diff did not touch skip the diff-only checks, so the count is a range.
+  const counts = jobs.map((j) => checksFor(j.state, opts, j.touched).length);
+  const low = Math.min(...counts);
+  const high = Math.max(...counts);
+  const checkCount = low === high ? `${high}` : `${low} to ${high}`;
+  log(`will run on ${c("bold", tests(jobs.length))} in ${c("bold", `${byFile.length} ${byFile.length === 1 ? "file" : "files"}`)}, ${checkCount} checks each${cachedNote}`);
+  if (diffLabel) log(c("dim", `changed vs ${diffLabel}`));
   log(c("cyan", listed.join("\n")));
   log(`\nestimated cost:    ${c("yellow", `~${tokens} input tokens`)} ≈ ${c(["green", "bold"], usd(tokens))}`);
   log(`estimated runtime: ${c("yellow", `~${runtime}`)} ${c("dim", `at concurrency ${opts.concurrency ?? 4}`)}`);
@@ -101,12 +104,14 @@ function printPlan(jobs: Job[], files: string[], values: PlanFlags, opts: Analyz
 
 async function main(): Promise<number> {
   const { values, positionals } = parseArgs({
+    args: normalizeDiffFlag(process.argv.slice(2)),
     allowPositionals: true,
     options: {
       key: { type: "string" },
       skill: { type: "string" },
       yes: { type: "boolean" },
       diff: { type: "string" },
+      "diff-all-blocks": { type: "boolean" },
       threshold: { type: "string" },
       only: { type: "string" },
       skip: { type: "string" },
@@ -140,7 +145,7 @@ async function main(): Promise<number> {
 
   if (positionals[0] === "init") {
     for (const file of await init({ key: values.key, skill, yes: values.yes })) console.log(`wrote ${file}`);
-    console.log("😐👍  You're set. Run: lgtm --diff main");
+    console.log("😐👍  You're set. Run: lgtm --diff");
     return 0;
   }
 
@@ -194,10 +199,25 @@ async function main(): Promise<number> {
     return 2;
   }
 
-  const files = discover(positionals, values.diff, ignoreMatcher(values.ignore ?? []));
-  const jobs = buildStates(files, { impl: !values["no-impl"], diffBase: values.diff, lean: values.lean });
+  const ignore = ignoreMatcher(values.ignore ?? []);
+  const selection =
+    values.diff === undefined
+      ? undefined
+      : diffSelection(
+          values.diff || undefined,
+          () => discover(positionals, ignore).map((f) => path.resolve(f)),
+          { allBlocks: values["diff-all-blocks"] },
+        );
+  const files = selection
+    ? selection.files.map((f) => path.relative(process.cwd(), f)).filter((f) => !ignore(f))
+    : discover(positionals, ignore);
+  const jobs = buildStates(files, {
+    impl: !values["no-impl"],
+    ...(selection ? { diffBase: selection.base, touched: selection.touched, ...(selection.blockFilter ? { blockFilter: selection.blockFilter } : {}) } : {}),
+    lean: values.lean,
+  });
   if (jobs.length === 0) {
-    console.error(`no test blocks found in ${files.length} file(s)`);
+    console.error(`no test blocks found in ${files.length} file(s)${selection ? ` changed vs ${selection.label}` : ""}`);
     return 0;
   }
 
@@ -215,14 +235,14 @@ async function main(): Promise<number> {
     console.log(JSON.stringify(jobs.map((job) => ({
       file: job.block.file,
       line: job.block.line,
-      questions: [...checksFor(job.state, opts).map((c) => c.id), "test_class (choice)"],
+      questions: [...checksFor(job.state, opts, job.touched).map((c) => c.id), "test_class (choice)"],
       state: job.state,
     })), null, 2));
     return 0;
   }
 
   // The plan always prints; on json/github it goes to stderr so stdout stays machine-readable.
-  printPlan(jobs, files, values, opts, values["dry-run"] || format === "text" ? console.log : console.error);
+  printPlan(jobs, files, selection?.label, opts, values["dry-run"] || format === "text" ? console.log : console.error);
   if (values["dry-run"]) return 0;
   if (!values.yes) {
     if (!process.stdin.isTTY) {
@@ -291,10 +311,13 @@ function cacheDir(): string {
   return path.join(base, ".cache", "lgtm");
 }
 
+// exitCode, not exit(): exit() drops piped stdout past ~64 KB (json output into a pipe).
 main().then(
-  (code) => process.exit(code),
+  (code) => {
+    process.exitCode = code;
+  },
   (err) => {
     console.error(err);
-    process.exit(2);
+    process.exitCode = 2;
   },
 );

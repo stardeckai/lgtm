@@ -24,10 +24,12 @@ description: Run the lgtm test linter on the current branch or a path and act on
 
 # lgtm
 
-First run \`lgtm --diff <default branch>\` (or \`lgtm <path>\` when the user named a path) without \`--yes\`: in a
-non-interactive shell it only prints the plan — files, estimated cost and runtime — and exits. Tell the user the
-estimate in one line. Then run the same command again with \`--yes --format json\` to actually analyse
-(for example \`lgtm --diff origin/main --yes --format json\`). Add \`--lean\` if the estimate is large.
+First run \`lgtm --diff\` (bare: it scopes to the tests you changed, the tests you added, and the tests of
+implementation you changed, against the default branch), or \`lgtm <path>\` when the user named a path, without
+\`--yes\`: in a non-interactive shell it only prints the plan — files, estimated cost and runtime — and exits. Tell
+the user the estimate in one line. Then run the same command again with \`--yes --format json\` to actually analyse
+(for example \`lgtm --diff --yes --format json\`). The two diff-only checks are asked only about blocks your change
+touched, so an old test in a file you edited is never reported as a weak regression test.
 
 \`lgtm\` is usually installed globally; in a repo that depends on it, run \`pnpm lgtm\` / \`npx lgtm\` instead.
 If neither works, do not work around it — tell the user to run \`npm i -g @stardeckai/lgtm && lgtm init\` and stop there.
