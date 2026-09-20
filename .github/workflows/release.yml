@@ -32,11 +32,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with:
-          # A deploy key with write access, listed as a bypass actor on the
-          # "main" ruleset: GITHUB_TOKEN can never bypass "changes must be made
-          # through a pull request", so the version-commit push needs this.
-          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
       - name: remember the pre-bump commit
         id: head
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -75,12 +70,22 @@ jobs:
       # then costs nothing, and a failed publish after it is retried by the run
       # this very push triggers. Publishing first is the one unrecoverable order:
       # npm versions are immutable, so the guard would skip the retry forever.
+      #
+      # Pushed over SSH with a write deploy key listed as a bypass actor on the
+      # "main" ruleset: GITHUB_TOKEN can never bypass "changes must be made
+      # through a pull request". The key is loaded here, not at checkout, so
+      # install scripts, tests and publish hooks never see it.
       - name: push the version commit and tag
         if: steps.check.outputs.publish == 'true'
+        env:
+          DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_KEY }}
         run: |
           version="${{ steps.check.outputs.version }}"
           git tag -a "v$version" -m "v$version" 2>/dev/null || true  # dispatch's npm version already made one
-          git push origin "HEAD:main" "v$version"
+          key=$(mktemp) && printf '%s\n' "$DEPLOY_KEY" > "$key"
+          GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" \
+            git push "git@github.com:${{ github.repository }}.git" "HEAD:main" "v$version"
+          rm -f "$key"
 
       # prepack runs gen:skill && build, so no separate build step.
       - name: publish
