@@ -1,0 +1,9 @@
+# Shapes what `gh release create --generate-notes` writes.
+changelog:
+  categories:
+    - title: Changes
+      labels: ["*"]
+      exclude:
+        authors: [dependabot]
+    - title: Dependencies
+      authors: [dependabot]

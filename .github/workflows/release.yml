@@ -82,6 +82,18 @@ jobs:
         if: steps.check.outputs.publish == 'true'
         run: npm publish
 
+      - name: create the GitHub release
+        if: steps.check.outputs.publish == 'true'
+        continue-on-error: true  # npm already has it; a missing release is fixed by hand
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.check.outputs.version }}
+        run: |
+          gh release create "v$VERSION" \
+            --title "v$VERSION" \
+            --verify-tag \
+            --generate-notes
+
       - name: comment on the released PR
         if: steps.check.outputs.publish == 'true'
         continue-on-error: true  # a missing comment must not fail a shipped release
