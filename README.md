@@ -1,5 +1,9 @@
 # 😐👍...lgtm?
 
+[![npm](https://img.shields.io/npm/v/@stardeckai/lgtm?color=blue)](https://www.npmjs.com/package/@stardeckai/lgtm)
+[![ci](https://img.shields.io/github/actions/workflow/status/stardeckai/lgtm/ci.yml?label=ci)](https://github.com/stardeckai/lgtm/actions/workflows/ci.yml)
+[![license](https://img.shields.io/github/license/stardeckai/lgtm?color=blue)](LICENSE)
+
 Prove that your tests actually test something. Powered by Jev and your own TypeSafe API key.
 
 <img src="public/findings.png" alt="lgtm findings: file:line, the check, its probability and a one-line reason">
