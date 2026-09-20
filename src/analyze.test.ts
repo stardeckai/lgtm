@@ -21,7 +21,7 @@ afterEach(() => {
 const state = (extra: Partial<State> = {}): State => ({
   test_name: "creates the user",
   describe_path: "createUser",
-  test_code: 'it("creates the user", () => { expect(true).toBeDefined(); });',
+  test_code: 'it("creates the user", () => { expect(createUser(seed).id).toBe("u1"); });',
   file_context: "",
   sibling_tests: "",
   ...extra,

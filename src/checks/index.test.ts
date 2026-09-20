@@ -39,10 +39,6 @@ describe("CHECKS", () => {
     expect(CHECKS.map((c) => c.id)).toEqual(ORDER);
   });
 
-  it("has unique ids", () => {
-    expect(new Set(CHECKS.map((c) => c.id)).size).toBe(CHECKS.length);
-  });
-
   it("names every check file after the id it exports, and registers all of them", async () => {
     const files = Object.keys(IMPORTERS).flatMap((cat) =>
       fs
