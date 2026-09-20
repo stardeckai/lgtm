@@ -78,9 +78,10 @@ function line(f: Finding, verbose: boolean): string {
   const blurb = (suspicious ? "Suspicious. " : probable ? "Worth a look. " : "") + (check?.blurb ?? "");
   // severity colour: red = certain, yellow = over threshold but within noise of it, dim = only suspicious
   const tone: Style = suspicious ? "dim" : probable ? "yellow" : "red";
-  const gesture = suspicious ? "😐" : probable ? "😐🤞" : GESTURE[CATEGORY_OF[f.checkId] ?? "scope"];
+  // worth-a-look rows get no gesture at all: yellow and the "Worth a look." blurb already say it
+  const gesture = suspicious ? "😐 " : probable ? "" : GESTURE[CATEGORY_OF[f.checkId] ?? "scope"] + " ";
   const score = verbose ? ` ${c(tone, p(f.probability))}` : "";
-  return `  ${gesture} ${c([tone, "bold"], f.checkId)}${score} ${c("dim", "— " + blurb)}`;
+  return `  ${gesture}${c([tone, "bold"], f.checkId)}${score} ${c("dim", "— " + blurb)}`;
 }
 
 /** Findings grouped per test: one header (location + name), one line per check, a blank line between tests. */
@@ -124,13 +125,14 @@ export function formatReport(findings: Finding[], format: Format, summary: Summa
   const accused = new Set(rows.filter(certain).map((f) => `${f.file}:${f.line}`));
   const lookAt = new Set(rows.filter((f) => real(f) && !certain(f)).map((f) => `${f.file}:${f.line}`));
   for (const k of accused) lookAt.delete(k);
+  const outOf = c("dim", ` out of ${summary.tests} test ${summary.tests === 1 ? "case" : "cases"}.`);
   const out = blocks(rows, summary.verbose ?? false);
   if (out.length > 0) out.push("");
   if (accused.size > 0) {
     const more = lookAt.size > 0 ? c("yellow", ` ${tests(lookAt.size)} more worth a look.`) : "";
-    out.push(`😐🫵  ${c(["red", "bold"], `${tests(accused.size, ["proves", "prove"])} nothing.`)}${more}`);
+    out.push(`😐🫵  ${c(["red", "bold"], `${tests(accused.size, ["proves", "prove"])} nothing,`)}${outOf}${more}`);
   } else if (lookAt.size > 0) {
-    out.push(`😐🤞  ${c(["yellow", "bold"], `${tests(lookAt.size)} worth a look.`)} ${c("dim", "nothing proven, nothing disproven.")}`);
+    out.push(`😐🤞  ${c(["yellow", "bold"], `${tests(lookAt.size)} worth a look,`)}${outOf} ${c("dim", "nothing proven, nothing disproven.")}`);
   } else {
     out.push(`😐👍  ${c("green", `${tests(summary.tests)}. fine...lgtm?`)}`);
   }
