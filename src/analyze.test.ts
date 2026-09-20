@@ -120,6 +120,16 @@ describe("analyze", () => {
     ]);
   });
 
+  it("reports spend the moment a request is billed, so a later throw does not lose it", async () => {
+    // A cache dir that is a file: the answer is billed, then the cache write throws. The caller still knows the cost.
+    const cacheDir = path.join(tmp(), "not-a-dir");
+    fs.writeFileSync(cacheDir, "");
+    const spends: number[] = [];
+
+    await expect(analyze([job()], { cacheDir, onSpend: (t) => spends.push(t) }, fakeClient(0.9).client)).rejects.toThrow();
+    expect(spends).toEqual([42]);
+  });
+
   it("answers a repeated state from the cache instead of calling the API again", async () => {
     const cacheDir = tmp();
     const first = fakeClient(0.9);

@@ -75,6 +75,8 @@ export type AnalyzeOptions = {
   concurrency?: number;
   /** called after each block finishes (answered, cached or skipped) with the running totals */
   onProgress?: (done: number, total: number, inputTokens: number) => void;
+  /** called with the running input-token total the moment a request is billed, so a later throw does not lose the spend */
+  onSpend?: (inputTokens: number) => void;
   /** also report findings from 0.5 up to the threshold */
   verbose?: boolean;
   /** directory for the answer cache; undefined disables caching */
@@ -565,6 +567,7 @@ export async function analyze(jobs: Job[], opts: AnalyzeOptions, client: Client)
         const result = await withRateLimitRetry(() => client.systemOne({ state: job.state, questions }));
         answers = result.answers;
         inputTokens += result.usage.input_tokens;
+        opts.onSpend?.(inputTokens);
         model = result.model;
       } catch (err) {
         if (err instanceof AuthenticationError) throw err;

@@ -35,6 +35,14 @@ describe("usageReport", () => {
     expect(usageReport(Date.now(), undefined, home)).toMatch(/all time\s+\$0\.0420\s+1000000 tokens · 1 run\b/);
   });
 
+  it("skips records that parse but are not runs, instead of throwing or totalling NaN", () => {
+    const home = tmpHome();
+    recordRun({ at: new Date().toISOString(), tokens: 1_000_000 }, home);
+    fs.appendFileSync(usagePath(home), 'null\n{}\n{"at":"x","tokens":"5"}\n{"at":"nonsense","tokens":9}\n');
+
+    expect(usageReport(Date.now(), undefined, home)).toMatch(/all time\s+\$0\.0420\s+1000000 tokens · 1 run\b/);
+  });
+
   it("omits the worktree line outside a repo", () => {
     const home = tmpHome();
     recordRun({ at: new Date().toISOString(), tokens: 1_000_000, worktree: "/w/a" }, home);

@@ -278,6 +278,9 @@ async function main(): Promise<number> {
   let result;
 
   let durationMs = 0;
+  // Tokens are billed the moment a request returns; a later throw (a failed cache write, a revoked key mid-run)
+  // must not lose the spend, so the log is written from a finally, not from the success path.
+  let spent = 0;
   try {
     // 10s per attempt is the SDK default; states can be large, so allow more.
     const client = new TypeSafeClient({ apiKey, timeout: 60_000 });
@@ -290,7 +293,7 @@ async function main(): Promise<number> {
           if (done === total) process.stderr.write("\r" + " ".repeat(60) + "\r");
         }
       : undefined;
-    result = await analyze(jobs, { ...opts, ...(progress ? { onProgress: progress } : {}) }, client);
+    result = await analyze(jobs, { ...opts, onSpend: (t) => (spent = t), ...(progress ? { onProgress: progress } : {}) }, client);
     durationMs = Date.now() - startedAt;
   } catch (err) {
     if (err instanceof AuthenticationError) {
@@ -298,6 +301,8 @@ async function main(): Promise<number> {
       return 2;
     }
     throw err;
+  } finally {
+    if (spent > 0) recordRun({ at: new Date().toISOString(), tokens: spent, worktree: worktreeRoot() });
   }
 
   if (values.classes && format === "text") console.log(formatClasses(result.classes) + "\n");
@@ -312,8 +317,6 @@ async function main(): Promise<number> {
       durationMs,
     }),
   );
-
-  if (result.inputTokens > 0) recordRun({ at: new Date().toISOString(), tokens: result.inputTokens, worktree: worktreeRoot() });
 
   if (values.fail && result.findings.some(real)) return 1;
   if (values["fail-on-error"] && result.skipped > 0) return 1;

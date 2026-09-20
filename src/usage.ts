@@ -7,6 +7,10 @@ import { c } from "./report.js";
 
 export type Run = { at: string; tokens: number; worktree?: string };
 
+/** The log is a file on disk anything can corrupt: `null`, `{}` and string tokens all parse, and would throw or total to NaN. */
+const isRun = (v: unknown): v is Run =>
+  typeof v === "object" && v !== null && Number.isFinite((v as Run).tokens) && !Number.isNaN(Date.parse((v as Run).at));
+
 export const usagePath = (home: string = os.homedir()) => path.join(home, ".config", "lgtm", "usage.jsonl");
 
 /** The worktree root, so runs can be attributed per checkout; undefined outside a repo. */
@@ -36,7 +40,8 @@ function readRuns(home: string = os.homedir()): Run[] {
     .filter(Boolean)
     .flatMap((line) => {
       try {
-        return [JSON.parse(line) as Run];
+        const parsed: unknown = JSON.parse(line);
+        return isRun(parsed) ? [parsed] : [];
       } catch {
         return [];
       }
