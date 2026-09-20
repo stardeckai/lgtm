@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "changed-in-lockstep"],
+  "class": "contract_integration",
+  "why": "the board and the allergen filter are both introduced by this diff and run for real together; nothing here existed before the change, so the test cannot be a regression test that also passed on old code"
+}

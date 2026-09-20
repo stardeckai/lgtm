@@ -718,5 +718,59 @@
     "holdout_f1": 0.4,
     "fitted_t": 0.8,
     "kept": false
+  },
+  {
+    "check": "regression-does-not-distinguish",
+    "variant": "baseline (round 4)",
+    "instructions": "Given `diff`, does this regression test fail to distinguish the pre-fix implementation from the fixed one \u2014 would it have passed before the fix?",
+    "train_f1": 0.69,
+    "holdout_f1": 0.44,
+    "fitted_t": 0.7,
+    "kept": false
+  },
+  {
+    "check": "changed-in-lockstep",
+    "variant": "baseline (round 4)",
+    "instructions": "In `diff`, were the implementation and the test changed in the same way, so the test may simply mirror the new behavior (including a bug) rather than check a requirement?",
+    "train_f1": 0.91,
+    "holdout_f1": 1.0,
+    "fitted_t": 0.75,
+    "kept": false
+  },
+  {
+    "check": "regression-does-not-distinguish",
+    "variant": "new-code gate (all-additions \u2192 no) + two look-alikes",
+    "instructions": "Procedure. 1. In `diff`, find the code this test exercises. If it is all additions \u2014 a new function, file or export with no removed (`-`) counterpart \u2014 that behaviour did not exist before the change and the question has no pre-change side: answer no. 2. Otherwise name the modified function, guard, mapping or constant, name the input whose result the change altered, and find whether an assertion here pins that changed output. 3. Answer yes only when every assertion also holds against the pre-change code. Look-alikes: a fixture that never reaches the changed lines is yes; a test feeding the changed input and asserting the new output is no.",
+    "train_f1": 0.82,
+    "holdout_f1": 0.67,
+    "fitted_t": 0.35,
+    "kept": false
+  },
+  {
+    "check": "regression-does-not-distinguish",
+    "variant": "new-code gate + name-the-changed-input search",
+    "instructions": "Procedure. 1. In `diff`, find the code this test exercises. All additions \u2014 a new function, file or export with no removed (`-`) line \u2014 means the behaviour is new rather than fixed: answer no. 2. Otherwise name the input whose result the change altered: the value that takes the new branch, trips the added guard, or hits the edited constant or mapping entry. 3. Search `test_code` for that input. If it is absent, or appears only where the old and new code agree, the test never sees the fix: answer yes. 4. Answer no only when an assertion feeds that input and pins the changed output.",
+    "train_f1": 0.92,
+    "holdout_f1": 0.86,
+    "fitted_t": 0.35,
+    "kept": true
+  },
+  {
+    "check": "regression-does-not-distinguish",
+    "variant": "+ 'outcome reached through an older rule' look-alike",
+    "instructions": "Procedure. 1. In `diff`, find the code this test exercises. All additions \u2014 a new function, file or export with no removed (`-`) line \u2014 means the behaviour is new rather than fixed: answer no. 2. Otherwise name the input whose result the change altered: the value taking the new branch, tripping the added guard, or hitting the edited constant or mapping. 3. Search `test_code` for that exact input. Absent, or present only where old and new agree, or reaching the expected outcome through an older rule that already applied: answer yes. 4. Answer no only when an assertion feeds that input and pins the changed output.",
+    "train_f1": 0.92,
+    "holdout_f1": 0.5,
+    "fitted_t": 0.35,
+    "kept": false
+  },
+  {
+    "check": "changed-in-lockstep",
+    "variant": "new-code gate (all-additions test file) + pair-expectation-to-impl-line (full-run numbers)",
+    "instructions": "Procedure. 1. Look at the test file's side of `diff`. If it is all additions \\u2014 no removed (`-`) assertion line \\u2014 nothing was rewritten to match the implementation: answer no. 2. Otherwise pair each edited expectation with the implementation line in `diff` that produces it. Answer yes when an expected literal that already existed was rewritten to the new output, so the test now records the change instead of requiring it. Answer no when the asserted values are unchanged and only the call shape, signature or types moved, or when the expectation states a requirement decided independently of the implementation.",
+    "train_f1": 0.96,
+    "holdout_f1": 1.0,
+    "fitted_t": 0.75,
+    "kept": true
   }
 ]

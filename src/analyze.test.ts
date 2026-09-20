@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
-import type { Questions } from "@typesafe-ai/sdk";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { APIError, AuthenticationError, type Questions } from "@typesafe-ai/sdk";
 import { analyze, buildStates, fitBudget, type Client, type Job, type State } from "./analyze.js";
 import { CHECKS, type TestClass } from "./checks/index.js";
 
@@ -401,5 +401,63 @@ describe("buildStates path aliases", () => {
     fs.writeFileSync(path.join(dir, "react", "index.ts"), "export const x = 1;\n");
 
     expect(buildStates([testFile(dir, "react")], { impl: true })[0]!.state.implementation).toBeUndefined();
+  });
+});
+
+describe("analyze API errors", () => {
+  /** A client that fails `failures` times with the given error before answering like fakeClient(0.9). */
+  function flakyClient(failures: number, error: Error) {
+    const good = fakeClient(0.9);
+    let calls = 0;
+    const client: Client = {
+      async systemOne(request) {
+        calls += 1;
+        if (calls <= failures) throw error;
+        return good.client.systemOne(request);
+      },
+    };
+    return { client, calls: () => calls };
+  }
+  const rateLimited = () => new APIError(429, { error: "Rate limit exceeded" }, new Headers(), "429 Rate limit exceeded");
+
+  it("retries a 429 with backoff and reports the eventual answer as if it never failed", async () => {
+    vi.useFakeTimers();
+    try {
+      const flaky = flakyClient(2, rateLimited());
+      const pending = analyze([job()], { only: ["vacuous-assertion"], threshold: 0.8 }, flaky.client);
+      await vi.runAllTimersAsync();
+      const result = await pending;
+      expect(flaky.calls()).toBe(3);
+      expect(result.skipped).toBe(0);
+      expect(result.findings.map((f) => [f.checkId, f.probability])).toEqual([["vacuous-assertion", 0.9]]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("gives up on a 429 after four attempts and counts the block as skipped, not as clean", async () => {
+    vi.useFakeTimers();
+    try {
+      const flaky = flakyClient(99, rateLimited());
+      const pending = analyze([job()], { only: ["vacuous-assertion"], threshold: 0.8 }, flaky.client);
+      await vi.runAllTimersAsync();
+      const result = await pending;
+      expect(flaky.calls()).toBe(4);
+      expect(result.skipped).toBe(1);
+      expect(result.findings).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("does not retry other API errors and rethrows an authentication error", async () => {
+    const server = flakyClient(99, new APIError(500, {}, new Headers(), "500 boom"));
+    const result = await analyze([job()], { only: ["vacuous-assertion"] }, server.client);
+    expect(server.calls()).toBe(1);
+    expect(result.skipped).toBe(1);
+
+    const auth = flakyClient(99, new AuthenticationError(401, {}, new Headers(), "401 bad key"));
+    await expect(analyze([job()], { only: ["vacuous-assertion"] }, auth.client)).rejects.toBeInstanceOf(AuthenticationError);
+    expect(auth.calls()).toBe(1);
   });
 });

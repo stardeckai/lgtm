@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "changed-in-lockstep"],
+  "class": "pure_logic",
+  "why": "launchWindows is appended to a module whose existing deepestTide is untouched by the diff, so the test exercises only code that did not exist before"
+}

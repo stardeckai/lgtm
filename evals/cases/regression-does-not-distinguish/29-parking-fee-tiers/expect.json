@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "changed-in-lockstep"],
+  "class": "pure_logic",
+  "why": "the whole fee table arrives in this diff as a new file beside an untouched zones module, so the expected amounts state a new tariff rather than restating an implementation that already existed"
+}

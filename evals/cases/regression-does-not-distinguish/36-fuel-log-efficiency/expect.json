@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "changed-in-lockstep"],
+  "class": "pure_logic",
+  "why": "litresPerHundredKm is added by this diff beside an untouched totalLitres; the opening-fill rule the test pins is new behaviour, not a corrected one"
+}

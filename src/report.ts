@@ -92,7 +92,7 @@ export function formatReport(findings: Finding[], format: Format, summary: Summa
     const checks = Object.fromEntries(
       used.map((id) => {
         const check = BY_ID.get(id);
-        return [id, { emoji: check?.emoji, blurb: check?.blurb, threshold: check?.threshold, explanation: EXPLANATIONS[id] }];
+        return [id, { emoji: GESTURE[CATEGORY_OF[id] ?? "scope"], blurb: check?.blurb, threshold: check?.threshold, explanation: EXPLANATIONS[id] }];
       }),
     );
     return JSON.stringify({ findings: rows, checks, ...summary, distribution: distribution(summary.classes) }, null, 2);

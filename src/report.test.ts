@@ -38,7 +38,7 @@ describe("formatReport", () => {
     ) as { findings: unknown[]; checks: Record<string, { explanation: string; emoji: string; threshold: number }> };
     expect(Object.keys(out.checks).sort()).toEqual(["mocks-seam-under-test", "over-mocked"]);
     expect(out.checks["mocks-seam-under-test"]!.explanation).toMatch(/scripted mock/);
-    expect(out.checks["over-mocked"]!.emoji).toBe("🧱");
+    expect(out.checks["over-mocked"]!.emoji).toBe("😐👏"); // the family gesture, same as the text output
     expect(JSON.stringify(out.findings)).not.toContain("explanation");
   });
 

@@ -10,5 +10,5 @@ export default {
     true: "Every asserted value came out of a fake; the decision the name promises is stubbed.",
     false: "Real code on the asserted path decides an asserted value, or the swapped module is a real test store.",
   },
-  threshold: 0.60,
+  threshold: 0.55,
 } satisfies Check;

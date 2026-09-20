@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish"],
+  "class": "pure_logic",
+  "why": "the diff adds the clamp to an existing setSetpoint and the first two assertions feed it 42 and -4, which the pre-change code returned unchanged, so the test goes red without the fix"
+}

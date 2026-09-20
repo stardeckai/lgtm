@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { blockTouched, buildStates, changedRanges, checksFor, defaultDiffBase, diffSelection, type GitRun, type State } from "./analyze.js";
+import { blockTouched, buildStates, changedRanges, checksFor, defaultDiffBase, diffSelection, type GitRun, type State, normalizeDiffFlag } from "./analyze.js";
 import { CHECKS } from "./checks/index.js";
 
 describe("changedRanges", () => {
@@ -191,5 +191,27 @@ describe("diffSelection in a real repo", () => {
       ["one", false],
       ["two changed", true],
     ]);
+  });
+});
+
+describe("normalizeDiffFlag", () => {
+  const exists = (p: string) => p === "src";
+
+  it("treats --diff as bare when nothing, a flag or an existing path follows, and keeps a ref", () => {
+    expect(normalizeDiffFlag(["--diff"], exists)).toEqual(["--diff="]);
+    expect(normalizeDiffFlag(["--diff", "--yes"], exists)).toEqual(["--diff=", "--yes"]);
+    // `lgtm --diff src` scopes to src against the default base; src must not be parsed as the ref.
+    expect(normalizeDiffFlag(["--diff", "src"], exists)).toEqual(["--diff=", "src"]);
+    expect(normalizeDiffFlag(["--diff", "origin/main", "src"], exists)).toEqual(["--diff", "origin/main", "src"]);
+  });
+});
+
+describe("diffSelection refusals", () => {
+  it("names an unknown ref instead of failing inside a later git call", () => {
+    const run = (args: string[]) => {
+      if (args[0] === "rev-parse" && args.includes("nope")) throw new Error("fatal: bad revision");
+      throw new Error(`unexpected git ${args.join(" ")}`);
+    };
+    expect(() => diffSelection("nope", () => [], {}, run)).toThrow("--diff: unknown ref nope");
   });
 });

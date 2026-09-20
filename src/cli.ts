@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { AuthenticationError, TypeSafeClient } from "@typesafe-ai/sdk";
-import { analyze, buildStates, checksFor, diffSelection, isCached, TEST_FILE, type AnalyzeOptions, type Job } from "./analyze.js";
+import { analyze, buildStates, checksFor, diffSelection, isCached, normalizeDiffFlag, TEST_FILE, type AnalyzeOptions, type Job } from "./analyze.js";
 import { CATEGORY_OF, CHECKS, GESTURE, usd } from "./checks/index.js";
 import { askKey, askSkillMode, init, installSkill, resolveApiKey, saveKey, SKILL_MODES, type SkillMode } from "./init.js";
 import { c, formatClasses, formatReport, real, tests, type Format } from "./report.js";
@@ -60,13 +60,6 @@ function discover(targets: string[], ignore: (file: string) => boolean = () => f
     else files.push(target);
   }
   return files.map((f) => path.relative(process.cwd(), path.resolve(f))).filter((f) => !ignore(f));
-}
-
-/** node:util parseArgs has no optional-value type: a bare `--diff` throws, and `--diff --yes` eats the next flag. */
-function normalizeDiffFlag(argv: string[]): string[] {
-  // Bare when nothing follows, a flag follows, or a path follows (`lgtm --diff src` means "default base, under src").
-  const bare = (next: string | undefined) => next === undefined || next.startsWith("-") || fs.existsSync(next);
-  return argv.map((a, i) => (a === "--diff" && bare(argv[i + 1]) ? "--diff=" : a));
 }
 
 /** The plan for a run: files, checks, estimated cost and runtime. Printed before every run and by --dry-run. */
