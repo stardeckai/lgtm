@@ -63,11 +63,14 @@ jobs:
         id: check
         run: |
           version=$(node -p "require('./package.json').version")
-          if git ls-remote --exit-code --tags origin "v$version" >/dev/null 2>&1; then
-            publish=false
-          else
-            publish=true
-          fi
+          # --exit-code: 0 = tag exists, 2 = no such ref; anything else is a
+          # lookup failure and must not be mistaken for "unreleased".
+          git ls-remote --exit-code --tags origin "v$version" >/dev/null && rc=0 || rc=$?
+          case $rc in
+            0) publish=false ;;
+            2) publish=true ;;
+            *) echo "tag lookup failed ($rc)"; exit 1 ;;
+          esac
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "publish=$publish" >> "$GITHUB_OUTPUT"
           echo "v$version — publish=$publish" >> "$GITHUB_STEP_SUMMARY"
@@ -95,10 +98,12 @@ jobs:
           TOKEN: ${{ steps.app.outputs.token }}
         run: git push "https://x-access-token:$TOKEN@github.com/${{ github.repository }}.git" "HEAD:main"
 
-      # prepack runs gen:skill && build, so no separate build step.
+      # prepack runs gen:skill && build, so no separate build step. A publish
+      # that fails because the version already exists (a previous run published
+      # and then died pushing the tag) is fine: fall through to push the tag.
       - name: publish
         if: steps.check.outputs.publish == 'true'
-        run: npm publish
+        run: npm publish || npm view "@stardeckai/lgtm@${{ steps.check.outputs.version }}" version
 
       - name: push the tag
         if: steps.check.outputs.publish == 'true'
