@@ -60,9 +60,8 @@ svg{width:100%;height:auto;display:block;overflow:visible}
 <div id="checks"></div>
 <div class="tip" id="tip"></div>
 <p class="foot">Curves on the right: precision (blue) and recall (orange) of the current selection if the threshold were set at each x. Hover a dot for the case. Public cases are named by their slug in <code>evals/cases</code>; private cases are numbered.</p>
-<script type="application/json" id="data">/*DATA*/</script>
 <script>
-const D=JSON.parse(document.getElementById('data').textContent);
+const D=/*DATA*/;
 const state={origin:'all',split:'all',sort:'recall'};
 const HI=0.15, W=640, H=118, PAD={l:8,r:8,t:14,b:26};
 const x=p=>PAD.l+(W-PAD.l-PAD.r)*p;
