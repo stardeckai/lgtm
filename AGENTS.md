@@ -55,7 +55,7 @@ and reports the ones that come back confident. Read `README.md` first; this file
   fenced, one hop of implementation through relative and tsconfig-`paths` imports, sibling test names, repo testing
   guidelines, optional git diff), `fitBudget()` trims to 100k chars, `analyze()` calls `systemOne` with a per-block
   cache and a concurrency pool.
-- `src/checks/<category>/<id>.ts` — one file per check: id, emoji, blurb, `instructions`, `criteria`, `threshold`.
+- `src/checks/<category>/<id>.ts` — one file per check: id, blurb, `instructions`, `criteria`, `threshold`.
   `src/checks/index.ts` registers them in the user-visible order. `src/checks/classes.ts` holds the test-class
   Choice question.
 - `src/report.ts` — text (😐 faces, colour), github annotations, json. `src/cli.ts` — flags, plan-then-confirm flow,

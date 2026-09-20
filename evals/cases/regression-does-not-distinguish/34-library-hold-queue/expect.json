@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "changed-in-lockstep"],
+  "class": "contract_integration",
+  "why": "the queue and the assignment function are both added by this diff and the assertions depend on the two real components agreeing, so there is no pre-change version to compare against"
+}

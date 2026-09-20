@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "changed-in-lockstep"],
+  "class": "pure_logic",
+  "why": "the diff adds shelfBarcode and checkDigit as a brand-new module beside an untouched units helper, so there is no pre-change version of this behaviour for the test to have passed against"
+}

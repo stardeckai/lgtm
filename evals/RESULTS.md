@@ -1,50 +1,49 @@
 # lgtm eval results
 
-768 labelled cases (506 public + 262 private, synthetic + anonymized real-world) · 1455 scored (check, case) pairs · model `jev-1.13.0`
+783 labelled cases (521 public + 262 private, synthetic + anonymized real-world) · 1482 scored (check, case) pairs · model `jev-1.13.0`
 
-Split: 606 train · 162 holdout.
+Split: 618 train · 165 holdout.
 
 ## Per check
 
 | check | pos | neg | own t | train P/R/F1 @own | holdout P/R/F1 @own | P/R/F1 @0.50 | best F1 (train) |
 |---|---|---|---|---|---|---|---|
-| `would-pass-if-broken` | 57 | 42 | 0.60 | 0.96/0.51/0.67 | 1.00/0.36/0.53 | 0.94/0.54/0.69 | 0.85 @ 0.23 |
+| `would-pass-if-broken` | 57 | 42 | 0.60 | 0.96/0.51/0.67 | 1.00/0.36/0.53 | 0.94/0.54/0.69 | 0.87 @ 0.23 |
 | `vacuous-assertion` | 39 | 140 | 0.70 | 1.00/0.71/0.83 | 1.00/0.63/0.77 | 0.92/0.90/0.91 | 0.91 @ 0.45 |
-| `assertion-weaker-than-name` | 60 | 22 | 0.60 | 0.98/0.96/0.97 | 1.00/0.92/0.96 | 0.92/0.95/0.93 | 0.97 @ 0.61 |
-| `reimplements-logic` | 30 | 174 | 0.85 | 1.00/0.71/0.83 | 1.00/0.50/0.67 | 0.81/1.00/0.90 | 0.98 @ 0.62 |
+| `assertion-weaker-than-name` | 60 | 22 | 0.60 | 0.98/0.94/0.96 | 1.00/1.00/1.00 | 0.92/0.95/0.93 | 0.96 @ 0.61 |
+| `reimplements-logic` | 30 | 176 | 0.85 | 1.00/0.71/0.83 | 1.00/0.50/0.67 | 0.81/1.00/0.90 | 0.98 @ 0.62 |
 | `mocks-seam-under-test` | 26 | 95 | 0.80 | 1.00/0.20/0.33 | 1.00/0.33/0.50 | 0.73/0.92/0.81 | 0.88 @ 0.65 |
 | `mock-mirrors-implementation` | 18 | 18 | 0.60 | 1.00/0.93/0.96 | 1.00/0.50/0.67 | 0.95/1.00/0.97 | 0.97 @ 0.50 |
 | `tests-calls-not-outcomes` | 23 | 51 | 0.65 | 1.00/0.84/0.91 | 1.00/1.00/1.00 | 0.78/0.91/0.84 | 0.91 @ 0.67 |
-| `tests-internals` | 23 | 41 | 0.65 | 1.00/0.67/0.80 | 1.00/0.80/0.89 | 0.91/0.87/0.89 | 0.95 @ 0.33 |
+| `tests-internals` | 23 | 41 | 0.65 | 1.00/0.67/0.80 | 1.00/0.80/0.89 | 0.91/0.87/0.89 | 0.92 @ 0.33 |
 | `setup-dominates` | 16 | 44 | 0.60 | 1.00/0.92/0.96 | 1.00/1.00/1.00 | 0.94/1.00/0.97 | 1.00 @ 0.53 |
 | `broad-snapshot` | 16 | 35 | 0.35 | 1.00/0.92/0.96 | 1.00/1.00/1.00 | 1.00/0.81/0.90 | 1.00 @ 0.22 |
-| `swallowed-error-as-success` | 24 | 52 | 0.80 | 1.00/0.37/0.54 | 1.00/0.80/0.89 | 0.92/0.92/0.92 | 0.95 @ 0.57 |
+| `swallowed-error-as-success` | 24 | 52 | 0.80 | 1.00/0.37/0.54 | 1.00/0.80/0.89 | 0.92/0.92/0.92 | 0.92 @ 0.57 |
 | `impossible-fixture` | 16 | 47 | 0.55 | 1.00/0.67/0.80 | 1.00/1.00/1.00 | 1.00/0.88/0.93 | 0.91 @ 0.52 |
-| `happy-path-only-of-risky-boundary` | 22 | 66 | 0.70 | 1.00/0.50/0.67 | 1.00/0.50/0.67 | 0.83/0.86/0.84 | 0.86 @ 0.53 |
-| `trivial-primitive` | 32 | 90 | 0.85 | 1.00/0.64/0.78 | 1.00/0.71/0.83 | 0.76/1.00/0.86 | 0.89 @ 0.61 |
-| `over-mocked` | 24 | 60 | 0.60 | 1.00/0.26/0.42 | —/0.00/— | 0.92/0.50/0.65 | 0.83 @ 0.29 |
-| `regression-does-not-distinguish` | 15 | 11 | 0.35 | 1.00/0.75/0.86 | 1.00/0.33/0.50 | 1.00/0.67/0.80 | 1.00 @ 0.11 |
-| `changed-in-lockstep` | 16 | 10 | 0.75 | 1.00/0.83/0.91 | 1.00/1.00/1.00 | 0.73/1.00/0.84 | 1.00 @ 0.73 |
+| `happy-path-only-of-risky-boundary` | 22 | 66 | 0.70 | 1.00/0.50/0.67 | 1.00/0.50/0.67 | 0.83/0.86/0.84 | 0.88 @ 0.61 |
+| `trivial-primitive` | 32 | 90 | 0.85 | 1.00/0.64/0.78 | 1.00/0.71/0.83 | 0.76/1.00/0.86 | 0.89 @ 0.57 |
+| `over-mocked` | 24 | 60 | 0.55 | 1.00/0.42/0.59 | 1.00/0.20/0.33 | 1.00/0.50/0.67 | 0.81 @ 0.29 |
+| `regression-does-not-distinguish` | 17 | 24 | 0.35 | 1.00/0.85/0.92 | 1.00/0.75/0.86 | 1.00/0.76/0.87 | 0.96 @ 0.23 |
+| `changed-in-lockstep` | 16 | 20 | 0.75 | 1.00/0.92/0.96 | 1.00/1.00/1.00 | 0.89/1.00/0.94 | 1.00 @ 0.74 |
 
-Holdout is one stratified draw per case, ~20% (162); with ~3 held-out positives per check its numbers are a sanity check against overfitting, not a precise estimate.
+Holdout is one stratified draw per case, ~20% (165); with ~3 held-out positives per check its numbers are a sanity check against overfitting, not a precise estimate.
 
 Checks with no labelled case are omitted.
 
 ## Test class
 
-Accuracy — all: 655/768 (0.85) · holdout: 142/162 (0.88).
+Accuracy — all: 665/783 (0.85) · holdout: 145/165 (0.88).
 
 | actual \ predicted | pure_logic | mocked_seam_unit | contract_integration |
 |---|---|---|---|
-| **pure_logic** | 433 | 55 | 12 |
-| **mocked_seam_unit** | 0 | 132 | 7 |
-| **contract_integration** | 24 | 15 | 90 |
+| **pure_logic** | 443 | 56 | 14 |
+| **mocked_seam_unit** | 1 | 131 | 7 |
+| **contract_integration** | 25 | 15 | 91 |
 
 ## Misses (labelled fire, p below the check's own threshold)
 
 - `broad-snapshot/11-schedule-lunch-break` · `broad-snapshot` · p=0.22 · the recorded list of seven slot objects hides the only thing that matters, the single missing midday entry, which one expected array of gaps would state outright
 - `changed-in-lockstep/01-late-fee-grace-period` · `changed-in-lockstep` · p=0.74 · the grace boundary moved by one day and the test's literals were shifted by one day to match it, so the test no longer states the billing rule
-- `changed-in-lockstep/09-payout-rounding-mode` · `changed-in-lockstep` · p=0.73 · the fee rounding switched from floor to round and the expected payout was edited from 1025 to 1024 to match, so the cent the seller loses is decided by the implementation
 - `happy-path-only-of-risky-boundary/04-tenant-scoped-document-read` · `happy-path-only-of-risky-boundary` · p=0.67 · read hides documents belonging to another organisation, and every block reads within one organisation — the unknown-id sibling exercises a different branch
 - `happy-path-only-of-risky-boundary/07-reserve-inventory-optimistic-lock` · `happy-path-only-of-risky-boundary` · p=0.52 · the version column exists to reject a second concurrent reservation built on a stale read, and every block passes the current version
 - `happy-path-only-of-risky-boundary/08-api-key-scope-check` · `happy-path-only-of-risky-boundary` · p=0.65 · the two refusals that matter — a missing scope and a revoked key — are never exercised here or in any sibling, which all use the same fully scoped live key
@@ -71,9 +70,7 @@ Accuracy — all: 655/768 (0.85) · holdout: 142/162 (0.88).
 - `mocks-seam-under-test/16-migration-journal` · `mocks-seam-under-test` · p=0.71 · what makes a migration run once is that recording it changes what the journal reports, and both the read and the write of that journal are fakes that never influence each other
 - `over-mocked/01-invite-route-handler` · `over-mocked` · p=0.48 · auth, validation, persistence and mail are all replaced, so only the handler's four lines of glue are real
 - `over-mocked/02-refund-orchestrator` · `over-mocked` · p=0.50 · every collaborator is a stub tuned so the policy limit and the outstanding balance coincide, leaving no real decision to fail
-- `over-mocked/03-nightly-rollup-job` · `over-mocked` · p=0.58 · the lock, the warehouse, metrics and slack are all faked and the asserted row count comes straight back out of a stub
 - `over-mocked/04-document-export` · `would-pass-if-broken` · p=0.47 · all four collaborators are stubs and the asserted url is the stub's own return, so a wrong storage key passes
-- `over-mocked/05-dashboard-page` · `over-mocked` · p=0.55 · every hook is stubbed and the formatter returns a fixed string, so neither the open-order filter nor the total is exercised
 - `over-mocked/06-graphql-resolver` · `over-mocked` · p=0.52 · the loader, the permission check and the database are all stubbed to agree, and the assertion echoes the loader's own object
 - `over-mocked/07-self-mocked-helpers` · `over-mocked` · p=0.39 · the version bump and manifest building are stubbed out, so choosing a patch bump for 40 files would still report 2.4.0
 - `over-mocked/07-self-mocked-helpers` · `would-pass-if-broken` · p=0.53 · the version bump and manifest building are stubbed out, so choosing a patch bump for 40 files would still report 2.4.0
@@ -83,13 +80,11 @@ Accuracy — all: 655/768 (0.85) · holdout: 142/162 (0.88).
 - `over-mocked/14-dunning-email` · `over-mocked` · p=0.35 · the eligibility decision and the attempt counter are both stubbed, so only string interpolation is left running
 - `over-mocked/15-transaction-wrapper` · `over-mocked` · p=0.35 · the transaction, every query builder and the schema are fakes, so the seat move and audit row are never really written or read
 - `over-mocked/15-transaction-wrapper` · `mocks-seam-under-test` · p=0.58 · the transaction, every query builder and the schema are fakes, so the seat move and audit row are never really written or read
-- `regression-does-not-distinguish/07-reset-token-expiry` · `regression-does-not-distinguish` · p=0.11 · the second redeem is refused only because the token was already used, so the pre-fix code without any TTL check returns the same values
-- `regression-does-not-distinguish/10-zero-decimal-currency` · `regression-does-not-distinguish` · p=0.19 · the fix is about JPY having no minor units, and every row in the table is USD or EUR, which the pre-fix hard-coded two decimals already formatted correctly
-- `regression-does-not-distinguish/12-replay-window-narrowed` · `regression-does-not-distinguish` · p=0.28 · the tolerance moved from 600 to 300 seconds and the test only uses ages of 60 and 1000 seconds, which fall the same side of both limits
-- `regression-does-not-distinguish/13-mention-at-line-start` · `assertion-weaker-than-name` · p=0.38 · every mention in the three strings is preceded by a space, so the pre-fix pattern that required leading whitespace returns the same arrays
-- `regression-does-not-distinguish/15-admin-implies-billing-read` · `regression-does-not-distinguish` · p=0.33 · the admin fixture carries an explicit billing:read grant, so the first assertion is satisfied by the grant list and never reaches the role table the fix changed
-- `regression-does-not-distinguish/16-csv-embedded-quote` · `regression-does-not-distinguish` · p=0.11 · no field in the test contains a double quote, so the pre-fix wrapper that never doubled quotes produces the same three rows
-- `regression-does-not-distinguish/16-csv-embedded-quote` · `assertion-weaker-than-name` · p=0.36 · no field in the test contains a double quote, so the pre-fix wrapper that never doubled quotes produces the same three rows
+- `regression-does-not-distinguish/07-reset-token-expiry` · `regression-does-not-distinguish` · p=0.13 · the second redeem is refused only because the token was already used, so the pre-fix code without any TTL check returns the same values
+- `regression-does-not-distinguish/13-mention-at-line-start` · `assertion-weaker-than-name` · p=0.30 · every mention in the three strings is preceded by a space, so the pre-fix pattern that required leading whitespace returns the same arrays
+- `regression-does-not-distinguish/15-admin-implies-billing-read` · `regression-does-not-distinguish` · p=0.23 · the admin fixture carries an explicit billing:read grant, so the first assertion is satisfied by the grant list and never reaches the role table the fix changed
+- `regression-does-not-distinguish/16-csv-embedded-quote` · `regression-does-not-distinguish` · p=0.24 · no field in the test contains a double quote, so the pre-fix wrapper that never doubled quotes produces the same three rows
+- `regression-does-not-distinguish/16-csv-embedded-quote` · `assertion-weaker-than-name` · p=0.34 · no field in the test contains a double quote, so the pre-fix wrapper that never doubled quotes produces the same three rows
 - `reimplements-logic/10-currency-rounding-helper` · `reimplements-logic` · p=0.84 · the expected payouts are produced by calling the same rounding helper the implementation calls with the same basis-point arithmetic, so a broken half-even rule passes
 - `setup-dominates/04-session-ttl-seconds` · `setup-dominates` · p=0.53 · five module mocks, a tenant, a device and an actor sit in file context for a pure arithmetic assertion that touches none of them
 - `swallowed-error-as-success/01-duplicate-signup-try-catch` · `would-pass-if-broken` · p=0.33 · if the duplicate check disappeared the second register would return an account, the catch would never run and the test would still be green
@@ -171,7 +166,6 @@ Accuracy — all: 655/768 (0.85) · holdout: 142/162 (0.88).
 - `private/realworld/mocks-sd/06-portal-token-hash` · `reimplements-logic` · p=0.77 · the expected token_hash is recomputed with the same sha256-hex call the builder makes, so swapping the digest or hashing the wrong column would be mirrored into the expectation; only the no-plaintext and prefix assertions beside it could still fail
 - `private/realworld/mocks-sd/07-cron-guard-branch` · `mocks-seam-under-test` · p=0.75 · whether a request counts as an authenticated cron worker is decided entirely by the stubbed guard, so a guard that compares the wrong header or accepts a missing secret still produces a green test, and the only unmocked code left is the if-branch and a passthrough of the stub's own count
 - `private/realworld/mocks-sd/13-row-policy-upsert-spy` · `mocks-seam-under-test` · p=0.71 · the policy write the name promises is only evidenced by a spy on the stubbed persistence call and the admin requirement only by the literal string handed to the stubbed guard, so a guard that ignores its level argument or a write that never commits still passes; every collaborator including the column-type lookup is scripted
-- `private/realworld/mocks-sd/13-row-policy-upsert-spy` · `over-mocked` · p=0.56 · the policy write the name promises is only evidenced by a spy on the stubbed persistence call and the admin requirement only by the literal string handed to the stubbed guard, so a guard that ignores its level argument or a write that never commits still passes; every collaborator including the column-type lookup is scripted
 - `private/realworld/mocks-sd/16-destinations-passthrough` · `over-mocked` · p=0.50 · the guard and the notification module are both first-party stubs, so the only real code left is a try/catch and handing the stub's own object back as JSON — the asserted body is literally the value the mock was configured to return and nothing about how destinations are assembled can fail
 - `private/realworld/mocks-sd/16-destinations-passthrough` · `mocks-seam-under-test` · p=0.75 · the guard and the notification module are both first-party stubs, so the only real code left is a try/catch and handing the stub's own object back as JSON — the asserted body is literally the value the mock was configured to return and nothing about how destinations are assembled can fail
 - `private/realworld/mocks-sd/19-readonly-role-mint` · `over-mocked` · p=0.44 · every collaborator the handler calls — access check, connection and branch reads, role provisioning, the mapping writes and even the advisory-lock wrapper — is a stub, so the assertions only check that one stub's return value was passed to the next; no real role is minted and no two components could disagree about what a SELECT-only credential is
@@ -181,7 +175,6 @@ Accuracy — all: 655/768 (0.85) · holdout: 142/162 (0.88).
 - `private/realworld/mocks/05-coupon-authority-call-args` · `over-mocked` · p=0.34 · the coupon authority is a vi.fn and the only evidence is the arguments it received, so a resolver that applied the wrong scope, cap or discount amount would leave this test green (mocks-seam-under-test unscored: the smell here is the co-labelled check's shape, not a scripted seam)
 - `private/realworld/mocks/05-coupon-authority-call-args` · `tests-calls-not-outcomes` · p=0.29 · the coupon authority is a vi.fn and the only evidence is the arguments it received, so a resolver that applied the wrong scope, cap or discount amount would leave this test green (mocks-seam-under-test unscored: the smell here is the co-labelled check's shape, not a scripted seam)
 - `private/realworld/mocks/06-order-submit-passthrough` · `over-mocked` · p=0.38 · the ordering service that mints the display number and validates the lines is a vi.fn, so what remains real is forwarding the request and prefixing the returned number with a hash
-- `private/realworld/mocks/07-account-panel-slot-stub` · `over-mocked` · p=0.59 · both the heading strings and the contributed panel come from the mocked module, so the registry could resolve no contributor at all and the page would still render the stub's markup; the stub is a plain echo rather than a copy of the resolver
 - `private/realworld/mocks/07-account-panel-slot-stub` · `mocks-seam-under-test` · p=0.65 · both the heading strings and the contributed panel come from the mocked module, so the registry could resolve no contributor at all and the page would still render the stub's markup; the stub is a plain echo rather than a copy of the resolver
 - `private/realworld/mocks/08-recovery-dialog-network-stub` · `mocks-seam-under-test` · p=0.70 · every recovery endpoint is fulfilled by page.route, so the recommendation, the settled status and the emptied list are all strings the test wrote; resolveCharge could settle a charge the provider never succeeded and this journey would still pass
 - `private/realworld/mocks/11-aggregate-totals-reduce` · `reimplements-logic` · p=0.83 · every expected total is the same summation the function performs, run again in the test, so a bucket added twice or omitted from the aggregate would produce identical numbers on both sides
@@ -351,8 +344,24 @@ Prompt-rewrite history from `evals/iterations.json`.
 | no-list-first + unpinned-derivation | 0.94 | 0.86 | no |
 | no-list-first + concrete-result rescue | 0.94 | 1.00 | yes |
 
+### `regression-does-not-distinguish`
+
+| variant | train F1 | holdout F1 | kept |
+|---|---|---|---|
+| baseline (round 4) | 0.69 | 0.44 | no |
+| new-code gate (all-additions → no) + two look-alikes | 0.82 | 0.67 | no |
+| new-code gate + name-the-changed-input search | 0.92 | 0.86 | yes |
+| + 'outcome reached through an older rule' look-alike | 0.92 | 0.50 | no |
+
+### `changed-in-lockstep`
+
+| variant | train F1 | holdout F1 | kept |
+|---|---|---|---|
+| baseline (round 4) | 0.91 | 1.00 | no |
+| new-code gate (all-additions test file) + pair-expectation-to-impl-line (full-run numbers) | 0.96 | 1.00 | yes |
+
 ## Cost
 
-362646 input tokens ≈ $0.0152 for the full corpus (768 cases, ~472 tokens per case) · model `jev-1.13.0`
+716081 input tokens ≈ $0.0301 for the full corpus (783 cases, ~915 tokens per case) · model `jev-1.13.0`
 
 Reproduce with `pnpm eval` (add `--offline` to re-score evals/results without calling the API).

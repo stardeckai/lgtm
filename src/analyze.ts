@@ -304,6 +304,15 @@ const tryGit = (run: GitRun, args: string[]): string | null => {
   }
 };
 
+/**
+ * node:util parseArgs has no optional-value type: a bare `--diff` throws, and `--diff --yes` eats the next flag.
+ * Bare when nothing follows, a flag follows, or a path follows (`lgtm --diff src` means "default base, under src").
+ */
+export function normalizeDiffFlag(argv: string[], exists: (p: string) => boolean = fs.existsSync): string[] {
+  const bare = (next: string | undefined) => next === undefined || next.startsWith("-") || exists(next);
+  return argv.map((a, i) => (a === "--diff" && bare(argv[i + 1]) ? "--diff=" : a));
+}
+
 /** The branch a bare `--diff` compares against: origin's HEAD, else origin/main, else main, else master. */
 export function defaultDiffBase(run: GitRun = gitRun): string {
   const head = tryGit(run, ["symbolic-ref", "-q", "refs/remotes/origin/HEAD"]);

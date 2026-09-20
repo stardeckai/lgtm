@@ -1,7 +1,6 @@
 export type Check = {
   id: string;
   /** the glyph after the 😐 face for this check */
-  emoji: string;
   /** the one-liner printed under a finding, in --list-checks and in the Claude skill */
   blurb: string;
   instructions: string;

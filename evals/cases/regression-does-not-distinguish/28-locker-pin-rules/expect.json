@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "changed-in-lockstep"],
+  "class": "pure_logic",
+  "why": "isPinAcceptable is added whole in this diff next to an unchanged lockerLabel; no pin rule existed before, so asking whether the test would have passed on the old code has no answer"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "changed-in-lockstep"],
+  "class": "pure_logic",
+  "why": "batchCode arrives as a new file in this diff, importing an unchanged species list; the packet-label format is stated here for the first time"
+}

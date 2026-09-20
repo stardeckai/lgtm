@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "changed-in-lockstep"],
+  "class": "pure_logic",
+  "why": "the booster due-date calculation is added whole in this diff next to an unchanged patients module, so no earlier implementation exists that the two dates could also have satisfied"
+}

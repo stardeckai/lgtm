@@ -1,0 +1,6 @@
+{
+  "fire": ["regression-does-not-distinguish"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the diff swaps floor for round in an existing lineTaxCents, but every rate and subtotal in the test multiplies out to a whole cent, so the pre-change floor returned the same 100, 400 and 6500"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish"],
+  "class": "pure_logic",
+  "why": "the capacity check is new on an existing enrol, and the third student the test adds was accepted by the pre-change code, so the final assertion fails before the fix"
+}

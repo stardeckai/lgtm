@@ -38,6 +38,10 @@ npm i -g @stardeckai/lgtm
 pnpm add -D @stardeckai/lgtm   # then: pnpm lgtm ...   (npm: npx lgtm ...)
 ```
 
+If `lgtm` is not found after a global install, the package manager's global bin directory is not on your PATH.
+Run `npm prefix -g` (or `pnpm bin -g`, `bun pm bin -g`) and add its `bin` to PATH, then open a new shell or run
+`rehash` in zsh.
+
 ## Setup
 
 ```sh
@@ -193,18 +197,18 @@ Retiring three unit tests for one wider test that really fails is a win, not a c
 <!-- evals:start -->
 ## Evals
 
-The corpus is 506 public + 262 private labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. The ground truth is kept in `expect.json` so it never reaches the model.
+The corpus is 521 public + 262 private labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. The ground truth is kept in `expect.json` so it never reaches the model.
 
-The 262 private cases come from real Stardeck customer apps and from Stardeck's own codebase, each read against its implementation, labelled, and anonymized. They are scored in these numbers but not published, because anonymization removes names, not shape. The 506 public cases in `evals/cases` reproduce with `pnpm eval` alone.
+The 262 private cases come from real Stardeck customer apps and from Stardeck's own codebase, each read against its implementation, labelled, and anonymized. They are scored in these numbers but not published, because anonymization removes names, not shape. The 521 public cases in `evals/cases` reproduce with `pnpm eval` alone.
 
-Scores are at each check's own threshold. 162 of the cases are holdout, never used to fit a threshold or a prompt.
+Scores are at each check's own threshold. 165 of the cases are holdout, never used to fit a threshold or a prompt.
 
 | check | cases | threshold | precision (holdout) | recall (holdout) | precision (all) | recall (all) |
 |---|---|---|---|---|---|---|
 | `would-pass-if-broken` | 99 | 0.60 | 1.00 | 0.36 | 0.96 | 0.47 |
 | `vacuous-assertion` | 179 | 0.70 | 1.00 | 0.63 | 1.00 | 0.69 |
-| `assertion-weaker-than-name` | 82 | 0.60 | 1.00 | 0.92 | 0.98 | 0.95 |
-| `reimplements-logic` | 204 | 0.85 | 1.00 | 0.50 | 1.00 | 0.67 |
+| `assertion-weaker-than-name` | 82 | 0.60 | 1.00 | 1.00 | 0.98 | 0.95 |
+| `reimplements-logic` | 206 | 0.85 | 1.00 | 0.50 | 1.00 | 0.67 |
 | `mocks-seam-under-test` | 121 | 0.80 | 1.00 | 0.33 | 1.00 | 0.23 |
 | `mock-mirrors-implementation` | 36 | 0.60 | 1.00 | 0.50 | 1.00 | 0.83 |
 | `tests-calls-not-outcomes` | 74 | 0.65 | 1.00 | 1.00 | 1.00 | 0.87 |
@@ -215,13 +219,13 @@ Scores are at each check's own threshold. 162 of the cases are holdout, never us
 | `impossible-fixture` | 63 | 0.55 | 1.00 | 1.00 | 1.00 | 0.75 |
 | `happy-path-only-of-risky-boundary` | 88 | 0.70 | 1.00 | 0.50 | 1.00 | 0.50 |
 | `trivial-primitive` | 122 | 0.85 | 1.00 | 0.71 | 1.00 | 0.66 |
-| `over-mocked` | 84 | 0.60 | — | 0.00 | 1.00 | 0.21 |
-| `regression-does-not-distinguish` | 26 | 0.35 | 1.00 | 0.33 | 1.00 | 0.67 |
-| `changed-in-lockstep` | 26 | 0.75 | 1.00 | 1.00 | 1.00 | 0.88 |
+| `over-mocked` | 84 | 0.55 | 1.00 | 0.20 | 1.00 | 0.38 |
+| `regression-does-not-distinguish` | 41 | 0.35 | 1.00 | 0.75 | 1.00 | 0.82 |
+| `changed-in-lockstep` | 36 | 0.75 | 1.00 | 1.00 | 1.00 | 0.94 |
 
-Test class accuracy: 655/768 (0.85) on all cases, 142/162 (0.88) on holdout.
+Test class accuracy: 665/783 (0.85) on all cases, 145/165 (0.88) on holdout.
 
-A full cold run of the corpus is about 3,740,225 input tokens ≈ $0.1571 (estimated from the states; the last run spent $0.0152 after cache hits).
+A full cold run of the corpus is about 3,988,609 input tokens ≈ $0.1675 (estimated from the states; the last run spent $0.0301 after cache hits).
 
 Every miss and false positive is listed in [`evals/RESULTS.md`](evals/RESULTS.md). The public cases reproduce with `pnpm eval`.
 <!-- evals:end -->

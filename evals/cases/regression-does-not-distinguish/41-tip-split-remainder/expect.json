@@ -1,0 +1,6 @@
+{
+  "fire": ["regression-does-not-distinguish"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the diff makes the leftover cents get handed out instead of vanishing, but every total in the test divides evenly, so the pre-change function returned exactly these arrays"
+}

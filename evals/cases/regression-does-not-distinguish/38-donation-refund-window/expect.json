@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish"],
+  "class": "pure_logic",
+  "why": "the window check is added to an existing refund and the second assertion refunds on day 31, which the pre-change code accepted happily, so the test fails without the guard"
+}

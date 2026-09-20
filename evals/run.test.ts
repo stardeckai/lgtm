@@ -5,10 +5,20 @@ import { describe, expect, it } from "vitest";
 import { evalRoots, findCases, fitThreshold, loadCase, resultPath, writeReadme } from "./run.js";
 
 describe("fitThreshold", () => {
-  it("sits one step above the lowest threshold with zero false positives, sacrificing recall", () => {
+  it("sits one step above the lowest threshold that keeps 0.95 precision, sacrificing recall", () => {
     // 0.50 would catch both positives but admits both negatives. The first clean point is 0.65 (above the
     // 0.60 negative); with the 0.05 margin the answer is 0.70, and the 0.5 positive is knowingly given up.
     expect(fitThreshold([0.9, 0.5], [0.6, 0.55])).toBe(0.7);
+  });
+
+  it("tolerates one contested negative among many positives instead of switching the check off", () => {
+    // 19 positives at 0.60 and one negative at 0.90: every grid point from 0.30 scores 19/20 = 0.95, so the
+    // fit stays at the bottom (0.30 + margin) rather than climbing above the lone negative and losing every positive.
+    const pos = Array.from({ length: 19 }, () => 0.6);
+    expect(fitThreshold(pos, [0.9])).toBe(0.35);
+    // Two such negatives break the floor (18/20 = 0.90 everywhere below them): no grid point qualifies, so the
+    // fallback takes the most precise point with the most recall, ties upward (0.60), plus margin.
+    expect(fitThreshold(Array.from({ length: 18 }, () => 0.6), [0.9, 0.9])).toBe(0.65);
   });
 
   it("falls back to the most precise point when a negative outscores every positive", () => {
