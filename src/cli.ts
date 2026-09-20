@@ -16,10 +16,10 @@ const IGNORED_DIRS = new Set(["node_modules", "dist", "build", ".git"]);
 
 const USAGE = `lgtm [files|dirs...]
 
-  init                 save your TypeSafe API key, then install the /lgtm agent skill
+  init                 save your TypeSafe API key, then install the /lgtm and /actually-test skills
   key [value]          swap the saved API key (prompts when no value is given)
   clear-cache          delete cached answers for this project (node_modules/.cache/lgtm)
-  skill                install the /lgtm skill again (to add more agents)
+  skill                install the /lgtm and /actually-test skills again (to add more agents)
   --key <value>        (init) use this key instead of prompting
   --skill <where>      (init/skill) global | project | claude | none — skip the prompt
   --yes                run without the confirmation prompt (also: init/skill defaults)
@@ -150,8 +150,8 @@ async function main(): Promise<number> {
   }
 
   if (positionals[0] === "skill") {
-    const file = installSkill(skill ?? (values.yes ? "global" : await askSkillMode()));
-    if (file) console.log(`wrote ${file}`);
+    for (const file of installSkill(skill ?? (values.yes ? "global" : await askSkillMode())))
+      console.log(`wrote ${file}`);
     return 0;
   }
 

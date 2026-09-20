@@ -423,6 +423,20 @@ function gitDiff(base: string, files: string[]): string | undefined {
   }
 }
 
+/** Retry a request on 429 with backoff (1s, 2s, 4s); anything else propagates. */
+async function withRateLimitRetry<T>(fn: () => Promise<T>, attempts = 4): Promise<T> {
+  for (let i = 0; ; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const status = (err as { status?: number }).status;
+      const limited = status === 429 || /429|rate limit/i.test((err as Error).message ?? "");
+      if (!limited || i >= attempts - 1) throw err;
+      await new Promise((r) => setTimeout(r, 1000 * 2 ** i));
+    }
+  }
+}
+
 /** Read test files and build one state per test block. */
 export function buildStates(
   files: string[],
@@ -548,7 +562,7 @@ export async function analyze(jobs: Job[], opts: AnalyzeOptions, client: Client)
       };
       for (const c of checks) questions[c.id] = noul(c.instructions, c.criteria);
       try {
-        const result = await client.systemOne({ state: job.state, questions });
+        const result = await withRateLimitRetry(() => client.systemOne({ state: job.state, questions }));
         answers = result.answers;
         inputTokens += result.usage.input_tokens;
         model = result.model;

@@ -5,7 +5,7 @@ describe("nextDelayMs", () => {
   test("clamps the exponential backoff at one hour", () => {
     const endpoint = {
       id: "wh_end_12",
-      url: "https://hooks.partner.example/stardeck",
+      url: "https://hooks.partner.example/acme",
       secret: "whsec_2f8ac1",
       subscribedEvents: ["order.created", "order.refunded", "invoice.paid", "invoice.failed"],
       disabledAt: null,

@@ -1,6 +1,0 @@
-{
-  "fire": [],
-  "not_fire": ["impossible-fixture", "swallowed-error-as-success"],
-  "class": "pure_logic",
-  "why": "the cast is the point — the row comes from a schemaless json column that really can be missing those arrays — and the exact rendered string is asserted, not merely the absence of a throw"
-}

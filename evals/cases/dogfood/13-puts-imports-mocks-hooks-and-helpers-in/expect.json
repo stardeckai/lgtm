@@ -2,8 +2,9 @@
   "test": "src/extract.test.ts::puts imports, mocks, hooks and helpers in fileContext but no test bodies",
   "fire": [],
   "not_fire": [
-    "happy-path-only-of-risky-boundary"
+    "happy-path-only-of-risky-boundary",
+    "tests-internals"
   ],
   "class": "pure_logic",
-  "why": "extraction has no refusal branch; siblings cover the remaining shapes"
+  "why": "extraction has no refusal branch; siblings cover the remaining shapes; the assertions read the return value of extractTests (names, lines, describe paths, source slices, fileContext), which is the module's whole contract surface; nothing private is peeked"
 }

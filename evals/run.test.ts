@@ -1,5 +1,8 @@
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { fitThreshold } from "./run.js";
+import { evalRoots, findCases, fitThreshold, loadCase, resultPath, writeReadme } from "./run.js";
 
 describe("fitThreshold", () => {
   it("sits one step above the lowest threshold with zero false positives, sacrificing recall", () => {
@@ -20,5 +23,50 @@ describe("fitThreshold", () => {
 
   it("has nothing to fit without positives", () => {
     expect(fitThreshold([], [0.1, 0.2])).toBeUndefined();
+  });
+});
+
+describe("extra (private) corpus root", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "lgtm-evals-"));
+  const dir = path.join(tmp, "cases", "realworld", "grp", "01-slug");
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, "impl.ts"), "export const add = (a: number, b: number) => a + b;\n");
+  fs.writeFileSync(path.join(dir, "case.test.ts"), 'import { add } from "./impl";\nit("adds", () => { expect(add(1, 2)).toBe(3); });\n');
+  fs.writeFileSync(
+    path.join(dir, "expect.json"),
+    JSON.stringify({ fire: [], not_fire: ["trivial-primitive"], class: "pure_logic", why: "fixture" }),
+  );
+
+  it("prefixes ids and writes answers under the extra root, not the public one", () => {
+    const found = findCases(evalRoots(tmp)).filter((f) => f.root.private);
+    expect(found.map((f) => f.dir)).toEqual([dir]);
+    const c = loadCase(found[0]!);
+    // The prefix is what keeps a private slug from colliding with a public case of the same path.
+    expect(c.id).toBe(path.join("private", "realworld", "grp", "01-slug"));
+    expect(c.check).toBe("realworld");
+    // The un-prefixed path under the extra root's results/, matching the files already written there.
+    expect(resultPath(c)).toBe(path.join(tmp, "results", "realworld", "grp", "01-slug.json"));
+  });
+});
+
+describe("writeReadme", () => {
+  const readme = (body: string) => `intro\n<!-- evals:start -->\n${body}<!-- evals:end -->\nouttro\n`;
+  const file = () => {
+    const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "lgtm-readme-")), "README.md");
+    fs.writeFileSync(f, readme("## Evals\n\nold numbers\n"));
+    return f;
+  };
+
+  it("leaves the published block alone on a public-only run", () => {
+    // The published numbers are scored over public + private; a public-only run would silently halve them.
+    const f = file();
+    writeReadme("## Evals\n\nnew numbers\n", false, f);
+    expect(fs.readFileSync(f, "utf8")).toBe(readme("## Evals\n\nold numbers\n"));
+  });
+
+  it("rewrites the block when the private corpus is loaded", () => {
+    const f = file();
+    writeReadme("## Evals\n\nnew numbers\n", true, f);
+    expect(fs.readFileSync(f, "utf8")).toBe(readme("## Evals\n\nnew numbers\n"));
   });
 });

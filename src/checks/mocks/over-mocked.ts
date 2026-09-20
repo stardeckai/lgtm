@@ -1,14 +1,14 @@
-import { DEFAULT_THRESHOLD, type Check } from "../types.js";
+import type { Check } from "../types.js";
 
 export default {
   id: "over-mocked",
   emoji: "🧱",
   blurb: "So many collaborators are faked that only glue is left to fail.",
   instructions:
-    "List the collaborators the `implementation` actually calls — imported modules, injected objects. Ignore objects built in `test_code` that never reach it. Answer yes when the faked collaborators include first-party code (repositories, stores, ORM or transaction handles, policy or rule modules, hooks, helpers) and what stays real is glue — returning a stub's value, interpolation, arithmetic, assembling stub returns — so no two real components could disagree. Two faked collaborators can be enough. Answer no when only true external edges are faked (clock, randomness, HTTP, third-party gateway, filesystem) and real logic computes the asserted value.",
+    "Trace each asserted value backwards through `implementation` from the entry point. Ignore faked modules the asserted path never reaches, and treat a module swapped for a real test database, an in-memory store with read-your-writes, or an in-process app as real, not a fake. Answer yes when every asserted value was already inside a fake — a stub's return echoed, forwarded, interpolated or prefixed, an argument handed to a stub, or arithmetic whose stub inputs are tuned so every branch yields the same answer — and the decision the test name promises is itself stubbed. Answer no when real code on that path decides an asserted value: a precondition guard on a fetched row or header, a branch, a loop bound or cursor, a selection, date or version arithmetic. Faking first-party data sources is not by itself the smell.",
   criteria: {
-    true: "First-party collaborators are faked and the remaining real code is glue over stub returns.",
-    false: "Only external edges are faked; real logic still computes what the test asserts.",
+    true: "Every asserted value came out of a fake; the decision the name promises is stubbed.",
+    false: "Real code on the asserted path decides an asserted value, or the swapped module is a real test store.",
   },
-  threshold: DEFAULT_THRESHOLD,
+  threshold: 0.60,
 } satisfies Check;

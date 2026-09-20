@@ -2,8 +2,10 @@
   "test": "src/analyze.test.ts::answers a repeated state from the cache instead of calling the API again",
   "fire": [],
   "not_fire": [
+    "over-mocked",
+    "tests-calls-not-outcomes",
     "would-pass-if-broken"
   ],
   "class": "mocked_seam_unit",
-  "why": "the assertions pin exact values the named behaviour produces; a plausible break changes them"
+  "why": "the assertions pin exact values the named behaviour produces; a plausible break changes them; the only fake is the model client, a vendor SDK at the external edge; the threshold filter, verbose band, diff gating, class mapping and cache are real analyze code, and the assertions pin exact finding arrays and the exact question set sent, not that a double was touched"
 }

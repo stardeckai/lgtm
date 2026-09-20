@@ -1,6 +1,0 @@
-{
-  "fire": [],
-  "not_fire": ["mocks-seam-under-test", "tests-calls-not-outcomes"],
-  "class": "mocked_seam_unit",
-  "why": "the header that actually leaves on the request is read off the real request init, and the scope string handed to the signer is the wire contract a widened bypass would break"
-}

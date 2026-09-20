@@ -25,8 +25,11 @@ and reports the ones that come back confident. Read `README.md` first; this file
   success. `contract_integration` is the only class it approves of; the 😐🎯 line reports how much of a suite is that.
 - **Origin.** The checks come from a hand-run test-audit skill (map each test to what it proves and what it mocks;
   hunt the seams no test crosses; write the cheapest test that locks each invariant) plus a list of review comments
-  a strong reviewer keeps making. The eval corpus was written to give that judgment ground truth: 485 synthetic
-  cases with deliberate hard negatives, and 40 anonymized real-world tests.
+  a strong reviewer keeps making. The eval corpus gives that judgment ground truth: 485 synthetic cases with deliberate
+  hard negatives, 40 anonymized real-world tests, and (round 3) ~210 more harvested from three production repos by
+  scoring every test block, sampling per check above and just under each threshold, and having agents read, label,
+  anonymize and port them (`cases/realworld/<group>/` in the private evals repo). The harvest is what exposed the real precision: several
+  checks were 0–30% precise on real code while the synthetic corpus said 1.00.
 
 ## Best practices for working here
 
@@ -41,7 +44,7 @@ and reports the ones that come back confident. Read `README.md` first; this file
   blurb. Wit lives in the findings; the README stays dry.
 - Costs are printed on every run and estimated before it. If you add context to the state, update the cost table
   and the latency model in `printPlan` from measurements, not guesses.
-- Anonymize anything derived from a real repository before it enters `evals/`. The corpus is public.
+- Anything derived from a real repository goes in the private evals repo, anonymized. `evals/` is public.
 
 ## Layout
 
@@ -57,23 +60,27 @@ and reports the ones that come back confident. Read `README.md` first; this file
   Choice question.
 - `src/report.ts` — text (😐 faces, colour), github annotations, json. `src/cli.ts` — flags, plan-then-confirm flow,
   `init` / `key` / `skill` / `clear-cache` subcommands. `src/skill.ts` — the generated Claude Code skill.
-- `evals/` — the labelled corpus and runner. `skills/lgtm/SKILL.md` — generated, committed, drift-guarded by a test.
+- `evals/` — the public labelled corpus (`cases/`, `results/`) and the runner; the private corpus lives in a
+  separate checkout, loaded through `LGTM_EVALS_EXTRA` (see "Private evals"). `skills/lgtm/SKILL.md` — generated, committed, drift-guarded by a test.
+- `skills/<name>/SKILL.md` — the two bundled skills, `lgtm` (act on findings) and `actually-test` (write the tests,
+  then iterate on lgtm), generated from `SKILLS` in `src/skill.ts`.
 
 ## Rules that are easy to break
 
 - **Changing any check's `instructions`/`criteria`, `TEST_CLASSES`, or the package version invalidates every cached
-  answer** (they are part of the cache key). After such a change run the full `pnpm eval` before quoting numbers.
+  answer** (they are part of the cache key). After such a change run the full `LGTM_EVALS_EXTRA=… pnpm eval` before quoting numbers.
 - **Thresholds are fitted, not hand-picked.** `pnpm eval --fit-thresholds --write` rewrites `threshold:` in each check
   file from ALL labelled cases (holdout included; a one-parameter fit cannot overfit): the lowest grid point
-  (0.30–0.95) with zero false positives, plus one step of margin; recall is whatever that leaves, because precision
-  on real code is the product. Holdout still guards prompt rewrites. Do not edit
+  (0.30–0.95) with precision ≥ 0.95, plus one step of margin; recall is whatever that leaves, because precision
+  on real code is the product. (A floor, not zero false positives: with hundreds of real negatives one contested
+  label would otherwise switch a check off.) Holdout still guards prompt rewrites. Do not edit
   thresholds by hand; refit after changing wording. Fit thresholds last, after prompt changes.
 - **Labels never go in fixture `.ts` files.** Ground truth lives only in `expect.json`; the `.ts` files are sent to
   the model verbatim. No comments, names or strings that hint at the smell.
 - **Unscored is the default.** A case scores a check only if that id is in its `fire` or `not_fire` list. Do not add
   "obviously also fires" ids unless you would defend the label in review.
 - **The check order in `src/checks/index.ts` is user-visible** (`--list-checks`, README, SKILL.md). Keep it stable.
-- **`skills/lgtm/SKILL.md` is generated.** Edit `src/skill.ts`, then `pnpm gen:skill`; a test fails on drift.
+- **`skills/*/SKILL.md` are generated.** Edit `src/skill.ts`, then `pnpm gen:skill`; a test fails on drift.
 - **The README `<!-- evals:start/end -->` block is rewritten by the runner.** Edit everything else by hand.
 - **`npm link` after `pnpm build`** exposes the checkout as the global `lgtm`. `pnpm link --global` needs `pnpm setup`.
 - Do not commit unless asked. Never commit `evals/.cache` or `node_modules/.cache/lgtm`.
@@ -89,7 +96,7 @@ and reports the ones that come back confident. Read `README.md` first; this file
 4. Append the attempt to `evals/iterations.json` (`{check, variant, instructions, train_f1, holdout_f1, fitted_t, kept}`).
    Cap yourself at four variants per check; more is holdout leakage.
 5. Keep the variant with the best train F1 whose holdout did not drop; restore the baseline text otherwise.
-6. When all wording is final: `pnpm eval` (full, ~$0.07), `pnpm eval --fit-thresholds --write`, `pnpm eval --offline`,
+6. When all wording is final, with `LGTM_EVALS_EXTRA` set: `pnpm eval` (full, ~$0.16 cold), `pnpm eval --fit-thresholds --write`, `pnpm eval --offline`,
    `pnpm gen:skill`, `pnpm typecheck && pnpm test && pnpm build`.
 
 Dogfood cases (`evals/cases/dogfood/`) are hard negatives taken from this repo's own tests: `expect.json` carries
@@ -102,23 +109,50 @@ flags a test you judge a keeper, add it here (one dir per test, `fire: []`, `not
 Adding cases: copy the layout of an existing case dir (`case.test.ts` importing `./impl`, `impl.ts`, `expect.json`
 with `fire`, `not_fire`, `class`, `why`). Diff checks add `before/` and `after/`; the top-level files equal `after/`.
 Extra `it()` blocks after the first become `sibling_tests` (names only). Aim for hard negatives, not more obvious
-positives. Real-world cases go under `realworld/` and must be anonymized: no product, customer, org or person names.
+positives. Real-world cases go in the private evals repo under `cases/realworld/`, anonymized: no product,
+customer, org or person names.
 
 Class rule (`expect.json.class`): `pure_logic` = one unit exercised directly (fakes only at true external edges:
 clock, random, HTTP, third-party or vendor-facing gateway, filesystem); `mocked_seam_unit` = a first-party
 collaborator is faked; `contract_integration` = two or more real first-party components run together and the
 assertion depends on their agreeing.
 
+## Harvesting real cases
+
+To grow the real-world set: run the built CLI on a repo with `--yes --format json --threshold 0.05` (all
+probabilities, ~$0.5 per 1k blocks), sample per check the blocks at or above its threshold plus the 0.15 band under
+it, and give each labelling agent one check family. Blocks the tool reports that are actually fine are the most
+valuable (they become hard negatives); label only what you would defend in review, leave contested verdicts
+unscored, anonymize, and never label from sibling names alone (the model sees names, not bodies). Harvested cases
+go in the private evals repo, never in the public tree. Then a full `pnpm eval` with `LGTM_EVALS_EXTRA` set, the
+prompt loop for any check whose fitted threshold jumped, and a refit.
+
+## Private evals
+
+Cases harvested from real code live in a separate private checkout (`../lgtm-evals-private`), laid out like
+`evals/`: `cases/<group>/<nn>-<slug>/` and `results/` written by the runner. Point the runner at it:
+
+```sh
+LGTM_EVALS_EXTRA=/path/to/lgtm-evals-private pnpm eval
+```
+
+- Their ids are prefixed `private/`, so they cannot collide with a public case; their answers are read and written
+  under the private repo's own `results/`, never in `evals/results`.
+- A full run and any refit need the env var. The published README numbers cover both corpora, so a public-only run
+  refuses to rewrite the README block and `--fit-thresholds --write` refuses outright (`--public-only-ok` overrides).
+- Anything derived from a customer app or from Stardeck's own repos goes there, never in `evals/cases`.
+
 ## What the numbers mean
 
 Jev is precise and conservative: on this corpus the ranking is good but the raw probabilities sit low, which is why
-thresholds are per check (0.30–0.85) rather than a flat 0.8. Crisp, locally verifiable questions score ~0.97 F1;
+thresholds are per check (0.35–0.85) rather than a flat 0.8. Real negatives are what set them: synthetic negatives
+were too easy, and until the harvest every check reported precision 1.00 while firing on half of a real PR. Crisp, locally verifiable questions score ~0.97 F1;
 holistic questions only work once rewritten as procedures. `regression-does-not-distinguish` has too few diff cases
 for its holdout number to mean much. A check that cannot separate on holdout after four iterations should be demoted
 to `--verbose` only, not shipped as a default.
 
 ## Verification before handing back
 
-`pnpm typecheck && pnpm test && pnpm build`, `pnpm eval --offline` still loads every case, and for anything touching
+`pnpm typecheck && pnpm test && pnpm build`, `LGTM_EVALS_EXTRA=... pnpm eval --offline` still loads every case, and for anything touching
 `src/analyze.ts` or `src/cli.ts` a live `lgtm --dry-run <some test dir>` plus one `lgtm --yes <one test file>` from a
 different repo (tsconfig `paths` aliases only show up there).

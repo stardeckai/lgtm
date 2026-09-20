@@ -1,11 +1,13 @@
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
-import { checksTable, skillMarkdown } from "../src/skill.js";
+import { checksTable, SKILLS } from "../src/skill.js";
 
-const skill = fileURLToPath(new URL("../skills/lgtm/SKILL.md", import.meta.url));
-fs.mkdirSync(fileURLToPath(new URL("../skills/lgtm/", import.meta.url)), { recursive: true });
-fs.writeFileSync(skill, skillMarkdown());
-console.log(`wrote ${skill}`);
+for (const { name, markdown } of SKILLS) {
+  const dir = fileURLToPath(new URL(`../skills/${name}/`, import.meta.url));
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(`${dir}SKILL.md`, markdown());
+  console.log(`wrote ${dir}SKILL.md`);
+}
 
 // The README checks table comes from the same source, between markers, so blurbs cannot drift.
 const readme = fileURLToPath(new URL("../README.md", import.meta.url));

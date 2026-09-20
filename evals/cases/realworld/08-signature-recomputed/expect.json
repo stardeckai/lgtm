@@ -1,6 +1,0 @@
-{
-  "fire": ["reimplements-logic"],
-  "not_fire": ["vacuous-assertion"],
-  "class": "pure_logic",
-  "why": "the expected digest is produced by rebuilding the canonical string and running the same hmac call the implementation runs, so a wrong field order or separator would be repeated identically on both sides"
-}

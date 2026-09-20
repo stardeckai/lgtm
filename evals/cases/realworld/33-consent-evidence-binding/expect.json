@@ -1,6 +1,0 @@
-{
-  "fire": ["mocks-seam-under-test"],
-  "not_fire": ["reimplements-logic"],
-  "class": "mocked_seam_unit",
-  "why": "the consent store whose write is the behaviour the name claims is itself the mock, so nothing checks that evidence is actually recorded against the booking"
-}

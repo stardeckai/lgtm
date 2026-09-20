@@ -1,0 +1,10 @@
+{
+  "test": "src/analyze.test.ts::reports answers at or above the threshold and nothing below it",
+  "fire": [],
+  "not_fire": [
+    "over-mocked",
+    "tests-calls-not-outcomes"
+  ],
+  "class": "mocked_seam_unit",
+  "why": "the only fake is the model client, a vendor SDK at the external edge; the threshold filter, verbose band, diff gating, class mapping and cache are real analyze code, and the assertions pin exact finding arrays and the exact question set sent, not that a double was touched"
+}

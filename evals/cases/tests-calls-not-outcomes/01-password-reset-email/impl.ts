@@ -1,4 +1,4 @@
-export type User = { id: string; email: string; locale: "en" | "th" };
+export type User = { id: string; email: string; locale: "en" | "fr" };
 
 export interface Mailer {
   send(message: { to: string; subject: string; body: string }): Promise<void>;
@@ -8,7 +8,7 @@ export interface TokenStore {
   put(userId: string, token: string, expiresAt: number): Promise<void>;
 }
 
-const SUBJECTS = { en: "Reset your password", th: "ตั้งรหัสผ่านใหม่" };
+const SUBJECTS = { en: "Reset your password", fr: "Réinitialisez votre mot de passe" };
 
 export async function requestPasswordReset(
   user: User,

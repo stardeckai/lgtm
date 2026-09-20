@@ -10,5 +10,5 @@ export default {
     true: "Every block, this one and the siblings, stays on the allowed path; the riskiest refusal in `implementation` is driven by none of them.",
     false: "This block or a sibling name drives that exact refusal, or there is no refusal branch to miss.",
   },
-  threshold: 0.65,
+  threshold: 0.70,
 } satisfies Check;

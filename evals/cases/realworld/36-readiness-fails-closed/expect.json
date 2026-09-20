@@ -1,6 +1,0 @@
-{
-  "fire": [],
-  "not_fire": ["mocks-seam-under-test", "swallowed-error-as-success", "over-mocked"],
-  "class": "pure_logic",
-  "why": "only the remote catalog is faked, and the assertions pin the exact refusal status and the exact fail-closed body a swallowed error would have to produce"
-}

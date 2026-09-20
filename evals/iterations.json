@@ -60,7 +60,7 @@
     "train_f1": 0.96,
     "holdout_f1": 0.86,
     "fitted_t": 0.8,
-    "kept": true
+    "kept": false
   },
   {
     "check": "happy-path-only-of-risky-boundary",
@@ -96,7 +96,7 @@
     "train_f1": 0.89,
     "holdout_f1": 1,
     "fitted_t": 0.6,
-    "kept": true
+    "kept": false
   },
   {
     "check": "happy-path-only-of-risky-boundary",
@@ -105,7 +105,7 @@
     "train_f1": 0.92,
     "holdout_f1": 0.86,
     "fitted_t": 0.55,
-    "kept": true
+    "kept": false
   },
   {
     "check": "setup-dominates",
@@ -127,7 +127,7 @@
     "train_f1": 1,
     "holdout_f1": 1,
     "fitted_t": 0.85,
-    "kept": true
+    "kept": false
   },
   {
     "check": "setup-dominates",
@@ -176,7 +176,7 @@
     "train_f1": 0.96,
     "holdout_f1": 0.86,
     "fitted_t": 0.7,
-    "kept": true
+    "kept": false
   },
   {
     "check": "swallowed-error-as-success",
@@ -203,7 +203,7 @@
     "train_f1": 1,
     "holdout_f1": 1,
     "fitted_t": 0.6,
-    "kept": true
+    "kept": false
   },
   {
     "check": "would-pass-if-broken",
@@ -248,7 +248,7 @@
     "train_f1": 0.81,
     "holdout_f1": 0.86,
     "fitted_t": 0.5,
-    "kept": true
+    "kept": false
   },
   {
     "check": "trivial-primitive",
@@ -318,8 +318,405 @@
     "variant": "drift-guard exemption + input-or-expectation recomputation",
     "instructions": "Does `test_code` reproduce the algorithm under test \u2014 the same formula, loop, or production helper `implementation` uses \u2014 to construct what it asserts (the expected value, or an input engineered to satisfy it), so test and implementation would share the same mistake instead of a fixed, requirement-derived example? Answer no when the comparison is a drift or parity guard rather than a recomputation: one side is a stored artifact (a committed/golden file read from disk, a checked-in fixture, a snapshot) that generator output must match, or it round-trips an inverse operation (decode what was encoded, verify what was signed).",
     "train_f1": 0.97,
-    "holdout_f1": 1.0,
+    "holdout_f1": 1,
     "fitted_t": 0.8,
     "kept": true
+  },
+  {
+    "check": "vacuous-assertion",
+    "variant": "baseline",
+    "instructions": "Are the assertions in `test_code` ones that almost any outcome satisfies \u2014 toBeDefined, toBeTruthy, length >= 0, not.toThrow with nothing else asserted, status !== 500, or 'greater than some older value'?",
+    "train_f1": 0.182,
+    "holdout_f1": 0.198,
+    "fitted_t": 0.95,
+    "kept": false
+  },
+  {
+    "check": "tests-internals",
+    "variant": "baseline",
+    "instructions": "Name the contract surface in `implementation`: return values, thrown errors, rendered text/roles/labels/aria/disabled/href, state read back out of storage, payloads handed to callbacks or collaborators. Answer no when `test_code` asserts on that surface \u2014 a class string that is the function's own return value counts, as does a storage round-trip. Answer yes when the asserted value is reachable only by peeking: private members or React state via an any-cast, instance or ref; class names, tag names or child counts of rendered DOM; render or stubbed-child call counts; source text; internal step or action-type order; or the shape or size of a table or bookkeeping accessor whose consuming function in `implementation` is never called.",
+    "train_f1": 0.29,
+    "holdout_f1": 0,
+    "fitted_t": 0.95,
+    "kept": false
+  },
+  {
+    "check": "swallowed-error-as-success",
+    "variant": "baseline (realworld corpus)",
+    "instructions": "Is this test's green independent of the specific failure it claims to cover? Decide in order: (1) `test_code` exercises no refusal, invalid input, failure or fallback path \u2192 no. (2) Its expects sit inside a test-side try/catch or `.catch()` and nothing \u2014 `expect.assertions`, `rejects.`, a throw at the end of the try \u2014 forces them to run \u2192 yes, however specific the matcher inside and however surely the rigged mock throws. (3) The assertion on the caught error or rejection accepts any error: bare `toThrow()`/`rejects.toThrow()`, `toThrow(Error)`, `toBeInstanceOf(Error)`, `toBeDefined()`, or a lone `not.toThrow()` \u2192 yes. (4) `implementation` funnels every exception on that path into the asserted value \u2014 a constant fallback or default, a cached value, null, [], `ok:false`, status 200, an error count, a logged line, a counter \u2014 and nothing in the assertion is derived from the specific failure \u2192 yes, even when that value is matched exactly. Answer no whenever the error is an input rather than something the test caught, a further assertion or sibling requires it to propagate, or the asserted result names the failure \u2014 its status, code, reason, the step that failed, the attempt count, the echoed input. Else no.",
+    "train_f1": 0,
+    "holdout_f1": 0,
+    "fitted_t": 0.95,
+    "kept": false
+  },
+  {
+    "check": "impossible-fixture",
+    "variant": "baseline",
+    "instructions": "Do the fixtures in `test_code` use `as Type`, partial objects or direct persistence writes to build state that production validation, constructors or database constraints could never create \u2014 where the test is not explicitly about corrupt legacy data?",
+    "train_f1": 0,
+    "holdout_f1": 0,
+    "fitted_t": 0.9,
+    "kept": false
+  },
+  {
+    "check": "tests-internals",
+    "variant": "asserted-value-no-list-first",
+    "instructions": "Judge only the values this block asserts; casts, mocks and fixtures in setup do not count. Answer no when the asserted value is a return value or thrown error; rendered text, role, aria, disabled or href; state read back out of storage; the arguments or payload a spy recorded for a collaborator, vendor SDK or callback (toHaveBeenCalledWith, mock.calls[0][1]), including an assertion that one was not called; a retry or in-flight count measured at an injected boundary; events, or their order, delivered to an external consumer; or two shipped artifacts asserted to agree. Answer yes only when the value takes peeking: private fields, React state or refs via an any-cast; CSS classes, tags or child counts of rendered DOM; render counts of stubbed children; the unit's own source text; its internal action or step order; the shape of a table whose consuming function is never called.",
+    "train_f1": 0.94,
+    "holdout_f1": 1,
+    "fitted_t": 0.35,
+    "kept": false
+  },
+  {
+    "check": "would-pass-if-broken",
+    "variant": "baseline-r3",
+    "instructions": "Would `test_code` still pass if the behavior `test_name` (under `describe_path`) names were broken in an obvious way? Procedure: name the branch, guard, or computation the name promises; check whether this fixture actually exercises it, or whether an earlier return, a default, a fallback, a stub's canned value, or a coincidence in the fixture already yields the asserted values; then break that behavior and re-run the fixture. Yes if every assertion still holds. No when the assertions pin the exact output the named behavior itself produces.",
+    "train_f1": 0,
+    "holdout_f1": 0,
+    "fitted_t": 0.95,
+    "kept": false
+  },
+  {
+    "check": "tests-internals",
+    "variant": "+never-runs-consumer qualifier",
+    "instructions": "Judge only the values this block asserts; casts, mocks and fixtures in setup do not count. Answer no when the asserted value is a return value or thrown error; rendered text, role, aria, disabled or href; state read back out of storage; the arguments or payload a spy recorded for a collaborator, vendor SDK or callback (toHaveBeenCalledWith, mock.calls[0][1]), including an assertion that one was not called; a retry or in-flight count measured at an injected boundary; events, or their order, delivered to an external consumer; or two shipped artifacts (manifest versus registry) asserted to agree. Answer yes only when the value takes peeking: private fields, React state or refs via an any-cast; CSS classes, tags or child counts of rendered DOM; render counts of stubbed children; the unit's own source text; or the keys, order or size of an internal step list, action-type sequence or lookup table whose consuming function in `implementation` this test never runs.",
+    "train_f1": 0.88,
+    "holdout_f1": 1,
+    "fitted_t": 0.45,
+    "kept": false
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "baseline",
+    "instructions": "Name the behaviour the test title claims \u2014 a refusal, a match, single-use, atomicity, a write landing, a key agreeing. In `implementation`, find which collaborator decides it. Smell if that collaborator is a scripted mock in `test_code`: the asserted outcome is what the mock was told, its canned read cannot reflect the write, it hands back the very value the real code is meant to check against, or the only evidence is that it was called. No when just neighbours are faked \u2014 signer, mailer, clock, metrics, downstream HTTP \u2014 and the asserted values, including arguments passed to them, come from real code, or real code's own branch kept a fake uncalled.",
+    "train_f1": 0,
+    "holdout_f1": 0,
+    "fitted_t": 0.9,
+    "kept": false
+  },
+  {
+    "check": "vacuous-assertion",
+    "variant": "wrong-result procedure + look-alike no-list",
+    "instructions": "From `implementation`, name what the call returns for this input and one realistic wrong result. Yes if every assertion in `test_code` still passes on that wrong result: toBeDefined/truthy on a value with real content; toContain or a loose regex a mis-formatted output also matches; generic properties (non-empty, positive, in range) over a table; gte against a frozen literal a growing value always clears; an equality both sides meet degenerately (both empty). No when: throw-or-not is the callee's whole contract (void guard; accept table beside a reject table); the error class or message is pinned; existence from a keyed find is the invariant; the comparison is against a second real computation, f(a) vs f(b), the bug must change; or this block also asserts an exact value. Judge this block; siblings show the contract, they do not rescue it.",
+    "train_f1": 0.83,
+    "holdout_f1": 0.718,
+    "fitted_t": 0.7,
+    "kept": true
+  },
+  {
+    "check": "tests-internals",
+    "variant": "v1 + dispatch-sequence-to-unrun-reducer",
+    "instructions": "Judge only the values this block asserts; casts, mocks and fixtures in setup do not count. Answer no when the asserted value is a return value or thrown error; rendered text, role, aria, disabled or href; state read back out of storage; the arguments or payload a spy recorded for a collaborator, vendor SDK or callback (toHaveBeenCalledWith, mock.calls[0][1]), including an assertion that one was not called; a retry or in-flight count measured at an injected boundary; events, or their order, delivered to an external consumer; or two shipped artifacts asserted to agree. Answer yes only when the value takes peeking: private fields, React state or refs via an any-cast; CSS classes, tags or child counts of rendered DOM; render counts of stubbed children; the unit's own source text; the bare action types or step order the unit dispatches to a reducer or store this test never runs; or the shape of a table whose consuming function is never called.",
+    "train_f1": 0.94,
+    "holdout_f1": 1,
+    "fitted_t": 0.35,
+    "kept": true
+  },
+  {
+    "check": "vacuous-assertion",
+    "variant": "v1 + lone-not.toThrow / table-loop / distinguishing-substring clauses",
+    "instructions": "From `implementation`, name what the call returns for this input and one realistic wrong result. Yes if every assertion in `test_code` still passes on that wrong result: toBeDefined/truthy on a value with real content; a substring or loose regex a mis-formatted output also matches; a loop pinning only that each entry is known, non-empty or unlike its key, never which value belongs to which key; gte against a frozen literal a growing value always clears; an equality both sides meet degenerately; a lone not.toThrow when nothing in the file exercises the refusal. No when: an accept table sits beside a reject table, or a sibling pins the throw; the error class or message is pinned; existence from a keyed find, or the substring is the branch's distinguishing token; the comparison is against a second real computation, f(a) vs f(b); or this block also asserts an exact value.",
+    "train_f1": 0.507,
+    "holdout_f1": 0.611,
+    "fitted_t": 0.85,
+    "kept": false
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "follow-the-asserted-value",
+    "instructions": "Name the behaviour the test claims \u2014 a refusal, a mapping, single-use, atomicity, a write landing, keys agreeing \u2014 then follow the asserted value. No when real code produced it before it reached the fake: arguments or call counts a handler derived (path id, verb\u2192flag mapping, batch size, forwarded target) where that forwarding is the named behaviour; state read back from a real database, store or rendered component; a fake supplying only input a real guard then judges; a stub whose value deliberately differs from a second real source, so the assertion shows which source won. Yes when the asserted value comes back out of the fake: it is what the fake was scripted to return, its canned read cannot reflect the write, both halves of a round trip are scripted, or its body re-encodes the rule.",
+    "train_f1": 0.25,
+    "holdout_f1": 0,
+    "fitted_t": 0.9,
+    "kept": false
+  },
+  {
+    "check": "vacuous-assertion",
+    "variant": "v1 + sharpened table-loop clause",
+    "instructions": "From `implementation`, name what the call returns for this input and one realistic wrong result. Yes if every assertion in `test_code` still passes on that wrong result: toBeDefined/truthy on a value with real content; toContain or a loose regex a mis-formatted output also matches; a loop over a table pinning only that each entry is non-empty, positive or unlike its key, never which value belongs to which key; gte against a frozen literal a growing value always clears; an equality both sides meet degenerately (both empty). No when: throw-or-not is the callee's whole contract (void guard; accept table beside a reject table); the error class or message is pinned; existence from a keyed find is the invariant; the comparison is against a second real computation, f(a) vs f(b), the bug must change; or this block also asserts an exact value. Judge this block; siblings show the contract, they do not rescue it.",
+    "train_f1": 0.81,
+    "holdout_f1": 0.611,
+    "fitted_t": 0.75,
+    "kept": false
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "no-clauses-first",
+    "instructions": "Name the behaviour the test claims \u2014 a refusal, a match, single-use, atomicity, a write landing, keys agreeing \u2014 and find in `implementation` which collaborator decides it. Answer no first when: the asserted value is one real code derived and handed to a fake (a path id, a verb\u2192flag mapping, a forwarded target, a batch count) and that handover is the named behaviour; the asserted state is read back from a real database, store or rendered component; a stub's value deliberately differs from a second real source so the assertion shows which won; or only neighbours are faked \u2014 signer, mailer, clock, metrics, vendor SDK, network \u2014 while the deciding code runs. Yes only when that deciding collaborator is itself scripted: the asserted outcome is what the mock was told, its canned read cannot reflect the write, both halves of a round trip are scripted, or the only evidence is that it was called.",
+    "train_f1": 0.31,
+    "holdout_f1": 0.5,
+    "fitted_t": 0.7,
+    "kept": false
+  },
+  {
+    "check": "impossible-fixture",
+    "variant": "name-the-violated-rule + writer-would-also-store negative",
+    "instructions": "Name the exact rule this fixture breaks. 1. Find the value or row the assertion depends on. 2. In `implementation`, find the writer, constructor, validator or schema that produces it. 3. Could that code ever produce this exact state? Answer yes only when you can name the rule it violates \u2014 a cap or range, an enum, a required field, uniqueness, or an ordering/sequence/state-transition invariant the writer maintains \u2014 and the asserted branch depends on that state. Otherwise no: a raw INSERT, UPDATE or map write storing a row the production writer also stores; a cast omitting fields the code never reads; casts on the call or on mocked returns; a test whose declared subject is corrupt, legacy or malformed data. Setup size and raw SQL are not evidence.",
+    "train_f1": 0.59,
+    "holdout_f1": 0.86,
+    "fitted_t": 0.7,
+    "kept": false
+  },
+  {
+    "check": "impossible-fixture",
+    "variant": "would-accept phrasing + guard-input carve-out",
+    "instructions": "Name the exact rule this fixture breaks. 1. Find the value or row the assertion depends on. 2. In `implementation`, find the writer, constructor, validator or schema for it. 3. Would that code accept this exact state? Answer yes only when you can name the rule it refuses \u2014 a cap, enum, required field, uniqueness, or ordering/sequence/state-transition invariant \u2014 and the asserted branch depends on that state; a seed, hydrate or raw write that slips past a validated sibling writer counts. Answer no when the validated writer would accept this row too, when the value is input handed to the very guard that rejects it, when a cast omits fields nothing reads, or when corrupt or legacy data is the declared subject. Setup size and raw SQL alone are not evidence.",
+    "train_f1": 0,
+    "holdout_f1": 0,
+    "fitted_t": 0.9,
+    "kept": false,
+    "fitted_t_estimated": true
+  },
+  {
+    "check": "impossible-fixture",
+    "variant": "v1 + seed/hydrate bypass is how it gets in",
+    "instructions": "Name the exact rule this fixture breaks. 1. Find the value or row the assertion depends on. 2. In `implementation`, find the writer, constructor, validator or schema that produces it. 3. Could that code ever produce this exact state? Answer yes only when you can name the rule it violates \u2014 a cap, an enum, a required field, uniqueness, or an ordering/sequence/state-transition invariant \u2014 and the asserted branch depends on that state; a seed, hydrate or restore path that skips that writer is how such a state gets in. Otherwise no: a write of a row the writer would also accept; a cast omitting fields nothing reads; casts on the call or on mocked returns; corrupt or legacy data as the declared subject. Setup size and raw SQL are not evidence.",
+    "train_f1": 0.857,
+    "holdout_f1": 1,
+    "fitted_t": 0.55,
+    "kept": true
+  },
+  {
+    "check": "impossible-fixture",
+    "variant": "v3 + cast-reads-the-omitted-field yes",
+    "instructions": "Name the exact rule this fixture breaks. 1. Find the value or row the assertion depends on. 2. In `implementation`, find the writer, constructor, validator or schema that produces it. 3. Could that code ever produce this exact state? Answer yes only when you can name the rule it violates \u2014 a cap, an enum, a required field, uniqueness, or an ordering/sequence/state-transition invariant \u2014 and the asserted branch depends on that state; a seed, hydrate or restore path that skips that writer is how such a state gets in. Otherwise no: a write of a row the writer would also accept; a cast omitting fields the asserted branch never reads \u2014 yes when it does read one; casts on the call or on mocked returns; corrupt or legacy data as the declared subject. Setup size and raw SQL are not evidence.",
+    "train_f1": 0.857,
+    "holdout_f1": 1,
+    "fitted_t": 0.6,
+    "kept": false
+  },
+  {
+    "check": "swallowed-error-as-success",
+    "variant": "v1-no-list-before-gates",
+    "instructions": "Does this test stay green whether or not the failure it names actually happens? In order: (1) its expects sit inside a test-side try/catch or .catch() and nothing forces them to run -> yes. (2) Else no if: accepting path; input refused by explicit guards; result distinguishes this failure from the neighbouring one incl. declared fail-closed mapping. (3) Else yes if matcher accepts any error, or implementation funnels every exception into the asserted catch-all fallback and no sibling pins a non-fallback result.",
+    "train_f1": 0,
+    "holdout_f1": 0,
+    "fitted_t": 0.9,
+    "kept": false
+  },
+  {
+    "check": "swallowed-error-as-success",
+    "variant": "v2-restore-no-failure-path-gate",
+    "instructions": "(1) block exercises no failure path -> no. (2) unforced test-side try/catch -> yes. (3) else no if accepting path / explicit-guard refusal of an input / result a sibling running the same fixture without this failure does not produce / fail-closed mapping. (4) else yes if the assertion on the caught error accepts any error, or implementation funnels every exception into the asserted catch-all fallback and no sibling pins a non-fallback result.",
+    "train_f1": 0.1,
+    "holdout_f1": 0.75,
+    "fitted_t": 0.85,
+    "kept": false
+  },
+  {
+    "check": "swallowed-error-as-success",
+    "variant": "v3-sibling-contrast-promoted",
+    "instructions": "as v2 but the explicit-guard clause dropped and the sibling-contrast clause promoted into step 3 (a sibling drives the same unit and pins a result this asserted value cannot be).",
+    "train_f1": 0.1,
+    "holdout_f1": 0.75,
+    "fitted_t": 0.85,
+    "kept": false
+  },
+  {
+    "check": "swallowed-error-as-success",
+    "variant": "v4-error-status-is-not-a-swallow",
+    "instructions": "Does this test stay green whether or not the failure it names actually happens? In order: (1) this block exercises no failure, refusal or fallback path \u2192 no. (2) Its expects sit inside a test-side try/catch or `.catch()` and nothing \u2014 `expect.assertions`, `rejects.`, a trailing throw \u2014 forces them to run \u2192 yes, however exact the matcher inside. (3) Else no if any holds: the asserted path is the accepting one (`not.toThrow()`, a success value); the asserted status is an error status the caller can act on (4xx/5xx) rather than the route's success answer; a sibling name shows the same unit answering something this asserted value cannot be, so an implementation that always answered this way would fail there; the asserted result names this failure's class, code, reason, failing step or count, including a fail-closed mapping whose category is the declared contract. (4) Else yes if the assertion on the caught error or rejection accepts any error (bare `toThrow()`/`rejects.toThrow()`, `toThrow(Error)`, `toBeInstanceOf(Error)`, `toBeDefined()`), or `implementation` funnels every exception on this path into the asserted value \u2014 a constant fallback, null, [], `ok:false`, 200, a cached value, a count, a logged line \u2014 even when matched exactly.",
+    "train_f1": 0.41,
+    "holdout_f1": 0.89,
+    "fitted_t": 0.8,
+    "kept": true
+  },
+  {
+    "check": "over-mocked",
+    "variant": "baseline (realworld corpus)",
+    "instructions": "List the collaborators the `implementation` actually calls \u2014 imported modules, injected objects. Ignore objects built in `test_code` that never reach it. Answer yes when the faked collaborators include first-party code (repositories, stores, ORM or transaction handles, policy or rule modules, hooks, helpers) and what stays real is glue \u2014 returning a stub's value, interpolation, arithmetic, assembling stub returns \u2014 so no two real components could disagree. Two faked collaborators can be enough. Answer no when only true external edges are faked (clock, randomness, HTTP, third-party gateway, filesystem) and real logic computes the asserted value.",
+    "train_f1": 0.1,
+    "holdout_f1": 0,
+    "fitted_t": 0.95,
+    "kept": false
+  },
+  {
+    "check": "would-pass-if-broken",
+    "variant": "two-run negation, pinned-output no",
+    "instructions": "Restate `test_name` (under `describe_path`) as a claim: for this fixture, `implementation` yields X. Run the fixture twice \u2014 as written, and with that one claim negated (guard dropped, filter removed, branch inverted, computation swapped for a plausible alternative). Yes only if every assertion holds both times: the fixture sits on the safe side of the filter, an alternative agrees on this input, or the asserted value never exposes the qualifier the name promises. Negate only the named claim, never other logic; an exact `toEqual` does not rescue a fixture the filter never touches. No when negating the claim changes an asserted value, however plain \u2014 a constant, `''`, `null`, an empty list, `not.toThrow()`, `not.toHaveBeenCalled()` are pinned output when the name claims that outcome.",
+    "train_f1": 0.27,
+    "holdout_f1": 0.33,
+    "fitted_t": 0.6,
+    "kept": false
+  },
+  {
+    "check": "would-pass-if-broken",
+    "variant": "two-run + named escapes",
+    "instructions": "Restate `test_name` (under `describe_path`) as a claim about this fixture, then negate only that claim in `implementation` \u2014 drop the guard, remove the filter, invert the branch, swap the computation for a plausible alternative \u2014 and re-run. Answer yes when every assertion still holds, and name why: every fixture row sits on the safe side of the filter (nothing archived, one tenant, 3 of a limit of 5, a weekday); the alternative computes the same value on this input (floor and round agree on 3.49); the matcher never exposes the qualifier the name promises (toContain, a regex, length, expect.any, gte against a value that only rises); or the assertion sits inside an `if` or loop this fixture may not enter. An exact `toEqual` does not rescue a fixture the filter never touches. Answer no when negating the claim changes an asserted value \u2014 including a constant, `''`, `null`, `[]`, `not.toThrow()` or `not.toHaveBeenCalled()` when that outcome is the claim.",
+    "train_f1": 0.34,
+    "holdout_f1": 0.42,
+    "fitted_t": 0.6,
+    "kept": false
+  },
+  {
+    "check": "would-pass-if-broken",
+    "variant": "break-and-rerun + named escapes + exact-output-is-no",
+    "instructions": "Would `test_code` still pass if the behaviour `test_name` (under `describe_path`) names were broken in an obvious way? Procedure: name the branch, guard, filter or computation the name promises; ask whether this fixture actually exercises it; then break that one thing and re-run. Yes if every assertion still holds, and say which escape: the fixture sits on the safe side (nothing archived, one tenant, 3 of a limit of 5, a weekday); a plausible alternative computes the same value on this input; the matcher never exposes the qualifier the name promises (toContain, a regex, length, expect.any, gte against a value that only rises); the asserted value comes from a stub or a second path; or the assertion sits inside an `if` or loop this fixture may not enter. No when the named behaviour's own output on this input is exactly what is asserted \u2014 even when that output is a constant, `''`, `null`, `[]`, not throwing, or a call that must not happen.",
+    "train_f1": 0.64,
+    "holdout_f1": 0.57,
+    "fitted_t": 0.6,
+    "kept": true
+  },
+  {
+    "check": "would-pass-if-broken",
+    "variant": "+ fallback/comparison-moves-together escape",
+    "instructions": "Would `test_code` still pass if the behaviour `test_name` (under `describe_path`) names were broken in an obvious way? Procedure: name the branch, guard, filter or computation the name promises; ask whether this fixture actually exercises it; then break that one thing and re-run. Yes if every assertion still holds, and say which escape: the fixture sits on the safe side (nothing archived, one tenant, 3 of a limit of 5, a weekday); a plausible alternative computes the same value on this input; the matcher never exposes the qualifier the name promises (toContain, a regex, length, expect.any, gte against a value that only rises); the asserted value would also come out of the other branch, the fallback or a stub, or both sides of a compared pair move together so the comparison holds either way; or the assertion sits inside an `if` or loop this fixture may not enter. No when the named behaviour's own output on this input is exactly what is asserted \u2014 even when that output is a constant, `''`, `null`, `[]`, not throwing, or a call that must not happen.",
+    "train_f1": 0.59,
+    "holdout_f1": 0.5,
+    "fitted_t": 0.6,
+    "kept": false
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "yes-procedure + rule-out list",
+    "instructions": "Name the behaviour the test claims \u2014 a refusal, a match, single-use, atomicity, a write landing, keys agreeing \u2014 and find in `implementation` which collaborator decides it. Smell it when that collaborator is a scripted mock in `test_code`: the asserted outcome is what the mock was told, its canned read cannot reflect the write, it hands back the very value the real code was meant to check against, both halves of a round trip are scripted, or the only evidence is that it was called. Before answering yes, rule out: the asserted value was derived by real code and merely handed to a fake (a path id, a verb\u2192flag mapping, a forwarded target, a batch count); the asserted state is read back from a real database, store or rendered component; a stub's value deliberately differs from a second real source so the assertion shows which won; only neighbours are faked \u2014 signer, mailer, clock, metrics, vendor SDK, network \u2014 while the deciding code runs.",
+    "train_f1": 0.56,
+    "holdout_f1": 0.67,
+    "fitted_t": 0.75,
+    "kept": true
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "+ end-to-end-real-db rule-out",
+    "instructions": "Name the behaviour the test claims \u2014 a refusal, a match, single-use, atomicity, a write landing, keys agreeing \u2014 and find in `implementation` which collaborator decides it. Smell it when that collaborator is a scripted mock in `test_code`: the asserted outcome is what the mock was told, its canned read cannot reflect the write, it hands back the very value the real code was meant to check against, both halves of a round trip are scripted, or the only evidence is that it was called. Before answering yes, rule out: the asserted value was derived by real code and merely handed to a fake (a path id, a verb\u2192flag mapping, a forwarded target, a batch count); the block runs a route or component end to end and reads its result back from a real database, store or rendered output while only the external provider lookup is faked; a stub's value deliberately differs from a second real source so the assertion shows which won; only neighbours are faked \u2014 signer, mailer, clock, metrics, vendor SDK, network \u2014 while the deciding code runs.",
+    "train_f1": 0.53,
+    "holdout_f1": 0.8,
+    "fitted_t": 0.75,
+    "kept": false
+  },
+  {
+    "check": "over-mocked",
+    "variant": "provenance-of-asserted-value",
+    "instructions": "Trace each asserted value backwards through `implementation` from the entry point. Ignore faked modules the asserted path never reaches, and treat a module swapped for a real test database, an in-memory store with read-your-writes, or an in-process app as real, not a fake. Answer yes when every asserted value was already inside a fake \u2014 a stub's return echoed, forwarded, interpolated or prefixed, an argument handed to a stub, or arithmetic whose stub inputs are tuned so every branch yields the same answer \u2014 and the decision the test name promises is itself stubbed. Answer no when real code on that path decides an asserted value: a precondition guard on a fetched row or header, a branch, a loop bound or cursor, a selection, date or version arithmetic. Faking first-party data sources is not by itself the smell.",
+    "train_f1": 0.88,
+    "holdout_f1": 0.8,
+    "fitted_t": 0.35,
+    "kept": true
+  },
+  {
+    "check": "broad-snapshot",
+    "variant": "baseline",
+    "instructions": "Does `test_code` rely on a snapshot so broad that a reviewer cannot tell which behavior it protects, and would likely re-record it rather than investigate a diff?",
+    "train_f1": 0.15,
+    "holdout_f1": 0,
+    "fitted_t": 0.65,
+    "kept": false
+  },
+  {
+    "check": "over-mocked",
+    "variant": "v2 no-fake-precondition + spy-args",
+    "instructions": "No stub, fake or module swap in `test_code`/`file_context` \u2014 answer no. Otherwise trace each asserted value backwards through `implementation` from the entry point. Ignore faked modules the asserted path never reaches, and treat a module swapped for a real test database or in-memory store with read-your-writes as real. Answer yes when every asserted value was already inside a fake \u2014 a stub's return echoed, forwarded, interpolated or prefixed; only the arguments a stub received or that it went uncalled; arithmetic whose stub inputs are tuned so every branch yields the same answer \u2014 and the decision the test name promises is itself stubbed. Answer no when real code on that path decides an asserted value: a precondition guard on a fetched row or header, a branch, a loop bound or cursor, a selection, date or version arithmetic.",
+    "train_f1": 0.85,
+    "holdout_f1": 0.5,
+    "fitted_t": 0.35,
+    "kept": false
+  },
+  {
+    "check": "broad-snapshot",
+    "variant": "two-gates-recorded-artifact-then-breadth",
+    "instructions": "Gate 1 \u2014 is a recording compared? Only yes if `test_code` checks the output of the code under test against a recorded artifact: `toMatchSnapshot`, `toMatchInlineSnapshot`, `toMatchFileSnapshot`, a committed golden file, or a frozen opaque digest or byte constant captured from a past run. Answer no otherwise, whatever it is called: a hand-written `toEqual`/`toBe` literal, however large; a helper, field or variable merely named snapshot; two live values compared to each other (before/after, restart vs start, channel A vs B, two maintained sources); a format regex over a hash. Gate 2 \u2014 does that recording carry many fields, rows, lines or markup past the one distinction the test name states, or collapse everything into one digest? A recorded scalar or few lines that show the named behavior on sight is no.",
+    "train_f1": 0.96,
+    "holdout_f1": 1,
+    "fitted_t": 0.35,
+    "kept": true
+  },
+  {
+    "check": "setup-dominates",
+    "variant": "baseline",
+    "instructions": "Inventory everything `test_code` and `file_context` construct: `vi.mock` calls, top-level consts, fixture objects and their fields, inserted records. Then trace the asserted call through `implementation`: which of those does the exercised path actually read, so that changing it would change the asserted value? Is most of that setup inert \u2014 deletable without touching the assertion?",
+    "train_f1": 0.56,
+    "holdout_f1": 0.4,
+    "fitted_t": 0.95,
+    "kept": false
+  },
+  {
+    "check": "setup-dominates",
+    "variant": "charge-own-setup-only",
+    "instructions": "Charge to this block only what it constructs itself, plus file-level mocks, fixtures and `beforeEach` values that no block in `sibling_tests` reads (a single-block file owns all of them). A module-mock wall or fixture the siblings share is the suite's scaffolding, not this block's scenery. If the block's own setup is under about five lines, answer no. Otherwise trace the exercised path in `implementation`: a fixture, field or stub is load-bearing when the code reads or branches on it so the asserted value depends on it, even if no assertion names it. Answer yes only when most of the charged setup is inert \u2014 records, collaborators and fields the path never touches, however the types demand them.",
+    "train_f1": 0.92,
+    "holdout_f1": 1,
+    "fitted_t": 0.5,
+    "kept": false
+  },
+  {
+    "check": "tests-calls-not-outcomes",
+    "variant": "baseline",
+    "instructions": "Does `test_code` assert only that something was called (toHaveBeenCalled, call counts) without meaningful arguments or resulting observable state, in a case where making the call is not itself the public contract?",
+    "train_f1": 0.81,
+    "holdout_f1": 0.67,
+    "fitted_t": 0.65,
+    "kept": false
+  },
+  {
+    "check": "setup-dominates",
+    "variant": "charge-then-size-escape",
+    "instructions": "Charge to this block only what it constructs itself, plus file-level mocks, fixtures and `beforeEach` values that no block in `sibling_tests` reads (a single-block file owns all of them). A module-mock wall or fixture the siblings share is the suite's scaffolding, not this block's scenery. If the charged setup is under about five lines, answer no. Otherwise trace the exercised path in `implementation`: a fixture, field or stub is load-bearing when the code reads or branches on it so the asserted value depends on it, even if no assertion names it. Answer yes only when most of the charged setup is inert \u2014 records, collaborators and fields the path never touches, however the types demand them.",
+    "train_f1": 0.92,
+    "holdout_f1": 1,
+    "fitted_t": 0.6,
+    "kept": true
+  },
+  {
+    "check": "tests-calls-not-outcomes",
+    "variant": "no-list-first + unpinned-derivation",
+    "instructions": "Answer no when the call \u2014 or its absence \u2014 is the unit's whole observable effect: `not.toHaveBeenCalled` on a guard, refusal, isolation fence or never-charged path; a UI callback prop fired by an interaction; counts pinned across several fake-clock ticks, windows or batches; an outbound request whose target and payload are pinned. Otherwise ask: does `implementation` derive something before the call \u2014 a key, ciphertext, capped amount, recipient set, command string, ordering, which rows \u2014 that no assertion pins to a concrete value? If so, and the only evidence is that a double was touched, answer yes. `resolves.toBeDefined()` on a stubbed return, `expect.any(...)` on the discriminating field, arguments that merely echo the test's inputs, and checking only the first of several calls are not evidence.",
+    "train_f1": 0.94,
+    "holdout_f1": 0.86,
+    "fitted_t": 0.6,
+    "kept": false
+  },
+  {
+    "check": "tests-calls-not-outcomes",
+    "variant": "no-list-first + concrete-result rescue",
+    "instructions": "Answer no when the call \u2014 or its absence \u2014 is the unit's whole observable effect: `not.toHaveBeenCalled` on a guard, refusal, isolation fence or never-charged path; a UI callback prop fired by an interaction; counts pinned across several fake-clock ticks or throttle windows; an outbound request whose target and payload are pinned. Also no when the block pins a concrete returned value, thrown error, response body or real unfaked state. Otherwise ask: does `implementation` derive something before the call \u2014 a key, ciphertext, capped amount, recipient set, command string, ordering, which rows \u2014 that no assertion pins concretely? Then yes, including a bare count on the collaborator whose argument carries that value. `resolves.toBeDefined()`, `expect.any(...)` on the discriminating field, arguments echoing the test's inputs, and checking only the first of several calls are not evidence.",
+    "train_f1": 0.94,
+    "holdout_f1": 1,
+    "fitted_t": 0.55,
+    "kept": true
+  },
+  {
+    "check": "happy-path-only-of-risky-boundary",
+    "variant": "baseline (round 3)",
+    "instructions": "Procedure. 1. List every refusal or failure branch in `implementation`: authorization and tenant guards, duplicate or already-used rejections, version/concurrency conflicts, quota and limit caps, retry exhaustion, rollback on partial failure, over-amount money guards. 2. Name the riskiest one. 3. Search `test_code` and every `sibling_tests` name for that exact condition. A sibling covering a different branch \u2014 unknown id, not found, expiry, bad input, empty result \u2014 does not count. Answer yes when the riskiest branch is exercised by nothing. Answer no when this block itself drives that refusal (even alongside the allowed path), when a sibling drives it, or when `implementation` has no refusal branch.",
+    "train_f1": 0.61,
+    "holdout_f1": 0.67,
+    "fitted_t": 0.75,
+    "kept": true
+  },
+  {
+    "check": "happy-path-only-of-risky-boundary",
+    "variant": "risky-list + success-only gate",
+    "instructions": "Procedure. 1. List the risky refusals in `implementation`: authorization, tenant or membership denial, duplicate or already-used rejection, quota and limit caps, version or concurrency conflict, retry exhaustion, rollback on partial failure, over-amount money guard. A guard that only rejects malformed input, a missing field or an unparseable value is not risky; a null that hides another tenant's or a non-member's data is. 2. No risky refusal in `implementation` -> answer no. 3. Name the riskiest one. Does anything drive it - this block, or a `sibling_tests` name? Neither a sibling on a lesser branch (expiry, unknown id, bad input) nor one on the allowed side of the same rule (a different customer, a non-overlapping slot, a matching version) counts. 4. Answer yes only when every block asserts the success value and none ever produces that guard's failure value.",
+    "train_f1": 0.44,
+    "holdout_f1": 0.67,
+    "fitted_t": 0.65,
+    "kept": false
+  },
+  {
+    "check": "happy-path-only-of-risky-boundary",
+    "variant": "no-risky-surface gate + allowed-side",
+    "instructions": "Procedure. 1. List every refusal branch in `implementation`: authorization, tenant or membership denial, duplicate or already-used rejection, version or concurrency conflict, quota and limit caps, retry exhaustion, rollback on partial failure, over-amount money guard. 2. If `implementation` has none of these - only input-shape validation, a parse error, or an unknown-id lookup - answer no. 3. Otherwise name the riskiest one and search `test_code` and every `sibling_tests` name for that exact condition. Neither a sibling on a different branch (expiry, unknown id, bad input, empty result) nor one on the allowed side of the same rule (a different customer, a non-overlapping slot, a matching version) counts as covering it. Answer yes when nothing drives it. Answer no when this block itself drives that refusal, even alongside the allowed path, or when a sibling does.",
+    "train_f1": 0.56,
+    "holdout_f1": 0.86,
+    "fitted_t": 0.65,
+    "kept": false
+  },
+  {
+    "check": "happy-path-only-of-risky-boundary",
+    "variant": "+sibling-name-describes-consequence",
+    "instructions": "Procedure. 1. List every refusal or failure branch in `implementation`: authorization and tenant guards, duplicate or already-used rejections, version/concurrency conflicts, quota and limit caps, retry exhaustion, rollback on partial failure, over-amount money guards. 2. Name the riskiest one. 3. Search `test_code` and every `sibling_tests` name for that exact condition. A sibling counts as driving it when its name describes the refusing input or the consequence of refusing, even without the words reject or refuse. Neither a sibling on a different branch \u2014 unknown id, expiry, bad input, empty result \u2014 nor one on the allowed side of the same rule \u2014 a different customer, a non-overlapping slot, a matching version \u2014 counts. Answer yes when nothing drives the riskiest branch. Answer no when this block itself drives that refusal (even alongside the allowed path), when a sibling drives it, or when `implementation` has no refusal branch.",
+    "train_f1": 0.61,
+    "holdout_f1": 0.4,
+    "fitted_t": 0.7,
+    "kept": false
+  },
+  {
+    "check": "happy-path-only-of-risky-boundary",
+    "variant": "+precondition-is-not-a-refusal",
+    "instructions": "Procedure. 1. List every refusal or failure branch in `implementation`: authorization and tenant guards, duplicate or already-used rejections, version/concurrency conflicts, quota and limit caps, retry exhaustion, rollback on partial failure, over-amount money guards. 2. Name the riskiest one. 3. Search `test_code` and every `sibling_tests` name for that exact condition. A sibling counts as driving it when its name describes the refusing input or the consequence of refusing, even without the words reject or refuse. Neither a sibling on a different branch \u2014 unknown id, expiry, bad input, empty result \u2014 nor one on the allowed side of the same rule \u2014 a different customer, a non-overlapping slot, a matching version \u2014 counts. Answer yes when nothing drives the riskiest branch. Answer no when this block itself drives that refusal (even alongside the allowed path), when a sibling drives it, or when `implementation` has no such refusal branch - an input-shape precondition, a parse error or an unknown-id lookup is not a risky refusal.",
+    "train_f1": 0.44,
+    "holdout_f1": 0.4,
+    "fitted_t": 0.8,
+    "kept": false
   }
 ]

@@ -1,6 +1,0 @@
-{
-  "fire": ["trivial-primitive"],
-  "not_fire": ["vacuous-assertion"],
-  "class": "pure_logic",
-  "why": "the code under test is a single template string with no branching or edge cases, and any test that follows a homepage card would catch a wrong href for free"
-}

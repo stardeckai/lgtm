@@ -10,6 +10,6 @@ export default {
     true: "The test's expectations were edited to match the new implementation output.",
     false: "The test expresses a requirement that was decided independently of the implementation change.",
   },
-  threshold: 0.70,
+  threshold: 0.75,
   diffOnly: true,
 } satisfies Check;

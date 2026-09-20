@@ -13,7 +13,7 @@ import {
   skillPath,
   type Spawn,
 } from "./init.js";
-import { checksTable, skillMarkdown } from "./skill.js";
+import { checksTable, SKILLS } from "./skill.js";
 
 const dirs: string[] = [];
 const tmp = (): string => {
@@ -42,11 +42,13 @@ describe("init", () => {
     const home = tmp();
     const written = await init({ key: "sk-test-123", home, skill: "claude" });
 
-    expect(written).toEqual([configPath(home), skillPath(home)]);
+    expect(written).toEqual([configPath(home), skillPath(home), skillPath(home, "actually-test")]);
     expect(JSON.parse(fs.readFileSync(configPath(home), "utf8"))).toEqual({ apiKey: "sk-test-123" });
     expect(fs.statSync(configPath(home)).mode & 0o777).toBe(0o600);
     expect(resolveApiKey(home)).toBe("sk-test-123");
-    expect(fs.readFileSync(skillPath(home), "utf8")).toBe(skillMarkdown());
+    for (const { name, markdown } of SKILLS) {
+      expect(fs.readFileSync(skillPath(home, name), "utf8")).toBe(markdown());
+    }
   });
 
   it("writes no skill file at all with --skill none", async () => {
@@ -56,7 +58,9 @@ describe("init", () => {
 
     expect(written).toEqual([configPath(home)]);
     expect(fs.existsSync(skillPath(home))).toBe(false);
+    expect(fs.existsSync(skillPath(home, "actually-test"))).toBe(false);
     expect(fs.existsSync(projectSkillPath(cwd))).toBe(false);
+    expect(fs.existsSync(projectSkillPath(cwd, "actually-test"))).toBe(false);
   });
 
   it("hands the bundled skill dir to the skills CLI, without -g for a project install", async () => {
@@ -77,7 +81,9 @@ describe("init", () => {
 
     await init({ key: "sk", home, cwd, skill: "project", spawn: npx.spawn });
 
-    expect(fs.readFileSync(projectSkillPath(cwd), "utf8")).toBe(skillMarkdown());
+    for (const { name, markdown } of SKILLS) {
+      expect(fs.readFileSync(projectSkillPath(cwd, name), "utf8")).toBe(markdown());
+    }
     expect(fs.existsSync(skillPath(home))).toBe(false);
   });
 
@@ -89,9 +95,9 @@ describe("init", () => {
   });
 });
 
-it("ships skills/lgtm/SKILL.md in sync with skillMarkdown()", () => {
-  const shipped = fs.readFileSync(fileURLToPath(new URL("../skills/lgtm/SKILL.md", import.meta.url)), "utf8");
-  expect(shipped, "skills/lgtm/SKILL.md is stale — run `pnpm gen:skill`").toBe(skillMarkdown());
+it.each(SKILLS)("ships skills/$name/SKILL.md in sync with its generator", ({ name, markdown }) => {
+  const shipped = fs.readFileSync(fileURLToPath(new URL(`../skills/${name}/SKILL.md`, import.meta.url)), "utf8");
+  expect(shipped, `skills/${name}/SKILL.md is stale — run \`pnpm gen:skill\``).toBe(markdown());
 });
 
 it("keeps the README checks table in sync with the checks", () => {

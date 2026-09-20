@@ -1,18 +1,25 @@
 # 😐👍...lgtm?
 
-A Jev-powered linter for tests that pass but prove nothing. BYO TypeSafe API key.
+Prove that your tests actually test something. Powered by Jev and your own TypeSafe API key.
 
 <img src="public/findings.png" alt="lgtm findings: file:line, the check, its probability and a one-line reason">
 
 Your agent wrote 40 tests. They're all green. What do they prove? lgtm reads every test block with its
-implementation and tells you which ones would still pass if the code were broken.
+implementation and tells you which ones are useless.
 
-It runs on [TypeSafe](https://typesafe.ai)'s Jev model, so a whole suite costs cents and a PR costs nothing you would notice.
+It runs on [Jev by TypeSafe](https://typesafe.ai), with your own `TYPESAFE_API_KEY`.
+
+With this, you can prove that your agent actually wrote code that actually works, so you can say it lgtm 😐👍.
+
+_Evaluated and hill-climbed on real live apps built by [Stardeck](https://stardeck.ai): 15,000+ real test blocks scored,
+262 each read against its implementation and labelled, every check's threshold fitted so that when lgtm points at a test, the test is
+worth your time._
 
 ## What you get
 
 - the `lgtm` CLI: run it on a file, a directory or `--diff`, in your terminal or in CI
 - a `/lgtm` skill for your coding agents, so the agent that wrote the tests runs the audit and fixes what it finds
+- an `/actually-test` skill: write the tests the change needs, prove them red, then iterate with lgtm until they pass
 
 ## Install
 
@@ -30,11 +37,11 @@ pnpm add -D @stardeckai/lgtm   # then: pnpm lgtm ...   (npm: npx lgtm ...)
 ## Setup
 
 ```sh
-lgtm init                    # paste your API key, then install the /lgtm skill
+lgtm init                    # paste your API key, then install the /lgtm and /actually-test skills
 ```
 
 It asks for your TypeSafe API key (get one at <https://typesafe.ai>), then asks whether to install the
-`/lgtm` skill with `npx skills`.
+`/lgtm` and `/actually-test` skills with `npx skills`.
 
 The key lands in `~/.config/lgtm/config.json` (mode 0600); `TYPESAFE_API_KEY` in the environment wins over it.
 
@@ -44,10 +51,10 @@ Skip the prompts with `--skill <where>`:
 |---|---|
 | `global` | every project, via the `skills` CLI (what `--yes` picks) |
 | `project` | this project only, via the `skills` CLI |
-| `claude` | write `~/.claude/skills/lgtm/SKILL.md` directly, no `npx` |
-| `none` | skip it |
+| `claude` | write `~/.claude/skills/{lgtm,actually-test}/SKILL.md` directly, no `npx` |
+| `none` | skip them |
 
-If the `skills` CLI can't run, `init` falls back to writing the Claude Code skill itself.
+If the `skills` CLI can't run, `init` falls back to writing the Claude Code skills itself.
 
 Running `lgtm` before setup exits with `😐✋  No API key. Run: lgtm init`.
 
@@ -132,9 +139,8 @@ confidence: a good audit shrinks the suite. And when the suite is clean, it says
 <img src="public/success.png" alt="lgtm clean run: 36 tests. fine. allegedly.">
 
 **Now it costs a cent.** Jev bills $0.042 per million input tokens and answers in under a second. lgtm shows you
-the bill and the runtime before it spends, and caches every answer. Thresholds are fitted for precision: on the
-labelled corpus in [`evals/`](evals/RESULTS.md) they produce zero false positives in 544 cases. When it points at
-a test, the test is worth a look.
+the bill and the runtime before it spends, and caches every answer. Every check holds precision 1.00 on the
+held-out slice of the corpus ([`evals/`](evals/RESULTS.md)).
 
 ## What lgtm likes
 
@@ -176,35 +182,37 @@ Retiring three unit tests for one wider test that really fails is a win, not a c
 <!-- evals:start -->
 ## Evals
 
-`evals/cases` holds 544 labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. The ground truth is kept in `expect.json` so it never reaches the model.
+The corpus is 506 public + 262 private labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. The ground truth is kept in `expect.json` so it never reaches the model.
 
-Scores are at each check's own threshold. 118 of the cases are holdout, never used to fit a threshold or a prompt.
+The 262 private cases come from real Stardeck customer apps and from Stardeck's own codebase, each read against its implementation, labelled, and anonymized. They are scored in these numbers but not published, because anonymization removes names, not shape. The 506 public cases in `evals/cases` reproduce with `pnpm eval` alone.
+
+Scores are at each check's own threshold. 162 of the cases are holdout, never used to fit a threshold or a prompt.
 
 | check | cases | threshold | precision (holdout) | recall (holdout) | precision (all) | recall (all) |
 |---|---|---|---|---|---|---|
-| `would-pass-if-broken` | 71 | 0.60 | 1.00 | 0.64 | 1.00 | 0.61 |
-| `vacuous-assertion` | 159 | 0.35 | 1.00 | 1.00 | 1.00 | 0.93 |
-| `assertion-weaker-than-name` | 59 | 0.60 | 1.00 | 0.89 | 1.00 | 0.93 |
-| `reimplements-logic` | 190 | 0.90 | 1.00 | 0.75 | 1.00 | 0.63 |
-| `mocks-seam-under-test` | 102 | 0.70 | 1.00 | 0.75 | 1.00 | 0.72 |
-| `mock-mirrors-implementation` | 25 | 0.35 | 1.00 | 1.00 | 1.00 | 1.00 |
-| `tests-calls-not-outcomes` | 54 | 0.35 | 1.00 | 1.00 | 1.00 | 0.84 |
-| `tests-internals` | 42 | 0.75 | 1.00 | 1.00 | 1.00 | 0.88 |
-| `setup-dominates` | 42 | 0.95 | 1.00 | 0.25 | 1.00 | 0.35 |
-| `broad-snapshot` | 39 | 0.45 | 1.00 | 1.00 | 1.00 | 0.60 |
-| `swallowed-error-as-success` | 56 | 0.70 | 1.00 | 0.75 | 1.00 | 0.88 |
-| `impossible-fixture` | 49 | 0.65 | 1.00 | 1.00 | 1.00 | 0.88 |
-| `happy-path-only-of-risky-boundary` | 71 | 0.65 | 1.00 | 0.75 | 1.00 | 0.72 |
-| `trivial-primitive` | 105 | 0.80 | 1.00 | 1.00 | 1.00 | 0.89 |
-| `over-mocked` | 59 | 0.80 | 1.00 | 0.75 | 1.00 | 0.88 |
+| `would-pass-if-broken` | 99 | 0.60 | 1.00 | 0.36 | 0.96 | 0.47 |
+| `vacuous-assertion` | 179 | 0.70 | 1.00 | 0.63 | 1.00 | 0.69 |
+| `assertion-weaker-than-name` | 82 | 0.60 | 1.00 | 0.92 | 0.98 | 0.95 |
+| `reimplements-logic` | 204 | 0.85 | 1.00 | 0.50 | 1.00 | 0.67 |
+| `mocks-seam-under-test` | 121 | 0.80 | 1.00 | 0.33 | 1.00 | 0.23 |
+| `mock-mirrors-implementation` | 36 | 0.60 | 1.00 | 0.50 | 1.00 | 0.83 |
+| `tests-calls-not-outcomes` | 74 | 0.65 | 1.00 | 1.00 | 1.00 | 0.87 |
+| `tests-internals` | 64 | 0.65 | 1.00 | 0.80 | 1.00 | 0.70 |
+| `setup-dominates` | 60 | 0.60 | 1.00 | 1.00 | 1.00 | 0.94 |
+| `broad-snapshot` | 51 | 0.35 | 1.00 | 1.00 | 1.00 | 0.94 |
+| `swallowed-error-as-success` | 76 | 0.80 | 1.00 | 0.80 | 1.00 | 0.46 |
+| `impossible-fixture` | 63 | 0.55 | 1.00 | 1.00 | 1.00 | 0.75 |
+| `happy-path-only-of-risky-boundary` | 88 | 0.70 | 1.00 | 0.50 | 1.00 | 0.50 |
+| `trivial-primitive` | 122 | 0.85 | 1.00 | 0.71 | 1.00 | 0.66 |
+| `over-mocked` | 84 | 0.60 | — | 0.00 | 1.00 | 0.21 |
 | `regression-does-not-distinguish` | 26 | 0.35 | 1.00 | 0.33 | 1.00 | 0.67 |
-| `changed-in-lockstep` | 26 | 0.70 | 1.00 | 1.00 | 1.00 | 1.00 |
+| `changed-in-lockstep` | 26 | 0.75 | 1.00 | 1.00 | 1.00 | 0.88 |
 
-Test class accuracy: 465/544 (0.85) on all cases, 104/118 (0.88) on holdout.
+Test class accuracy: 655/768 (0.85) on all cases, 142/162 (0.88) on holdout.
 
-A full cold run of the corpus costs 2124397 input tokens ≈ $0.0892; re-runs hit the cache and only pay for changed cases.
+A full cold run of the corpus is about 3,740,225 input tokens ≈ $0.1571 (estimated from the states; the last run spent $0.0152 after cache hits).
 
-Every miss and false positive is listed in [`evals/RESULTS.md`](evals/RESULTS.md). Reproduce with `pnpm eval`.
+Every miss and false positive is listed in [`evals/RESULTS.md`](evals/RESULTS.md). The public cases reproduce with `pnpm eval`.
 <!-- evals:end -->
 
 ## CI
@@ -240,7 +248,7 @@ above it. `--lean` cuts that back to an 8,000-char implementation and no test fi
 | a PR touching 20 tests (`--diff`) | 20 | ~100k | ~$0.004 |
 | a mid-sized suite | 500 | ~2.5M | ~$0.11 |
 | a large monorepo suite | 5,000 | ~25M | ~$1.05 |
-| the eval corpus (`pnpm eval`, cold) | 544 | see the Evals section | |
+| the eval corpus (`pnpm eval`, cold) | 768 | see the Evals section | |
 
 Answers are cached by state hash under `node_modules/.cache/lgtm`, so a re-run after editing one test only pays for
 that test. The implementation source is the main cost lever: `--no-impl` cuts the bulk of each request at the price
@@ -254,7 +262,7 @@ The key lives in `~/.config/lgtm/config.json`. `TYPESAFE_API_KEY` in the environ
 ```sh
 lgtm key <new-key>           # swap the saved key; `lgtm key` alone prompts
 lgtm clear-cache             # drop this project's cached answers (node_modules/.cache/lgtm)
-lgtm skill                   # (re)install the /lgtm skill, e.g. to add another agent
+lgtm skill                   # (re)install the /lgtm and /actually-test skills, e.g. to add another agent
 lgtm init                    # both steps again
 ```
 
@@ -279,7 +287,7 @@ pnpm test
 pnpm build
 node dist/cli.js --dry-run src   # no API key needed
 npm link                         # expose this checkout as the global `lgtm` (symlink to dist/cli.js; rebuild to update)
-pnpm gen:skill                   # regenerate skills/lgtm/SKILL.md after changing a check (a test guards drift)
+pnpm gen:skill                   # regenerate skills/*/SKILL.md after changing a check or a skill (a test guards drift)
 pnpm eval                        # run the labelled corpus against Jev; --offline re-scores, --fit-thresholds refits
 ```
 

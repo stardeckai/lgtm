@@ -10,5 +10,5 @@ export default {
     true: "The test recomputes the production algorithm to build what it asserts against.",
     false: "Expected values are literals or requirement-derived examples, or the test is a drift/parity guard against a stored artifact or an inverse-operation round trip.",
   },
-  threshold: 0.90,
+  threshold: 0.85,
 } satisfies Check;

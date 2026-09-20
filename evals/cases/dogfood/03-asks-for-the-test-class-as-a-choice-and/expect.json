@@ -2,8 +2,10 @@
   "test": "src/analyze.test.ts::asks for the test class as a choice and returns the answer",
   "fire": [],
   "not_fire": [
+    "over-mocked",
+    "tests-calls-not-outcomes",
     "would-pass-if-broken"
   ],
   "class": "contract_integration",
-  "why": "the assertions pin exact values the named behaviour produces; a plausible break changes them"
+  "why": "the assertions pin exact values the named behaviour produces; a plausible break changes them; the only fake is the model client, a vendor SDK at the external edge; the threshold filter, verbose band, diff gating, class mapping and cache are real analyze code, and the assertions pin exact finding arrays and the exact question set sent, not that a double was touched"
 }

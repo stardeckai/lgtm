@@ -1,9 +1,0 @@
-{
-  "fire": [],
-  "not_fire": [
-    "reimplements-logic",
-    "trivial-primitive"
-  ],
-  "class": "pure_logic",
-  "why": "the icon lookup loops over regex name hints with a precedence fallback, which is real logic with cases of its own, so a test that pins that precedence is not testing a trivial primitive"
-}

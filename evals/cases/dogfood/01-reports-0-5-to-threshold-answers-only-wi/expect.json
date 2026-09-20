@@ -2,9 +2,11 @@
   "test": "src/analyze.test.ts::reports 0.5-to-threshold answers only with verbose",
   "fire": [],
   "not_fire": [
-    "would-pass-if-broken",
-    "vacuous-assertion"
+    "over-mocked",
+    "tests-calls-not-outcomes",
+    "vacuous-assertion",
+    "would-pass-if-broken"
   ],
   "class": "mocked_seam_unit",
-  "why": "the assertions pin exact values the named behaviour produces; a plausible break changes them; the assertions are exact tuples and lengths, not existence checks"
+  "why": "the assertions pin exact values the named behaviour produces; a plausible break changes them; the assertions are exact tuples and lengths, not existence checks; the only fake is the model client, a vendor SDK at the external edge; the threshold filter, verbose band, diff gating, class mapping and cache are real analyze code, and the assertions pin exact finding arrays and the exact question set sent, not that a double was touched"
 }

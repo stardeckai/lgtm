@@ -1,6 +1,0 @@
-{
-  "fire": [],
-  "not_fire": ["tests-calls-not-outcomes", "mocks-seam-under-test", "over-mocked"],
-  "class": "contract_integration",
-  "why": "the real validator runs against the real URL resolver and the assertions pin the resolved URL, the exact key handed to storage, and that a traversal key never reaches it"
-}

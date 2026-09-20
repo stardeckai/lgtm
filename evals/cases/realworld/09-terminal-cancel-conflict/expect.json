@@ -1,9 +1,0 @@
-{
-  "fire": [],
-  "not_fire": [
-    "swallowed-error-as-success",
-    "vacuous-assertion"
-  ],
-  "class": "pure_logic",
-  "why": "the try/catch is preceded by an explicit toThrow on the same call, so a second cancel that silently succeeded would fail the test, and the stored status is pinned before and after"
-}

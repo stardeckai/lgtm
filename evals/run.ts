@@ -18,6 +18,8 @@ import { resolveApiKey } from "../src/init.js";
 const ROOT = path.resolve(import.meta.dirname, "..");
 const CASES = path.join(ROOT, "evals", "cases");
 const RESULTS = path.join(ROOT, "evals", "results");
+/** Ids of cases from an extra (private) root are prefixed with this, so they cannot collide with public ids. */
+const PRIVATE_PREFIX = "private/";
 const ITERATIONS = path.join(ROOT, "evals", "iterations.json");
 /** Every 5th case of each (check, side) group is held out. */
 const HOLDOUT_EVERY = 5;
@@ -25,28 +27,51 @@ const HOLDOUT_EVERY = 5;
 const GRID = Array.from({ length: 14 }, (_, i) => Math.round((0.3 + i * 0.05) * 100) / 100);
 /** one grid step above the lowest clean threshold */
 const MARGIN = 0.05;
+/** A fitted threshold must keep at least this precision on all labelled cases. */
+const MIN_PRECISION = 0.95;
 
 type Expect = { fire: string[]; not_fire: string[]; class: TestClass; why: string; /** dogfood: "src/x.test.ts::test name" */ test?: string };
 type Answered = { probabilities: Record<string, number>; class?: string; model?: string };
-type Case = { id: string; check: string; dir: string; expect: Expect; job: Job };
+type Case = { id: string; check: string; dir: string; root: Root; expect: Expect; job: Job };
+/** A corpus root: `cases/` to walk and `results/` to write answers under. */
+export type Root = { cases: string; results: string; private: boolean };
+
+/**
+ * The public corpus, plus the private one when LGTM_EVALS_EXTRA points at it (a checkout of lgtm-evals-private,
+ * holding `cases/` and `results/` in the same layout). Its cases are scored but not published.
+ */
+export function evalRoots(extra = process.env.LGTM_EVALS_EXTRA): Root[] {
+  const roots: Root[] = [{ cases: CASES, results: RESULTS, private: false }];
+  if (!extra) return roots;
+  // Fail fast: a typo'd path would silently score the public half and then overwrite the published numbers with it.
+  const cases = path.join(extra, "cases");
+  if (!fs.existsSync(cases)) throw new Error(`LGTM_EVALS_EXTRA=${extra} has no cases/ directory`);
+  roots.push({ cases, results: path.join(extra, "results"), private: true });
+  return roots;
+}
 type Split = "train" | "holdout";
 
-function findCases(): string[] {
-  const out: string[] = [];
-  const walk = (dir: string) => {
-    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (!e.isDirectory()) continue;
-      const child = path.join(dir, e.name);
-      if (fs.existsSync(path.join(child, "expect.json"))) out.push(child);
-      else walk(child);
-    }
-  };
-  walk(CASES);
-  return out.sort();
+export function findCases(roots: Root[]): { dir: string; root: Root }[] {
+  const out: { dir: string; root: Root }[] = [];
+  for (const root of roots) {
+    const dirs: string[] = [];
+    const walk = (dir: string) => {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (!e.isDirectory()) continue;
+        const child = path.join(dir, e.name);
+        if (fs.existsSync(path.join(child, "expect.json"))) dirs.push(child);
+        else walk(child);
+      }
+    };
+    walk(root.cases);
+    out.push(...dirs.sort().map((dir) => ({ dir, root })));
+  }
+  return out;
 }
 
-function loadCase(dir: string): Case {
-  const id = path.relative(CASES, dir);
+export function loadCase({ dir, root }: { dir: string; root: Root }): Case {
+  const rel = path.relative(root.cases, dir);
+  const id = root.private ? PRIVATE_PREFIX + rel : rel;
   const expect = JSON.parse(fs.readFileSync(path.join(dir, "expect.json"), "utf8")) as Expect;
 
   // Dogfood cases point at one of this repo's own tests ("src/x.test.ts:42") and get the exact state the CLI
@@ -56,12 +81,11 @@ function loadCase(dir: string): Case {
     const [file, name] = expect.test.split("::");
     const job = buildStates([path.join(ROOT, file!)], { impl: true }).find((j) => j.block.name === name);
     if (!job) throw new Error(`${id}: no test block named ${JSON.stringify(name)} in ${file}`);
-    return { id, check: id.split(path.sep)[0]!, dir, expect, job };
+    return { id, check: rel.split(path.sep)[0]!, dir, root, expect, job };
   }
 
   const testPath = path.join(dir, "case.test.ts");
-  const rel = path.relative(ROOT, testPath);
-  const { tests, fileContext } = extractTests(fs.readFileSync(testPath, "utf8"), rel);
+  const { tests, fileContext } = extractTests(fs.readFileSync(testPath, "utf8"), path.relative(ROOT, testPath));
   if (tests.length === 0) throw new Error(`${id}: no test block found`);
   // The first block is the case under evaluation; any further blocks are its siblings (same as buildStates).
   const block = tests[0]!;
@@ -77,8 +101,9 @@ function loadCase(dir: string): Case {
 
   return {
     id,
-    check: id.split(path.sep)[0]!,
+    check: rel.split(path.sep)[0]!,
     dir,
+    root,
     expect,
     job: {
       block,
@@ -149,7 +174,8 @@ function withLock(file: string, fn: () => void): void {
   }
 }
 
-const resultPath = (c: Case) => path.join(RESULTS, c.check, `${path.basename(c.id)}.json`);
+/** Mirrors the case path under its own root's results/, so nested groups cannot collide and private answers stay private. */
+export const resultPath = (c: Case) => path.join(c.root.results, `${c.root.private ? c.id.slice(PRIVATE_PREFIX.length) : c.id}.json`);
 /** Run-level cost, so --offline and cache-only re-runs keep reporting what the corpus actually cost. */
 const RUN_META = path.join(RESULTS, "run.json");
 
@@ -233,20 +259,19 @@ const bestBy = (scores: Score[], key: "recall" | "f1" | "precision") =>
   scores.reduce((a, b) => ((b[key] ?? -1) >= (a[key] ?? -1) ? b : a));
 
 /**
- * The one threshold rule lives in fitThreshold: zero train false positives, plus one grid step of margin.
- * Returns undefined when there is nothing to fit on (no positives).
- */
-/**
- * Precision first. The threshold is the lowest grid point with zero false positives on train, plus one grid
- * step of margin so a negative sitting just under the line does not flip on a rerun; recall is whatever that
- * leaves. When no grid point is clean (a negative outscores every positive), take the highest-precision point
- * with the most recall, again plus the margin.
+ * The one threshold rule lives in fitThreshold. Returns undefined when there is nothing to fit on (no positives).
+ *
+ * Precision first. The threshold is the lowest grid point whose precision on all labelled cases is at least
+ * MIN_PRECISION, plus one grid step of margin so a negative sitting just under the line does not flip on a rerun;
+ * recall is whatever that leaves. A floor rather than zero false positives: with hundreds of real negatives one
+ * contested label would otherwise switch a check off. When no grid point reaches the floor, take the
+ * highest-precision point with the most recall, again plus the margin.
  */
 export function fitThreshold(pos: (number | undefined)[], neg: (number | undefined)[]): number | undefined {
   if (pos.length === 0) return undefined;
   const rows = [...pos.map((p) => ({ label: true, p })), ...neg.map((p) => ({ label: false, p }))];
   const scores = GRID.map((t) => scoreAt(rows, t));
-  const clean = scores.filter((s) => s.tp > 0 && s.fp === 0);
+  const clean = scores.filter((s) => s.tp > 0 && (s.precision ?? 0) >= MIN_PRECISION);
   // clean thresholds: the lowest one has the most recall (grid is ascending, so take the first)
   const pick = clean.length > 0 ? clean[0]! : bestBy(scores.filter((s) => s.tp > 0), "precision");
   return Math.min(GRID[GRID.length - 1]!, Math.round((pick.t + MARGIN) * 100) / 100);
@@ -352,6 +377,10 @@ function iterationsSection(): string[] {
 
 function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inputTokens?: number; model?: string }): { md: string; readme: string } {
   const rows = scoreRows(cases, answers);
+  const nPrivate = cases.filter((c) => c.root.private).length;
+  /** "768 labelled cases (506 public + 262 private)" once the private root is loaded. */
+  const counted = `${cases.length} labelled cases (${nPrivate === 0 ? "" : `${cases.length - nPrivate} public + ${nPrivate} private, `}synthetic + anonymized real-world)`;
+  const countedReadme = nPrivate === 0 ? `${cases.length}` : `${cases.length - nPrivate} public + ${nPrivate} private`;
   const holdoutCases = cases.filter((c) => splitOf(c) === "holdout");
 
   const perCheck = CHECKS.map((check) => {
@@ -390,7 +419,7 @@ function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inpu
   const md = [
     "# lgtm eval results",
     "",
-    `${cases.length} labelled cases (synthetic + anonymized real-world) · ${rows.length} scored (check, case) pairs · model \`${meta.model ?? "cached/offline"}\``,
+    `${counted} · ${rows.length} scored (check, case) pairs · model \`${meta.model ?? "cached/offline"}\``,
     "",
     `Split: ${cases.length - holdoutCases.length} train · ${holdoutCases.length} holdout.`,
     "",
@@ -436,11 +465,21 @@ function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inpu
     "",
   ].join("\n");
 
+  // Cold cost from state sizes plus the question text sent with every request: the measured count only covers
+  // what the cache did not have.
+  const questionChars = JSON.stringify(CHECKS.map((c) => [c.instructions, c.criteria])).length;
+  const coldTokens = Math.round(cases.reduce((n, c) => n + JSON.stringify(c.job.state).length + questionChars, 0) / 4);
   const readme = [
     "## Evals",
     "",
-    `\`evals/cases\` holds ${cases.length} labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. The ground truth is kept in \`expect.json\` so it never reaches the model.`,
+    `The corpus is ${countedReadme} labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. The ground truth is kept in \`expect.json\` so it never reaches the model.`,
     "",
+    ...(nPrivate === 0
+      ? []
+      : [
+          `The ${nPrivate} private cases come from real Stardeck customer apps and from Stardeck's own codebase, each read against its implementation, labelled, and anonymized. They are scored in these numbers but not published, because anonymization removes names, not shape. The ${cases.length - nPrivate} public cases in \`evals/cases\` reproduce with \`pnpm eval\` alone.`,
+          "",
+        ]),
     `Scores are at each check's own threshold. ${holdoutCases.length} of the cases are holdout, never used to fit a threshold or a prompt.`,
     "",
     "| check | cases | threshold | precision (holdout) | recall (holdout) | precision (all) | recall (all) |",
@@ -452,17 +491,20 @@ function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inpu
     "",
     `Test class accuracy: ${acc(classAll)} on all cases, ${acc(classHold)} on holdout.`,
     "",
-    `A full cold run of the corpus costs ${meta.inputTokens ?? 0} input tokens ≈ ${usd(meta.inputTokens ?? 0)}; re-runs hit the cache and only pay for changed cases.`,
+    `A full cold run of the corpus is about ${coldTokens.toLocaleString("en-US")} input tokens ≈ ${usd(coldTokens)} (estimated from the states; the last run spent ${usd(meta.inputTokens ?? 0)} after cache hits).`,
     "",
-    "Every miss and false positive is listed in [`evals/RESULTS.md`](evals/RESULTS.md). Reproduce with `pnpm eval`.",
+    "Every miss and false positive is listed in [`evals/RESULTS.md`](evals/RESULTS.md). The public cases reproduce with `pnpm eval`.",
     "",
   ].join("\n");
 
   return { md, readme };
 }
 
-function writeReadme(section: string): void {
-  const file = path.join(ROOT, "README.md");
+/**
+ * The published numbers include the private corpus, so a public-only run must not overwrite them.
+ */
+export function writeReadme(section: string, hasPrivate: boolean, file = path.join(ROOT, "README.md")): void {
+  if (!hasPrivate) return;
   const src = fs.readFileSync(file, "utf8");
   const start = "<!-- evals:start -->";
   const end = "<!-- evals:end -->";
@@ -481,11 +523,15 @@ async function main(): Promise<void> {
       only: { type: "string" },
       "fit-thresholds": { type: "boolean" },
       write: { type: "boolean" },
+      "public-only-ok": { type: "boolean" },
     },
   });
-  const cases = findCases().map(loadCase);
+  const roots = evalRoots();
+  const hasPrivate = roots.some((r) => r.private);
+  const cases = findCases(roots).map(loadCase);
   HOLDOUT = computeSplit(cases);
   console.log(`${cases.length} cases · ${cases.length - HOLDOUT.size} train · ${HOLDOUT.size} holdout`);
+  if (!hasPrivate) console.log("[eval] public corpus only — the published README numbers include the private set, so they are left alone (set LGTM_EVALS_EXTRA to refresh them)");
 
   if (values["dump-states"]) {
     console.log(JSON.stringify(cases.map((c) => ({ case: c.id, state: c.job.state })), null, 2));
@@ -493,6 +539,10 @@ async function main(): Promise<void> {
   }
 
   if (values["fit-thresholds"]) {
+    // Fitting on the public half alone would move every threshold, so refuse unless that is the point.
+    if (values.write && !hasPrivate && !values["public-only-ok"]) {
+      throw new Error("refusing to refit thresholds without the private corpus: set LGTM_EVALS_EXTRA, or pass --public-only-ok to fit on the public cases alone");
+    }
     fitThresholds(scoreRows(cases, readAnswers(cases)), values.write === true);
     return;
   }
@@ -513,7 +563,7 @@ async function main(): Promise<void> {
   const { md, readme } = buildReport(cases, answers, { inputTokens, ...(model ? { model } : {}) });
 
   fs.writeFileSync(path.join(ROOT, "evals", "RESULTS.md"), md);
-  writeReadme(readme);
+  writeReadme(readme, hasPrivate);
   console.log(`${cases.length} cases, ${answers.size} with answers → evals/RESULTS.md`);
 }
 

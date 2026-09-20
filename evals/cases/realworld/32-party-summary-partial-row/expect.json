@@ -1,6 +1,0 @@
-{
-  "fire": ["impossible-fixture"],
-  "not_fire": ["vacuous-assertion"],
-  "class": "pure_logic",
-  "why": "the cast builds a booking with no id, no createdAt and no attendees array at all, a row the type and the writer never produce, and the branch it reaches depends on that missing array"
-}

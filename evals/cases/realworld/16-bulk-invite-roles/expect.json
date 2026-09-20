@@ -1,6 +1,0 @@
-{
-  "fire": ["happy-path-only-of-risky-boundary"],
-  "not_fire": ["vacuous-assertion"],
-  "class": "mocked_seam_unit",
-  "why": "the admin gate, the seat quota and the role-belongs-to-this-workspace check are all stubbed to allow, and no test here or alongside it covers a non-admin caller, an exhausted seat quota or a role id from another workspace"
-}

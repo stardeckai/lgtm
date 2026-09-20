@@ -1,0 +1,9 @@
+{
+  "test": "src/extract.test.ts::records every test with its name, line, describePath and exact source slice",
+  "fire": [],
+  "not_fire": [
+    "tests-internals"
+  ],
+  "class": "pure_logic",
+  "why": "the assertions read the return value of extractTests (names, lines, describe paths, source slices, fileContext), which is the module's whole contract surface; nothing private is peeked"
+}

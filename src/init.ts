@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import readline from "node:readline/promises";
 import { fileURLToPath } from "node:url";
-import { skillMarkdown } from "./skill.js";
+import { SKILLS } from "./skill.js";
 
 export type SkillMode = "global" | "project" | "claude" | "none";
 export const SKILL_MODES: SkillMode[] = ["global", "project", "claude", "none"];
@@ -13,9 +13,10 @@ export const SKILL_MODES: SkillMode[] = ["global", "project", "claude", "none"];
 export const pkgRoot = fileURLToPath(new URL("..", import.meta.url));
 
 export const configPath = (home: string = os.homedir()) => path.join(home, ".config", "lgtm", "config.json");
-export const skillPath = (home: string = os.homedir()) => path.join(home, ".claude", "skills", "lgtm", "SKILL.md");
-export const projectSkillPath = (cwd: string = process.cwd()) =>
-  path.join(cwd, ".claude", "skills", "lgtm", "SKILL.md");
+export const skillPath = (home: string = os.homedir(), name = "lgtm") =>
+  path.join(home, ".claude", "skills", name, "SKILL.md");
+export const projectSkillPath = (cwd: string = process.cwd(), name = "lgtm") =>
+  path.join(cwd, ".claude", "skills", name, "SKILL.md");
 
 /** Key from the environment, else the global config file. */
 export function resolveApiKey(home: string = os.homedir()): string | undefined {
@@ -47,7 +48,9 @@ export function saveKey(key: string, home = os.homedir()): string {
 export async function askSkillMode(): Promise<SkillMode> {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   try {
-    const yes = (await rl.question("Install the /lgtm skill for your coding agents? [Y/n] ")).trim().toLowerCase();
+    const yes = (await rl.question("Install the /lgtm and /actually-test skills for your coding agents? [Y/n] "))
+      .trim()
+      .toLowerCase();
     if (yes.startsWith("n")) return "none";
     const where = (await rl.question("Where? (g)lobal for every project / (p)roject only [g] ")).trim().toLowerCase();
     return where.startsWith("p") ? "project" : "global";
@@ -56,10 +59,14 @@ export async function askSkillMode(): Promise<SkillMode> {
   }
 }
 
-function writeSkillFile(file: string): string {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, skillMarkdown());
-  return file;
+/** Write every bundled skill under `.claude/skills/<name>/SKILL.md` at `root`; returns the files. */
+function writeSkillFiles(root: string): string[] {
+  return SKILLS.map(({ name, markdown }) => {
+    const file = path.join(root, ".claude", "skills", name, "SKILL.md");
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, markdown());
+    return file;
+  });
 }
 
 export type Spawn = (
@@ -69,30 +76,27 @@ export type Spawn = (
 ) => { status: number | null; error?: Error };
 
 /**
- * Hand the bundled skill to the `skills` CLI (which asks the user which agents to install to).
- * Falls back to writing the Claude Code skill directly when that CLI can't run.
- * Returns a path worth printing, or undefined when nothing else needs saying.
+ * Hand the bundled skills to the `skills` CLI (which asks the user which agents to install to).
+ * Falls back to writing the Claude Code skills directly when that CLI can't run.
+ * Returns the paths worth printing, empty when nothing else needs saying.
  */
-export function installSkill(
-  mode: SkillMode,
-  opts: { home?: string; cwd?: string; spawn?: Spawn } = {},
-): string | undefined {
-  if (mode === "none") return undefined;
+export function installSkill(mode: SkillMode, opts: { home?: string; cwd?: string; spawn?: Spawn } = {}): string[] {
+  if (mode === "none") return [];
   const home = opts.home ?? os.homedir();
   const cwd = opts.cwd ?? process.cwd();
-  if (mode === "claude") return writeSkillFile(skillPath(home));
+  if (mode === "claude") return writeSkillFiles(home);
 
   const args = ["-y", "skills", "add", path.join(pkgRoot, "skills")];
   if (mode === "global") args.push("-g");
   const res = (opts.spawn ?? spawnSync)("npx", args, { stdio: "inherit", cwd });
-  if (!res.error && res.status === 0) return undefined;
+  if (!res.error && res.status === 0) return [];
 
-  const file = writeSkillFile(mode === "global" ? skillPath(home) : projectSkillPath(cwd));
-  console.log(`skills CLI unavailable, installed for Claude Code only at ${file}`);
-  return undefined;
+  const files = writeSkillFiles(mode === "global" ? home : cwd);
+  console.log(`skills CLI unavailable, installed for Claude Code only at ${files.join(", ")}`);
+  return [];
 }
 
-/** Step 1: save the key. Step 2: install the skill. Returns the files worth printing. */
+/** Step 1: save the key. Step 2: install the skills. Returns the files worth printing. */
 export async function init(
   opts: { key?: string; home?: string; cwd?: string; skill?: SkillMode; yes?: boolean; spawn?: Spawn } = {},
 ): Promise<string[]> {
@@ -108,8 +112,7 @@ export async function init(
   if (key) written.push(saveKey(key, home));
 
   const mode = opts.skill ?? (opts.yes ? "global" : await askSkillMode());
-  const skill = installSkill(mode, { home, cwd: opts.cwd, spawn: opts.spawn });
-  if (skill) written.push(skill);
+  written.push(...installSkill(mode, { home, cwd: opts.cwd, spawn: opts.spawn }));
 
   return written;
 }

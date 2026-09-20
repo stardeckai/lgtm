@@ -5,11 +5,11 @@ export default {
   emoji: "🌀",
   blurb: "Most of the setup never reaches the assertion. It is scenery.",
   instructions:
-    "Inventory everything `test_code` and `file_context` construct: `vi.mock` calls, top-level consts, fixture objects and their fields, inserted records. Then trace the asserted call through `implementation`: which of those does the exercised path actually read, so that changing it would change the asserted value? Is most of that setup inert — deletable without touching the assertion?",
+    "Charge to this block only what it constructs itself, plus file-level mocks, fixtures and `beforeEach` values that no block in `sibling_tests` reads (a single-block file owns all of them). A module-mock wall or fixture the siblings share is the suite's scaffolding, not this block's scenery. If the charged setup is under about five lines, answer no. Otherwise trace the exercised path in `implementation`: a fixture, field or stub is load-bearing when the code reads or branches on it so the asserted value depends on it, even if no assertion names it. Answer yes only when most of the charged setup is inert — records, collaborators and fields the path never touches, however the types demand them.",
   criteria: {
-    true: "Most mocks, fixtures or fields never reach the asserted value; they exist to make the test look realistic.",
+    true: "This block builds its own bulky fixture and most of its fields, rows or stubs are never touched by the exercised path.",
     false:
-      "Every fixture and mock is read by the exercised path or named in an assertion — or the setup is only a few lines, whatever else is wrong with the test.",
+      "The bulky mocks or fixtures are file-level and shared with sibling blocks, or the path reads what is built, or the block owns only a few lines of setup.",
   },
-  threshold: 0.95,
+  threshold: 0.60,
 } satisfies Check;

@@ -1,4 +1,4 @@
-import { DEFAULT_THRESHOLD, type Check } from "../types.js";
+import type { Check } from "../types.js";
 
 export default {
   id: "trivial-primitive",
@@ -10,5 +10,5 @@ export default {
     true: "A one-liner with no subtle edge cases, already exercised by any real test of the feature.",
     false: "The behavior has edge cases worth pinning on their own — money or rounding, parsing, dates and time zones, encoding, or a security or permission path.",
   },
-  threshold: DEFAULT_THRESHOLD,
+  threshold: 0.85,
 } satisfies Check;

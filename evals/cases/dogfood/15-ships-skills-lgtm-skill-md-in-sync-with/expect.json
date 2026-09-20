@@ -1,5 +1,5 @@
 {
-  "test": "src/init.test.ts::ships skills/lgtm/SKILL.md in sync with skillMarkdown()",
+  "test": "src/init.test.ts::ships skills/$name/SKILL.md in sync with its generator",
   "fire": [],
   "not_fire": [
     "reimplements-logic"
