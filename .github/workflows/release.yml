@@ -19,6 +19,10 @@ permissions:
   id-token: write  # npm trusted publishing
   pull-requests: write  # "shipped in vX" comment
 
+# Serialized so two releases cannot race the tag. GitHub keeps at most one
+# running plus one pending run per group, so a burst of pushes drops the
+# intermediate pending runs — harmless here, because every run does the same
+# guarded publish off main's HEAD, and the last one always executes.
 concurrency: release
 
 jobs:
