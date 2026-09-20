@@ -14,7 +14,7 @@ import readline from "node:readline/promises";
 
 const IGNORED_DIRS = new Set(["node_modules", "dist", "build", ".git"]);
 
-const USAGE = `lgtm [files|dirs...]
+const USAGE = `lgtm <files|dirs...>   (e.g. lgtm .)
 
   init                 save your TypeSafe API key, then install the /lgtm and /actually-test skills
   key [value]          swap the saved API key (prompts when no value is given)
@@ -179,6 +179,12 @@ async function main(): Promise<number> {
       console.log(`${GESTURE[CATEGORY_OF[check.id] ?? "scope"]} ${check.id} — ${check.blurb}${check.diffOnly ? "  [--diff only]" : ""}`);
     }
     return 0;
+  }
+
+  // A bare `lgtm` used to walk the cwd — which might be $HOME. Make the target explicit.
+  if (positionals.length === 0 && values.diff === undefined) {
+    console.log(USAGE);
+    return 2;
   }
 
   const format = values.format as Format;

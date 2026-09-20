@@ -61,7 +61,7 @@ Running `lgtm` before setup exits with `😐✋  No API key. Run: lgtm init`.
 ## Use
 
 ```sh
-lgtm                       # every *.test.* / *.spec.* file under the cwd
+lgtm .                     # every *.test.* / *.spec.* file under a directory (a path is required)
 lgtm src/user.test.ts      # one file, or a directory
 lgtm --diff origin/main    # only tests changed vs a base, with the diff as evidence
 lgtm --diff                # just what you're working on: changed and new tests, plus tests of changed code, vs the default branch
@@ -74,7 +74,7 @@ unless you pass `--yes`.
 <img src="public/plan.png" alt="lgtm plan: files, estimated cost and runtime, then a confirmation prompt">
 
 ```sh
-lgtm --yes --format json   # non-interactive
+lgtm . --yes --format json # non-interactive
 ```
 
 For a one-off run without installing: `npx @stardeckai/lgtm --dry-run src`.
