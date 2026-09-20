@@ -183,7 +183,7 @@ function resolveAlias(fromFile: string, spec: string): string | null {
       middle = spec.slice(head.length, spec.length - tail.length);
     }
     for (const target of targets) {
-      const hit = resolveBase(star < 0 ? target : target.replace("*", middle));
+      const hit = resolveBase(star < 0 ? target : target.replaceAll("*", middle));
       if (hit) return hit;
     }
   }
