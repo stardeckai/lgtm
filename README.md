@@ -93,7 +93,7 @@ test/payment.test.ts:42  "rejects expired cards"
 test/refund.test.ts:17  "refunds a captured charge"
   😐🤏 swallowed-error-as-success 0.88 — The test passes whether the error is thrown, caught or never raised; assert the specific failure by class, code or message.
 
-😐🫵  2 tests prove nothing.
+😐🫵  2 tests prove nothing, out of 31 test cases.
 4 contract-integration · 19 mocked-seam · 8 pure-logic
 
 98120 input tokens used ≈ $0.0041 ($0.0001 per test)
@@ -101,10 +101,10 @@ test/refund.test.ts:17  "refunds a captured charge"
 ```
 
 Four faces, one per family: `😐🤏` the assertion proves this much, `😐👏` you tested the mock, `😐🤌` what
-exactly are we doing here, `😐🫸` do not merge this. A finding within 0.15 of its check's threshold is `😐🤞`,
-"Worth a look.", and does not count against the test; one clear of that margin is red and does. `--verbose` also
+exactly are we doing here, `😐🫸` do not merge this. A finding within 0.15 of its check's threshold carries no
+face, is yellow and reads "Worth a look."; it does not count against the test; one clear of that margin is red and does. `--verbose` also
 shows suspects under the threshold, dim. The verdict is one line, `😐👍  N tests. fine...lgtm?`,
-`😐🤞  N tests worth a look. nothing proven, nothing disproven.` or `😐🫵  N tests prove nothing.` `--format github`
+`😐🤞  N tests worth a look, out of M test cases.` or `😐🫵  N tests prove nothing, out of M test cases.` `--format github`
 emits a warning for a proven finding and a notice for one worth a look; `--format json` stays plain.
 
 ### /actually-test

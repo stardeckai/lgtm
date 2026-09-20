@@ -52,10 +52,10 @@ Report as a table: file:line, check id, verdict, one-line reason.
 Each finding line opens with one of four faces, one per family: \`😐🤏\` the assertion proves this much,
 \`😐👏\` you tested the mock, \`😐🤌\` what exactly are we doing here, \`😐🫸\` do not merge this. Then the
 check id and a one-line reason (\`--verbose\` adds the probability, which is a score against a fitted cut-off, not a confidence); \`--format json\` adds a \`checks\` map with the longer explanation
-and the fix, once per check. A finding within 0.15 of its check's threshold is shown as \`😐🤞\` with "Worth a
-look." and is not counted against the test; one clear of that margin is red and counts. \`--verbose\` suspects
+and the fix, once per check. A finding within 0.15 of its check's threshold carries no face, is yellow and
+prefixed "Worth a look."; it is not counted against the test; one clear of that margin is red and counts. \`--verbose\` suspects
 under the threshold show a bare \`😐\`. The verdict is one line: \`😐👍  N tests. fine...lgtm?\`,
-\`😐🤞  N tests worth a look. nothing proven, nothing disproven.\` or \`😐🫵  N tests prove nothing.\` The class line
+\`😐🤞  N tests worth a look, out of M test cases.\` or \`😐🫵  N tests prove nothing, out of M test cases.\` The class line
 counts contract-integration (the good kind), mocked-seam and pure-logic.
 
 ## Checks
