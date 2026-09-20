@@ -613,18 +613,27 @@ export async function analyze(jobs: Job[], opts: AnalyzeOptions, client: Client)
 
   let next = 0;
   let done = 0;
+  // A throwing worker must not leave its siblings billing into a total the caller has already written: stop
+  // handing out jobs, let what is in flight settle, then raise the first failure with the accounting complete.
+  let failure: { err: unknown } | undefined;
   const workers = Math.max(1, Math.min(opts.concurrency ?? 4, jobs.length));
   await Promise.all(
     Array.from({ length: workers }, async () => {
-      while (next < jobs.length) {
+      while (next < jobs.length && !failure) {
         const job = jobs[next++];
         if (job) {
-          await run(job);
+          try {
+            await run(job);
+          } catch (err) {
+            failure ??= { err };
+            return;
+          }
           opts.onProgress?.(++done, jobs.length, inputTokens);
         }
       }
     }),
   );
+  if (failure) throw failure.err;
 
   return { findings, classes, skipped, inputTokens, ...(model ? { model } : {}) };
 }
