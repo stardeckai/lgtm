@@ -10,26 +10,26 @@ Corpus: 521 public + 347 private labelled cases (368 real), 245 held out (187 re
 
 High-confidence findings sit at or above the check's high-confidence line; all flagged includes the worth-a-look band from the threshold up.
 
-| check | threshold | high-confidence precision/recall | all flagged precision/recall | cases |
+| check | threshold | high-confidence precision/recall | all flagged precision/recall | held-out +/− |
 |---|---|---|---|---|
-| `would-pass-if-broken` | 0.35 | 0.91/0.42 | 0.81/0.54 | 115 |
-| `vacuous-assertion` | 0.58 | 1.00/0.33 | 1.00/0.83 | 194 |
-| `assertion-weaker-than-name` | 0.68 | 1.00/0.58 | 1.00/0.84 | 95 |
-| `reimplements-logic` | 0.60 | 1.00/0.90 | 1.00/0.90 | 213 |
-| `mocks-seam-under-test` | 0.84 | 1.00/0.17 | 1.00/0.67 | 128 |
-| `mock-mirrors-implementation` | 0.55 | 1.00/0.50 | 1.00/0.75 | 42 |
-| `tests-calls-not-outcomes` | 0.75 | —/0.00 | 1.00/0.67 | 77 |
-| `tests-internals` | 0.35 | 1.00/0.57 | 0.86/0.86 | 70 |
-| `setup-dominates` | 0.70 | 1.00/0.67 | 0.67/0.67 | 68 |
-| `broad-snapshot` | 0.35 | 1.00/0.67 | 1.00/1.00 | 51 |
-| `swallowed-error-as-success` | 0.70 | 1.00/0.43 | 0.71/0.71 | 77 |
-| `impossible-fixture` | 0.50 | 1.00/0.33 | 1.00/0.33 | 76 |
-| `happy-path-only-of-risky-boundary` | 0.65 | —/0.00 | 1.00/0.60 | 96 |
-| `trivial-primitive` | 0.68 | 1.00/0.57 | 1.00/0.86 | 129 |
-| `over-mocked` | 0.55 | 0.80/0.57 | 0.83/0.71 | 94 |
-| `regression-does-not-distinguish` | 0.35 | 1.00/0.50 | 1.00/0.50 | 41 |
-| `changed-in-lockstep` | 0.80 | 1.00/0.50 | 1.00/1.00 | 36 |
-| **all** | | 0.97/0.46 | 0.93/0.74 | 1602 |
+| `would-pass-if-broken` | 0.35 | 0.91/0.42 | 0.81/0.54 | 24/18 |
+| `vacuous-assertion` | 0.58 | 1.00/0.33 | 1.00/0.83 | 18/28 |
+| `assertion-weaker-than-name` | 0.68 | 1.00/0.58 | 1.00/0.84 | 19/6 |
+| `reimplements-logic` | 0.60 | 1.00/0.90 | 1.00/0.90 | 10/26 |
+| `mocks-seam-under-test` | 0.84 | 1.00/0.17 | 1.00/0.67 | 6/18 |
+| `mock-mirrors-implementation` | 0.55 | 1.00/0.50 | 1.00/0.75 | 4/10 |
+| `tests-calls-not-outcomes` | 0.75 | —/0.00 | 1.00/0.67 | 6/16 |
+| `tests-internals` | 0.35 | 1.00/0.57 | 0.86/0.86 | 7/11 |
+| `setup-dominates` | 0.70 | 1.00/0.67 | 0.67/0.67 | 3/17 |
+| `broad-snapshot` | 0.35 | 1.00/0.67 | 1.00/1.00 | 3/14 |
+| `swallowed-error-as-success` | 0.70 | 1.00/0.43 | 0.71/0.71 | 7/14 |
+| `impossible-fixture` | 0.50 | 1.00/0.33 | 1.00/0.33 | 3/18 |
+| `happy-path-only-of-risky-boundary` | 0.65 | —/0.00 | 1.00/0.60 | 5/17 |
+| `trivial-primitive` | 0.68 | 1.00/0.57 | 1.00/0.86 | 14/12 |
+| `over-mocked` | 0.55 | 0.80/0.57 | 0.83/0.71 | 7/19 |
+| `regression-does-not-distinguish` | 0.35 | 1.00/0.50 | 1.00/0.50 | 2/1 |
+| `changed-in-lockstep` | 0.80 | 1.00/0.50 | 1.00/1.00 | 2/2 |
+| **all** | | 0.97/0.46 | 0.93/0.74 | 140/247 |
 
 ## Per check
 
