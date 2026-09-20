@@ -66,6 +66,8 @@ export type AnalyzeOptions = {
   only?: string[];
   skip?: string[];
   concurrency?: number;
+  /** called after each block finishes (answered, cached or skipped) with the running totals */
+  onProgress?: (done: number, total: number, inputTokens: number) => void;
   /** also report findings from 0.5 up to the threshold */
   verbose?: boolean;
   /** directory for the answer cache; undefined disables caching */
@@ -197,6 +199,8 @@ function hopImports(file: string, seen: Set<string>): string[] {
   for (const spec of extractTests(fs.readFileSync(file, "utf8"), file).imports) {
     const resolved = resolveImport(file, spec);
     if (!resolved || seen.has(resolved)) continue;
+    // JSON/CSS/asset imports resolve fine but are not modules to parse or send.
+    if (!SOURCE_EXTS.includes(path.extname(resolved))) continue;
     if (fs.statSync(resolved).size > BIG_FILE) continue;
     seen.add(resolved);
     out.push(resolved);
@@ -363,6 +367,13 @@ export function checksFor(state: State, opts: AnalyzeOptions) {
   );
 }
 
+/** Whether a block's answer is already on disk for these options — the plan uses it to estimate only the misses. */
+export function isCached(job: Job, opts: AnalyzeOptions): boolean {
+  if (!opts.cacheDir) return false;
+  const checks = checksFor(job.state, opts);
+  return checks.length > 0 && fs.existsSync(cachePath(opts.cacheDir, job.state, checks));
+}
+
 function cachePath(dir: string, state: State, checks: Check[]): string {
   const questions = checks.map((c) => c.id + c.instructions + JSON.stringify(c.criteria ?? null)).join(",");
   const hash = createHash("sha256")
@@ -438,12 +449,16 @@ export async function analyze(jobs: Job[], opts: AnalyzeOptions, client: Client)
   };
 
   let next = 0;
+  let done = 0;
   const workers = Math.max(1, Math.min(opts.concurrency ?? 4, jobs.length));
   await Promise.all(
     Array.from({ length: workers }, async () => {
       while (next < jobs.length) {
         const job = jobs[next++];
-        if (job) await run(job);
+        if (job) {
+          await run(job);
+          opts.onProgress?.(++done, jobs.length, inputTokens);
+        }
       }
     }),
   );

@@ -5,10 +5,11 @@ import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { AuthenticationError, TypeSafeClient } from "@typesafe-ai/sdk";
-import { analyze, buildStates, checksFor } from "./analyze.js";
-import { CHECKS } from "./checks/index.js";
+import { analyze, buildStates, checksFor, isCached, type AnalyzeOptions, type Job } from "./analyze.js";
+import { usd, CHECKS } from "./checks/index.js";
 import { askKey, askSkillMode, init, installSkill, resolveApiKey, saveKey, SKILL_MODES, type SkillMode } from "./init.js";
-import { formatClasses, formatReport, real, type Format } from "./report.js";
+import { c, formatClasses, formatReport, real, type Format } from "./report.js";
+import readline from "node:readline/promises";
 
 const TEST_FILE = /\.(test|spec)\.(ts|tsx|js|jsx|mts|cts)$/;
 const IGNORED_DIRS = new Set(["node_modules", "dist", "build", ".git"]);
@@ -20,7 +21,7 @@ const USAGE = `lgtm [files|dirs...]
   skill                install the /lgtm skill again (to add more agents)
   --key <value>        (init) use this key instead of prompting
   --skill <where>      (init/skill) global | project | claude | none — skip the prompt
-  --yes                (init/skill) take the defaults: key from --key, skill installed globally
+  --yes                run without the confirmation prompt (also: init/skill defaults)
   --diff <base>        only test files changed vs base, and include the diff in the state
   --threshold <0..1>   override every check's threshold
   --only <ids,...>     run only these checks
@@ -32,7 +33,8 @@ const USAGE = `lgtm [files|dirs...]
   --no-cache           ignore the answer cache
   --fail               exit 1 if there are findings
   --fail-on-error      exit 1 if any test block was skipped by an API error
-  --dry-run            print the states that would be sent, call nothing
+  --dry-run            list the blocks and state sizes that would be sent, call nothing
+  --json               (dry-run) print the full states as JSON instead
   --classes            list every test with its class (🎯 integration, 🧱 mocked seam, 🔬 pure logic)
   --verbose            also show 0.5-to-threshold findings (😐🫴 "explain this")
   --list-checks        print the checks and exit
@@ -65,6 +67,45 @@ function discover(targets: string[], diffBase?: string): string[] {
   return files.map((f) => path.relative(process.cwd(), path.resolve(f)));
 }
 
+type PlanFlags = { lean?: boolean; "no-impl"?: boolean; diff?: string };
+
+/** The plan for a run: files, checks, estimated cost and runtime. Printed before every run and by --dry-run. */
+function printPlan(jobs: Job[], files: string[], values: PlanFlags, opts: AnalyzeOptions, log = console.log): void {
+  const byFile = [...new Set(jobs.map((j) => j.block.file))];
+  const fresh = jobs.filter((j) => !isCached(j, opts));
+  const cached = jobs.length - fresh.length;
+  const tokensOf = (list: Job[]) => Math.round(list.reduce((n, j) => n + JSON.stringify(j.state).length, 0) / 4);
+  const tokens = tokensOf(fresh);
+  // Measured on live runs: ~1s of connection setup, then rounds of `concurrency` requests where each request
+  // takes ~0.4s plus ~0.015s per 1k input tokens (7 blocks/1 worker 5.0s, 36 blocks/4 workers 5.3s full, 4.4s lean).
+  const estimate = (list: Job[], totalTokens: number) => {
+    if (list.length === 0) return 0;
+    const workers = opts.concurrency ?? 4;
+    const perRequest = 0.4 + 0.015 * (totalTokens / list.length / 1000);
+    return 1 + Math.ceil(list.length / workers) * perRequest;
+  };
+  const seconds = estimate(fresh, tokens);
+  const listed = byFile.slice(0, 8).map((f) => `  ${f}`);
+  if (byFile.length > 8) listed.push(`  … and ${byFile.length - 8} more`);
+  const runtime = seconds < 60 ? `${seconds.toFixed(0)}s` : `${(seconds / 60).toFixed(1)} min`;
+  const cachedNote = cached > 0 ? c("dim", ` · ${cached} already cached, ${fresh.length} to send`) : "";
+  log(`😐 will run on ${c("bold", `${jobs.length} tests`)} in ${c("bold", `${byFile.length} file(s)`)}, ${checksFor(jobs[0]!.state, opts).length} checks each${cachedNote}`);
+  log(c("cyan", listed.join("\n")));
+  log(`\nestimated cost:    ${c("yellow", `~${tokens} input tokens`)} ≈ ${c(["green", "bold"], usd(tokens))}`);
+  log(`estimated runtime: ${c("yellow", `~${runtime}`)} ${c("dim", `at concurrency ${opts.concurrency ?? 4}`)}`);
+  if (!values.lean && fresh.length > 0) {
+    const leanJobs = buildStates(files, { impl: !values["no-impl"], diffBase: values.diff, lean: true }).filter((j) => !isCached(j, opts));
+    const leanTokens = tokensOf(leanJobs);
+    const leanSeconds = estimate(leanJobs, leanTokens);
+    const leanRuntime = leanSeconds < 60 ? `${leanSeconds.toFixed(0)}s` : `${(leanSeconds / 60).toFixed(1)} min`;
+    log(
+      `\n😐🫴 ${c("bold", "--lean")} would send less context: ${c(["green", "bold"], usd(leanTokens))} and ${c("yellow", `~${leanRuntime}`)} ` +
+        c("dim", `(${Math.round((1 - leanTokens / tokens) * 100)}% fewer tokens; weaker mocks-seam and would-pass-if-broken answers)`),
+    );
+  }
+  log(c("dim", "(--json prints the states that would be sent)"));
+}
+
 async function main(): Promise<number> {
   const { values, positionals } = parseArgs({
     allowPositionals: true,
@@ -84,6 +125,7 @@ async function main(): Promise<number> {
       fail: { type: "boolean" },
       "fail-on-error": { type: "boolean" },
       "dry-run": { type: "boolean" },
+      json: { type: "boolean" },
       "list-checks": { type: "boolean" },
       verbose: { type: "boolean" },
       classes: { type: "boolean" },
@@ -166,18 +208,30 @@ async function main(): Promise<number> {
     cacheDir: values["no-cache"] ? undefined : cacheDir(),
   };
 
-  if (values["dry-run"]) {
-    for (const job of jobs.slice(0, 3)) {
-      console.log(JSON.stringify(
-          { questions: [...checksFor(job.state, opts).map((c) => c.id), "test_class (choice)"], state: job.state },
-          null,
-          2,
-        ));
-    }
-    const byFile = new Set(jobs.map((j) => j.block.file));
-    console.log(`\n${jobs.length} test blocks in ${byFile.size} files, ${checksFor(jobs[0]!.state, opts).length} checks each`);
-    console.log(`would send ${jobs.length} systemOne requests (${jobs.reduce((n, j) => n + JSON.stringify(j.state).length, 0)} state chars)`);
+  if (values["dry-run"] && values.json) {
+      // The raw states, for piping into a file or jq.
+    console.log(JSON.stringify(jobs.map((job) => ({
+      file: job.block.file,
+      line: job.block.line,
+      questions: [...checksFor(job.state, opts).map((c) => c.id), "test_class (choice)"],
+      state: job.state,
+    })), null, 2));
     return 0;
+  }
+
+  // The plan always prints; on json/github it goes to stderr so stdout stays machine-readable.
+  printPlan(jobs, files, values, opts, values["dry-run"] || format === "text" ? console.log : console.error);
+  if (values["dry-run"]) return 0;
+  if (!values.yes) {
+    if (!process.stdin.isTTY) {
+      console.error(c("dim", "\nnot a terminal — pass --yes to run, or --dry-run to only estimate"));
+      return 0;
+    }
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const answer = (await rl.question("\nRun? [Y/n] ")).trim().toLowerCase();
+    rl.close();
+    if (answer && answer !== "y" && answer !== "yes") return 0;
+    console.log("");
   }
 
   const apiKey = resolveApiKey();
@@ -187,10 +241,22 @@ async function main(): Promise<number> {
   }
 
   let result;
+
+  let durationMs = 0;
   try {
     // 10s per attempt is the SDK default; states can be large, so allow more.
     const client = new TypeSafeClient({ apiKey, timeout: 60_000 });
-    result = await analyze(jobs, opts, client);
+    const startedAt = Date.now();
+    const progress = process.stderr.isTTY
+      ? (done: number, total: number, tokens: number) => {
+          const secs = ((Date.now() - startedAt) / 1000).toFixed(0);
+          const bar = "█".repeat(Math.round((done / total) * 20)).padEnd(20, "░");
+          process.stderr.write(`\r😐 ${bar} ${done}/${total} tests · ${tokens} tokens · ${secs}s`);
+          if (done === total) process.stderr.write("\r" + " ".repeat(60) + "\r");
+        }
+      : undefined;
+    result = await analyze(jobs, { ...opts, ...(progress ? { onProgress: progress } : {}) }, client);
+    durationMs = Date.now() - startedAt;
   } catch (err) {
     if (err instanceof AuthenticationError) {
       console.error("😐✋  TypeSafe rejected the API key. Run: lgtm init");
@@ -208,6 +274,7 @@ async function main(): Promise<number> {
       files: new Set(jobs.map((j) => j.block.file)).size,
       skipped: result.skipped,
       inputTokens: result.inputTokens,
+      durationMs,
     }),
   );
 

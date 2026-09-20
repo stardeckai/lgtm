@@ -54,7 +54,14 @@ Running `lgtm` before setup exits with `😐✋  No API key. Run: lgtm init`.
 lgtm                       # every *.test.* / *.spec.* file under the cwd
 lgtm src/user.test.ts      # one file, or a directory
 lgtm --diff origin/main    # only tests changed vs a base, with the diff as evidence
-lgtm --dry-run src         # print what would be sent, call nothing, no key needed
+lgtm --dry-run src         # only the plan: files, estimated cost and runtime; no key needed
+```
+
+Every run starts with that plan and asks `Run? [Y/n]`. Outside a terminal (CI, an agent) it stops after the plan
+unless you pass `--yes`.
+
+```sh
+lgtm --yes --format json   # non-interactive
 ```
 
 For a one-off run without installing: `npx @stardeckai/lgtm --dry-run src`.
@@ -165,10 +172,19 @@ Every miss and false positive is listed in [`evals/RESULTS.md`](evals/RESULTS.md
 ## CI
 
 ```yaml
-- run: npx @stardeckai/lgtm --diff origin/${{ github.base_ref }} --format github
+- uses: actions/cache@v4
+  with:
+    path: node_modules/.cache/lgtm
+    key: lgtm-${{ hashFiles('**/pnpm-lock.yaml', '**/package-lock.json') }}
+    restore-keys: lgtm-
+- run: npx @stardeckai/lgtm --diff origin/${{ github.base_ref }} --yes --format github
   env:
     TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
 ```
+
+The cache step is optional: `--diff` already limits a PR run to the tests it touched, and answers are keyed by the
+full state (test, imports, implementation, guidelines) plus the check wording and lgtm version, so a hit means
+nothing relevant changed. Do not commit the cache directory; it churns on every refactor and never shrinks.
 
 Fetch enough history for the base ref (`fetch-depth: 0`) and add `--fail` once the findings are clean
 enough that you want them blocking.
@@ -222,6 +238,7 @@ pnpm typecheck
 pnpm test
 pnpm build
 node dist/cli.js --dry-run src   # no API key needed
+npm link                         # expose this checkout as the global `lgtm` (symlink to dist/cli.js; rebuild to update)
 pnpm gen:skill                   # regenerate skills/lgtm/SKILL.md after changing a check (a test guards drift)
 pnpm eval                        # run the labelled corpus against Jev; --offline re-scores, --fit-thresholds refits
 ```

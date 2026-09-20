@@ -9,7 +9,7 @@ const klass = (testClass: Classified["testClass"], line: number): Classified => 
   testClass,
 });
 
-const summary = { tests: 4, files: 2, skipped: 0, inputTokens: 100, classes: [] as Classified[] };
+const summary = { tests: 4, files: 2, skipped: 0, inputTokens: 100, durationMs: 6000, classes: [] as Classified[] };
 
 const finding = (over: Partial<Finding> = {}): Finding => ({
   file: "a.test.ts",
@@ -34,26 +34,26 @@ describe("formatReport", () => {
       summary,
     );
     expect(out.split("\n").slice(0, 2)).toEqual([
-      '😐👏 test/payment.test.ts:42  "rejects expired cards"',
-      "     mocks-seam-under-test 0.93 — Congratulations. You tested the mock.",
+      'test/payment.test.ts:42  "rejects expired cards"',
+      "  😐👏 mocks-seam-under-test 0.93 — Congratulations. You tested the mock.",
     ]);
   });
 
   it("uses the check's own face, and the magnifier for a sub-threshold finding", () => {
     const lines = (over: Partial<Finding>) => formatReport([finding(over)], "text", summary).split("\n");
 
-    expect(lines({ checkId: "swallowed-error-as-success" })[0]!.startsWith("😐🔥")).toBe(true);
-    expect(lines({ checkId: "broad-snapshot" })[0]!.startsWith("😐📸")).toBe(true);
+    expect(lines({ checkId: "swallowed-error-as-success" })[1]!.startsWith("  😐🔥")).toBe(true);
+    expect(lines({ checkId: "broad-snapshot" })[1]!.startsWith("  😐📸")).toBe(true);
 
     const quiet = lines({ probability: 0.62, threshold: 0.8 });
-    expect(quiet[0]!.startsWith("😐🔍")).toBe(true);
+    expect(quiet[1]!.startsWith("  😐🔍")).toBe(true);
     expect(quiet[1]).toContain("— Suspicious. Congratulations. You tested the mock.");
   });
 
   it("closes with the pointing finger when there are findings and the thumb when there are none", () => {
     const accusing = formatReport([finding(), finding({ line: 9 })], "text", summary);
-    expect(accusing.split("\n").slice(-5, -2)).toEqual(["2 tests prove nothing.", "", "😐🫵"]);
-    expect(accusing.split("\n").at(-1)).toBe("100 input tokens used (≈ $0.0000)");
+    expect(accusing.split("\n").slice(-7, -4)).toEqual(["2 tests prove nothing.", "", "😐🫵"]);
+    expect(accusing.split("\n").at(-1)).toBe("6.0s (1.5s per test)");
 
     const suspicionOnly = formatReport([finding({ probability: 0.6, threshold: 0.8 })], "text", summary);
     expect(suspicionOnly).toContain("😐👍  4 tests. fine. allegedly.");
@@ -81,6 +81,17 @@ describe("formatReport", () => {
     );
   });
 
+  it("prints one header per test and a blank line between tests", () => {
+    const out = formatReport(
+      [finding({ line: 2, checkId: "x" }), finding({ line: 2, checkId: "y" }), finding({ line: 9, checkId: "z" })],
+      "text",
+      summary,
+    );
+    const lines = out.split("\n");
+    expect(lines.filter((l) => l.startsWith("a.test.ts:"))).toEqual(['a.test.ts:2  "name"', 'a.test.ts:9  "name"']);
+    expect(lines.slice(0, 5)).toEqual([lines[0], lines[1], lines[2], "", 'a.test.ts:9  "name"']);
+  });
+
   it("sorts by file, then line, then probability descending", () => {
     const out = formatReport(
       [
@@ -92,7 +103,7 @@ describe("formatReport", () => {
       "text",
       summary,
     );
-    const ids = out.split("\n").filter((l) => l.startsWith("     ")).map((l) => l.trim().split(" ")[0]);
+    const ids = out.split("\n").filter((l) => l.startsWith("  😐")).map((l) => l.trim().split(" ")[1]);
     expect(ids).toEqual(["z", "y", "x", "w"]);
   });
 });

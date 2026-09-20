@@ -14,8 +14,10 @@ description: Run the lgtm test linter on the current branch or a path and act on
 
 # lgtm
 
-Run \`lgtm --diff <default branch> --format json\` (for example \`lgtm --diff origin/main --format json\`),
-or \`lgtm <path> --format json\` when the user named a path.
+First run \`lgtm --diff <default branch>\` (or \`lgtm <path>\` when the user named a path) without \`--yes\`: in a
+non-interactive shell it only prints the plan — files, estimated cost and runtime — and exits. Tell the user the
+estimate in one line. Then run the same command again with \`--yes --format json\` to actually analyse
+(for example \`lgtm --diff origin/main --yes --format json\`). Add \`--lean\` if the estimate is large.
 
 \`lgtm\` is usually installed globally; in a repo that depends on it, run \`pnpm lgtm\` / \`npx lgtm\` instead.
 If neither works, do not work around it — tell the user to run \`npm i -g @stardeckai/lgtm && lgtm init\` and stop there.
@@ -35,10 +37,10 @@ Report as a table: file:line, check id, verdict, one-line reason.
 
 ## Reading the output
 
-- \`😐🫸\` (p >= 0.9) — nope.
-- \`😐🤌\` (threshold <= p < 0.9) — what exactly are we doing here.
-- \`😐🫴\` (0.5 <= p < threshold) — explain this; only shown with \`--verbose\`.
-- \`😐👍\` — the summary line when there is nothing to say.
+Every finding wears its check's glyph after the \`😐\` face (table below) with the probability next to it; the
+colour is the severity (red ≥ 0.9, yellow at or over the check's threshold, dim for \`--verbose\` suspects marked
+\`😐🔍\`). Summary faces: \`😐👍\` nothing to say, \`😐🫵\` findings, \`😐❓\` API skips, \`😐✋\` no API key,
+\`😐🎯\` the class distribution (contract-integration is the good kind).
 
 ## Checks
 
