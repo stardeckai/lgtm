@@ -2,7 +2,6 @@ import type { Check } from "../types.js";
 
 export default {
   id: "broad-snapshot",
-  emoji: "📸",
   blurb: "The snapshot pins everything and explains nothing, so it will be re-recorded on the next change.",
   instructions:
     "Gate 1 — is a recording compared? Only yes if `test_code` checks the output of the code under test against a recorded artifact: `toMatchSnapshot`, `toMatchInlineSnapshot`, `toMatchFileSnapshot`, a committed golden file, or a frozen opaque digest or byte constant captured from a past run. Answer no otherwise, whatever it is called: a hand-written `toEqual`/`toBe` literal, however large; a helper, field or variable merely named snapshot; two live values compared to each other (before/after, restart vs start, channel A vs B, two maintained sources); a format regex over a hash. Gate 2 — does that recording carry many fields, rows, lines or markup past the one distinction the test name states, or collapse everything into one digest? A recorded scalar or few lines that show the named behavior on sight is no.",

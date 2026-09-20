@@ -2,7 +2,6 @@ import type { Check } from "../types.js";
 
 export default {
   id: "trivial-primitive",
-  emoji: "🔬",
   blurb: "A one-line helper tested in isolation; any real test of the feature that uses it would catch the same break.",
   instructions:
     "Is the code under test in `test_code` and `implementation` a small pure primitive — a formatter, getter, trivial mapper, constant lookup or thin wrapper — whose bugs would be obvious in any wider test of the feature that uses it?",
