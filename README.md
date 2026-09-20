@@ -102,6 +102,13 @@ exactly are we doing here, `😐🫸` do not merge this. Colour is severity (red
 the check's threshold, dim for `--verbose` suspects). The verdict is one line, `😐👍  N tests. fine. allegedly.`
 or `😐🫵  N tests prove nothing.` `--format github` and `--format json` stay plain.
 
+### /actually-test
+
+Gets your agent to actually test the code it just wrote, and iterates on `/lgtm` (don't worry, it's cached)
+until it proves the code is actually tested.
+
+<img src="public/actually-test.png" alt="/actually-test: the agent runs the CLI, writes src/cli.test.ts, then proves the tests red">
+
 ### Flags
 
 | flag | |
