@@ -32,6 +32,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # Otherwise checkout leaves GITHUB_TOKEN as an http.extraheader that
+          # overrides the App token in the push URL below.
+          persist-credentials: false
       - name: remember the pre-bump commit
         id: head
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -89,7 +93,9 @@ jobs:
         run: |
           version="${{ steps.check.outputs.version }}"
           git tag -a "v$version" -m "v$version" 2>/dev/null || true  # dispatch's npm version already made one
-          git push "https://x-access-token:$TOKEN@github.com/${{ github.repository }}.git" "HEAD:main" "v$version"
+          url="https://x-access-token:$TOKEN@github.com/${{ github.repository }}.git"
+          git push "$url" "HEAD:main"  # main first: a rejected push must not leave a stray tag
+          git push "$url" "v$version"
 
       # prepack runs gen:skill && build, so no separate build step.
       - name: publish
