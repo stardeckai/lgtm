@@ -33,7 +33,7 @@ const USAGE = `lgtm <files|dirs...>   (e.g. lgtm .)
   --format <fmt>       text | github | json (default text)
   --concurrency <n>    parallel requests (default 4)
   --no-impl            don't send implementation source
-  --lean               smaller states (8k of implementation, no test file or guidelines); ~2.5x cheaper, many more false positives
+  --lean               smaller states (8k of implementation, no test file or guidelines); ~3x cheaper, many more false positives
   --no-cache           ignore the answer cache
   --fail               exit 1 if there are findings
   --fail-on-error      exit 1 if any test block was skipped by an API error

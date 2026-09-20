@@ -22,8 +22,6 @@ const LEAN_IMPL_CAP = 8_000;
 const TEST_FILE_CAP = 40_000;
 const GUIDELINES_CAP = 8_000;
 const DIFF_CAP = 20_000;
-/** Don't follow a transitive import into a file this big. */
-const BIG_FILE = 200 * 1024;
 /** TypeSafe allows 32k tokens of state; at ~4 chars/token we trim back to this. */
 const STATE_BUDGET = 100_000;
 const TRUNCATED = "\n/* …truncated… */";
@@ -200,21 +198,6 @@ export function resolveImport(fromFile: string, spec: string): string | null {
 
 function cap(text: string, limit: number): string {
   return text.length > limit ? text.slice(0, limit) + TRUNCATED : text;
-}
-
-/** Resolved relative imports of an already-resolved source file, one hop. */
-function hopImports(file: string, seen: Set<string>): string[] {
-  const out: string[] = [];
-  for (const spec of extractTests(fs.readFileSync(file, "utf8"), file).imports) {
-    const resolved = resolveImport(file, spec);
-    if (!resolved || seen.has(resolved)) continue;
-    // JSON/CSS/asset imports resolve fine but are not modules to parse or send.
-    if (!SOURCE_EXTS.includes(path.extname(resolved))) continue;
-    if (fs.statSync(resolved).size > BIG_FILE) continue;
-    seen.add(resolved);
-    out.push(resolved);
-  }
-  return out;
 }
 
 /** The whole test file with the block fenced, so the model sees what the rest of the file already covers. */
@@ -467,21 +450,24 @@ export function buildStates(
     if (tests.length === 0) continue;
 
     const seen = new Set<string>([path.resolve(file)]);
+    // The files the test imports, and whatever those forward through `export … from`, so an import of a
+    // barrel `index.ts` reaches the module behind it. Barrels are tiny; their own imports are not followed.
     const direct: string[] = [];
     if (opts.impl || opts.diffBase) {
-      for (const spec of imports) {
-        const resolved = resolveImport(file, spec);
-        if (resolved && !seen.has(resolved)) {
-          seen.add(resolved);
-          direct.push(resolved);
-        }
+      const queue = imports.map((spec) => ({ from: file, spec }));
+      for (let next = queue.shift(); next; next = queue.shift()) {
+        const resolved = resolveImport(next.from, next.spec);
+        if (!resolved || seen.has(resolved) || !SOURCE_EXTS.includes(path.extname(resolved))) continue;
+        seen.add(resolved);
+        direct.push(resolved);
+        for (const spec of extractTests(fs.readFileSync(resolved, "utf8"), resolved).reexports) queue.push({ from: resolved, spec });
       }
     }
-    // One hop past the direct imports, so a route's helpers come along too.
-    const implFiles = opts.lean ? direct : [...direct, ...direct.flatMap((p) => hopImports(p, seen))];
-    const implementation = opts.impl && implFiles.length > 0
+    // No transitive hop through imports: it was 28% of every request on this repo and the evals never saw it;
+    // dogfood scores did not move without it, while the whole test file is load-bearing (see AGENTS.md).
+    const implementation = opts.impl && direct.length > 0
       ? cap(
-          implFiles
+          direct
             .map((p) => cap(`// ---- ${path.relative(process.cwd(), p)}\n${fs.readFileSync(p, "utf8")}`, opts.lean ? LEAN_IMPL_CAP : IMPL_CAP))
             .join("\n"),
           opts.lean ? LEAN_IMPL_CAP : IMPL_TOTAL_CAP,

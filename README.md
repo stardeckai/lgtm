@@ -124,7 +124,7 @@ until it proves the code is actually tested.
 | `--concurrency <n>` | parallel requests, default 4 |
 | `--no-impl` | don't send implementation source |
 | `--ignore <pattern>` | skip paths; repeatable. Also reads `.lgtmignore` in the cwd, one gitignore-style pattern per line (`evals/`, `**/fixtures/**`, `*.stories.test.ts`) |
-| `--lean` | send ~2.5x fewer tokens (8k of implementation, no test file or guidelines). Thresholds are calibrated on full context, so expect several times more false positives; only for rate limits or enormous test files |
+| `--lean` | send ~3x fewer tokens (8k of implementation, no test file or guidelines). Thresholds are calibrated on full context, so expect several times more false positives; only for rate limits or enormous test files |
 | `--no-cache` | ignore the answer cache |
 | `--fail` | exit 1 when there are findings |
 | `--fail-on-error` | exit 1 when a block was skipped by an API error |
@@ -196,9 +196,9 @@ Retiring three unit tests for one wider test that really fails is a win, not a c
 <!-- evals:start -->
 ## Evals
 
-**Precision first, by construction.** Each check's threshold is fitted to the lowest point where precision stays at or above 0.95, so high precision is what the fit buys, not something the model earned on its own; the honest numbers are the false-positive count and recall. At those thresholds lgtm raises 314 findings across 1482 scored (check, case) pairs, 3 of them wrong, and misses 148 of 459 labelled smells (recall 0.68). Thresholds are fitted on every case including holdout, since a one-parameter fit cannot overfit; holdout guards the prompt wording, and 1 of 68 holdout findings are wrong there. A linter you can ignore is a linter you will ignore, so recall is the number we trade away.
+**Precision first, by construction.** Each check's threshold is fitted to the lowest point where precision stays at or above 0.95, so high precision is what the fit buys, not something the model earned on its own; the honest numbers are the false-positive count and recall. At those thresholds lgtm raises 315 findings across 1482 scored (check, case) pairs, 4 of them wrong, and misses 148 of 459 labelled smells (recall 0.68). Thresholds are fitted on every case including holdout, since a one-parameter fit cannot overfit; holdout guards the prompt wording, and 2 of 69 holdout findings are wrong there. A linter you can ignore is a linter you will ignore, so recall is the number we trade away.
 
-The corpus is 521 public + 262 private labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. 283 of them are real tests from production apps, read against their implementation and labelled. The ground truth is kept in `expect.json` so it never reaches the model.
+The corpus is 521 public + 262 private labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. 283 of them are real tests, from production apps and from this repo, read against their implementation and labelled. The ground truth is kept in `expect.json` so it never reaches the model.
 
 The 262 private cases come from real Stardeck customer apps and from Stardeck's own codebase, harvested by scoring 15,000+ real test blocks and sampling around each check's threshold. That harvest is what set the thresholds: synthetic negatives were too easy, and several checks that scored 1.00 on synthetic cases were 0–30% precise on real code until they were rewritten against it. The private cases are scored in these numbers but not published, because anonymization removes names, not shape. The 521 public cases in `evals/cases` reproduce with `pnpm eval` alone.
 
@@ -206,7 +206,7 @@ Scores are at each check's own threshold. 165 of the cases are holdout, never us
 
 | check | cases | threshold | precision (holdout) | recall (holdout) | precision (all) | recall (all) |
 |---|---|---|---|---|---|---|
-| `would-pass-if-broken` | 99 | 0.60 | 1.00 | 0.36 | 0.96 | 0.47 |
+| `would-pass-if-broken` | 99 | 0.60 | 0.83 | 0.36 | 0.96 | 0.47 |
 | `vacuous-assertion` | 179 | 0.70 | 1.00 | 0.63 | 1.00 | 0.69 |
 | `assertion-weaker-than-name` | 82 | 0.60 | 1.00 | 1.00 | 0.98 | 0.95 |
 | `reimplements-logic` | 206 | 0.85 | 1.00 | 0.50 | 1.00 | 0.67 |
@@ -220,14 +220,14 @@ Scores are at each check's own threshold. 165 of the cases are holdout, never us
 | `impossible-fixture` | 63 | 0.55 | 1.00 | 1.00 | 1.00 | 0.75 |
 | `happy-path-only-of-risky-boundary` | 88 | 0.70 | 1.00 | 0.50 | 1.00 | 0.50 |
 | `trivial-primitive` | 122 | 0.85 | 1.00 | 0.71 | 1.00 | 0.66 |
-| `over-mocked` | 84 | 0.55 | 1.00 | 0.20 | 1.00 | 0.38 |
+| `over-mocked` | 84 | 0.55 | 1.00 | 0.20 | 0.90 | 0.38 |
 | `regression-does-not-distinguish` | 41 | 0.35 | 1.00 | 0.75 | 1.00 | 0.82 |
 | `changed-in-lockstep` | 36 | 0.75 | 1.00 | 1.00 | 1.00 | 0.94 |
-| **all checks** | 1482 | | 0.99 | 0.68 | 0.99 | 0.68 |
+| **all checks** | 1482 | | 0.97 | 0.68 | 0.99 | 0.68 |
 
-Test class accuracy: 666/783 (0.85) on all cases, 146/165 (0.88) on holdout.
+Test class accuracy: 668/783 (0.85) on all cases, 140/165 (0.85) on holdout.
 
-A full cold run of the corpus is about 3,881,122 input tokens ≈ $0.1630 (estimated from the states; the last run spent $0.0301 after cache hits).
+A full cold run of the corpus is about 3,907,681 input tokens ≈ $0.1641 (estimated from the states; the last run spent $0.0301 after cache hits).
 
 Every miss and false positive is listed in [`evals/RESULTS.md`](evals/RESULTS.md). The public cases reproduce with `pnpm eval`.
 <!-- evals:end -->
@@ -257,7 +257,7 @@ lgtm is advisory by default: it prints findings and exits 0. Fetch enough histor
 TypeSafe bills $0.042 per million input tokens and nothing for output, so lgtm is cheap enough to run on every PR.
 One request per test block. Each state is trimmed to at most 100,000 chars (~25,000 tokens, under TypeSafe's 32k
 state limit): the test code, the whole test file with the block fenced, the file's imports and sibling test names,
-up to 60,000 chars of the imported implementation (one hop deep) and the test sections of any CLAUDE.md/AGENTS.md
+up to 60,000 chars of the directly imported implementation and the test sections of any CLAUDE.md/AGENTS.md
 above it. `--lean` cuts that back to an 8,000-char implementation and no test file or guidelines.
 
 | run | blocks | input tokens | cost |

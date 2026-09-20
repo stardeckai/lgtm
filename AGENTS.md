@@ -17,9 +17,18 @@ and reports the ones that come back confident. Read `README.md` first; this file
   affordable. The trade-off, confirmed by the evals: Jev is precise but conservative and answers crisp, locally
   verifiable questions far better than holistic ones. Every check is therefore written as a decision procedure
   over named evidence, and thresholds are fitted per check rather than set to a flat 0.8.
-- **Context is cheap; send it.** Each request carries the whole test file, the implementation one hop deep, sibling
+- **Context is cheap; send it.** Each request carries the whole test file, the directly imported implementation, sibling
   test names and the repo's own testing guidelines, budgeted at 100k chars. The model never has to guess at the
   rest of the owl. `--lean` keeps the old 8k-char requests as an escape hatch; on this repo it produced 19 findings where full context produced 2, so never tune thresholds against it.
+  What is and is not load-bearing was measured on a self-run (Sept 2026): the transitive import hop was 28% of the
+  tokens on this repo and the evals never contained one. Dropping it left 0 of 34 dogfood negatives over threshold
+  in the eval sample, the one measured cost being `would-pass-if-broken` on the three `fitBudget` tests rising
+  ~0.2 to 0.55, just under its 0.60. Dropping the whole test file instead took the self-run from 3 findings to 8
+  (one keeper went 0.28 → 0.81), so it stays. Jev is not deterministic: the same state re-answered moves ±0.1 at
+  mid probabilities, which is why a threshold that sits one grid step above a keeper will fire on it some runs.
+  Barrels are still followed: `export … from` in a directly imported file is resolved, so an `index.ts` import
+  reaches the module behind it without a general hop. Type-only imports are skipped too (a test cannot exercise a file it only takes types from): another 10% here,
+  far more in files that import a type from a big module. The remaining cost is structural: one request per block, each carrying the full test file and direct imports.
 - **Stance.** lgtm favours few, wide tests with real collaborators and assertions that both sides agree. It dislikes
   isolated tests of trivial primitives, over-mocked tests, and one-off assertions. An audit that deletes tests is a
   success. `contract_integration` is the only class it approves of; the 😐🎯 line reports how much of a suite is that.
@@ -52,7 +61,7 @@ and reports the ones that come back confident. Read `README.md` first; this file
   the exact source slice, line range, describe path, file context (imports, `vi.mock`, hooks, top-level helpers) and
   the import specifiers.
 - `src/analyze.ts` — `buildStates()` turns test files into per-block states (test code, whole test file with the block
-  fenced, one hop of implementation through relative and tsconfig-`paths` imports, sibling test names, repo testing
+  fenced, the directly imported implementation through relative and tsconfig-`paths` imports, sibling test names, repo testing
   guidelines, optional git diff), `fitBudget()` trims to 100k chars, `analyze()` calls `systemOne` with a per-block
   cache and a concurrency pool.
 - `src/checks/<category>/<id>.ts` — one file per check: id, blurb, `instructions`, `criteria`, `threshold`.

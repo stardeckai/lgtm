@@ -198,25 +198,33 @@ describe("buildStates", () => {
 });
 
 describe("buildStates context", () => {
-  it("includes a module imported by two implementation modules exactly once", () => {
+  it("sends the value imports and what a barrel forwards: no transitive hop, no type-only modules", () => {
     const dir = tmp();
+    fs.mkdirSync(path.join(dir, "lib"));
+    fs.writeFileSync(path.join(dir, "lib", "c.ts"), 'import { shared } from "../shared.js";\nexport const c = shared;\n');
+    fs.writeFileSync(path.join(dir, "lib", "index.ts"), 'export * from "./c.js";\nexport type { Pair } from "../types.js";\n');
     fs.writeFileSync(path.join(dir, "shared.ts"), "export const shared = 1;\n");
     fs.writeFileSync(path.join(dir, "a.ts"), 'import { shared } from "./shared.js";\nexport const a = shared;\n');
     fs.writeFileSync(path.join(dir, "b.ts"), 'import { shared } from "./shared.js";\nexport const b = shared;\n');
+    fs.writeFileSync(path.join(dir, "types.ts"), "export type Pair = [number, number];\n");
+    fs.writeFileSync(path.join(dir, "setup.ts"), "globalThis.ready = true;\n");
     fs.writeFileSync(
       path.join(dir, "a.test.ts"),
       [
+        'import "./setup.js";',
         'import { a } from "./a.js";',
-        'import { b } from "./b.js";',
-        'it("adds", () => { expect(a + b).toBe(2); });',
+        'import { type Pair, b } from "./b.js";',
+        'import type { Pair as P2 } from "./types.js";',
+        'import { c } from "./lib/index.js";',
+        'it("adds", () => { expect(a + b + c).toBe(3); });',
       ].join("\n"),
     );
 
     const impl = buildStates([path.join(dir, "a.test.ts")], { impl: true })[0]!.state.implementation!;
-    const header = `// ---- ${path.relative(process.cwd(), path.join(dir, "shared.ts"))}`;
-    expect(impl.split(header).length - 1).toBe(1);
-    expect(impl).toContain("export const shared = 1;");
+    const files = impl.split("\n").filter((l) => l.startsWith("// ---- ")).map((l) => path.basename(l));
+    expect(files).toEqual(["setup.ts", "a.ts", "b.ts", "index.ts", "c.ts"]);
     expect(impl).toContain("export const a = shared;");
+    expect(impl).not.toContain("export const shared = 1;");
   });
 
   it("fences the second block of a two-test file in test_file", () => {
@@ -343,10 +351,9 @@ describe("--lean caps", () => {
   it("drops the test file and guidelines and caps the implementation at 8k", () => {
     const dir = tmp();
     fs.writeFileSync(path.join(dir, "CLAUDE.md"), "## Testing\nName the bug.\n");
-    fs.writeFileSync(path.join(dir, "deep.ts"), "export const deep = 1;\n");
     fs.writeFileSync(
       path.join(dir, "impl.ts"),
-      `import { deep } from "./deep.js";\nexport const pad = "${"y".repeat(20_000)}";\nexport const impl = deep;\n`,
+      `export const pad = "${"y".repeat(20_000)}";\nexport const impl = 1;\n`,
     );
     const file = path.join(dir, "a.test.ts");
     fs.writeFileSync(file, 'import { impl } from "./impl.js";\nit("works", () => { expect(impl).toBe(1); });\n');
@@ -355,12 +362,11 @@ describe("--lean caps", () => {
     expect(lean.test_file).toBeUndefined();
     expect(lean.repo_guidelines).toBeUndefined();
     expect(lean.implementation!.length).toBeLessThanOrEqual(8_000 + "\n/* …truncated… */".length);
-    expect(lean.implementation).not.toContain("deep.ts");
 
     const full = buildStates([file], { impl: true })[0]!.state;
     expect(full.test_file).toContain("// >>> test under evaluation");
     expect(full.repo_guidelines).toContain("Name the bug.");
-    expect(full.implementation).toContain("export const deep = 1;");
+    expect(full.implementation!.endsWith("/* …truncated… */")).toBe(false);
   });
 });
 

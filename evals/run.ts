@@ -200,17 +200,22 @@ async function runLive(cases: Case[], only?: string[]): Promise<{ answers: Map<s
 
   // On a warm cache analyze reports no model; keep the one the corpus was answered with.
   const model = result.model ?? (fs.existsSync(RUN_META) ? (JSON.parse(fs.readFileSync(RUN_META, "utf8")).model as string | undefined) : undefined);
-  // Key by file AND line: dogfood cases share a file, so file alone would collapse them onto one case.
-  const byBlock = new Map(cases.map((c) => [`${c.job.block.file}:${c.job.block.line}`, c]));
+  // Key by file AND line: dogfood cases share a file, so file alone would collapse them onto one case. Two
+  // cases may still name the same test; each gets the answer, or one would keep stale answers forever.
+  const byBlock = new Map<string, Case[]>();
+  for (const c of cases) {
+    const key = `${c.job.block.file}:${c.job.block.line}`;
+    byBlock.set(key, [...(byBlock.get(key) ?? []), c]);
+  }
   const fresh = new Map<string, Answered>();
-  const get = (file: string, line: number) => {
-    const c = byBlock.get(`${file}:${line}`)!;
-    let a = fresh.get(c.id);
-    if (!a) fresh.set(c.id, (a = { probabilities: {}, ...(model ? { model } : {}) }));
-    return a;
-  };
-  for (const f of result.findings) get(f.file, f.line).probabilities[f.checkId] = f.probability;
-  for (const k of result.classes) get(k.file, k.line).class = k.testClass;
+  const get = (file: string, line: number) =>
+    (byBlock.get(`${file}:${line}`) ?? []).map((c) => {
+      let a = fresh.get(c.id);
+      if (!a) fresh.set(c.id, (a = { probabilities: {}, ...(model ? { model } : {}) }));
+      return a;
+    });
+  for (const f of result.findings) for (const a of get(f.file, f.line)) a.probabilities[f.checkId] = f.probability;
+  for (const k of result.classes) for (const a of get(k.file, k.line)) a.class = k.testClass;
 
   // A --only run must never drop the probabilities it did not ask about: merge into what is on disk.
   // Several --only runs may be in flight at once (one per check being tuned), so the merge re-reads the
@@ -479,7 +484,7 @@ function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inpu
     "",
     `**Precision first, by construction.** Each check's threshold is fitted to the lowest point where precision stays at or above 0.95, so high precision is what the fit buys, not something the model earned on its own; the honest numbers are the false-positive count and recall. At those thresholds lgtm raises ${pooledAll.tp + pooledAll.fp} findings across ${rows.length} scored (check, case) pairs, ${pooledAll.fp} of them wrong, and misses ${pooledAll.fn} of ${pooledAll.tp + pooledAll.fn} labelled smells (recall ${pct(pooledAll.recall)}). Thresholds are fitted on every case including holdout, since a one-parameter fit cannot overfit; holdout guards the prompt wording, and ${pooledHold.fp} of ${pooledHold.tp + pooledHold.fp} holdout findings are wrong there. A linter you can ignore is a linter you will ignore, so recall is the number we trade away.`,
     "",
-    `The corpus is ${countedReadme} labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. ${nReal} of them are real tests from production apps, read against their implementation and labelled. The ground truth is kept in \`expect.json\` so it never reaches the model.`,
+    `The corpus is ${countedReadme} labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. ${nReal} of them are real tests, from production apps and from this repo, read against their implementation and labelled. The ground truth is kept in \`expect.json\` so it never reaches the model.`,
     "",
     ...(nPrivate === 0
       ? []
