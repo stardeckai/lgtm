@@ -1,8 +1,9 @@
 name: release
 
-# Two ways in, one guard: publish only when package.json's version is not on the
-# registry yet. A dispatch bump pushes a version commit to main, which fires the
-# push run, which then sees the version already published and skips.
+# Two ways in, one guard: publish only when package.json's version has no tag on
+# the remote yet. A dispatch bump pushes a version commit to main, which fires
+# the push run, which then sees the tag and skips. The tag is the signal, not
+# npm: the registry's read replicas lag a published version by minutes.
 on:
   push:
     branches: [main]
@@ -38,7 +39,10 @@ jobs:
           persist-credentials: false
       - name: remember the pre-bump commit
         id: head
-        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413  # v6.1.0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
@@ -53,15 +57,13 @@ jobs:
       - name: bump version
         if: github.event_name == 'workflow_dispatch'
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           npm version ${{ inputs.bump }} -m "chore: release v%s"
 
-      - name: is this version already on npm?
+      - name: is this version already tagged?
         id: check
         run: |
           version=$(node -p "require('./package.json').version")
-          if npm view "@stardeckai/lgtm@$version" version >/dev/null 2>&1; then
+          if git ls-remote --exit-code --tags origin "v$version" >/dev/null 2>&1; then
             publish=false
           else
             publish=true
@@ -70,10 +72,11 @@ jobs:
           echo "publish=$publish" >> "$GITHUB_OUTPUT"
           echo "v$version — publish=$publish" >> "$GITHUB_STEP_SUMMARY"
 
-      # Push BEFORE publish. A rejected push (main advanced, branch protection)
-      # then costs nothing, and a failed publish after it is retried by the run
-      # this very push triggers. Publishing first is the one unrecoverable order:
-      # npm versions are immutable, so the guard would skip the retry forever.
+      # Push the commit BEFORE publish, the tag AFTER. A rejected push (main
+      # advanced, branch protection) then costs nothing, and a failed publish is
+      # retried by the run this very push triggers, because the tag that would
+      # make it skip only lands once publish succeeded. Publishing first is the
+      # one unrecoverable order: npm versions are immutable.
       #
       # Pushed with an installation token from the org's release GitHub App,
       # which is a bypass actor on the "main" ruleset: GITHUB_TOKEN can never
@@ -86,21 +89,25 @@ jobs:
         with:
           app-id: ${{ vars.RELEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
-      - name: push the version commit and tag
+      - name: push the version commit
+        if: steps.check.outputs.publish == 'true'
+        env:
+          TOKEN: ${{ steps.app.outputs.token }}
+        run: git push "https://x-access-token:$TOKEN@github.com/${{ github.repository }}.git" "HEAD:main"
+
+      # prepack runs gen:skill && build, so no separate build step.
+      - name: publish
+        if: steps.check.outputs.publish == 'true'
+        run: npm publish
+
+      - name: push the tag
         if: steps.check.outputs.publish == 'true'
         env:
           TOKEN: ${{ steps.app.outputs.token }}
         run: |
           version="${{ steps.check.outputs.version }}"
           git tag -a "v$version" -m "v$version" 2>/dev/null || true  # dispatch's npm version already made one
-          url="https://x-access-token:$TOKEN@github.com/${{ github.repository }}.git"
-          git push "$url" "HEAD:main"  # main first: a rejected push must not leave a stray tag
-          git push "$url" "v$version"
-
-      # prepack runs gen:skill && build, so no separate build step.
-      - name: publish
-        if: steps.check.outputs.publish == 'true'
-        run: npm publish
+          git push "https://x-access-token:$TOKEN@github.com/${{ github.repository }}.git" "v$version"
 
       # Not gated on publishing: it releases whatever tag is current and has no
       # release yet, so a run that published but died here is repaired by the
