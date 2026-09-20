@@ -120,6 +120,42 @@ describe("analyze", () => {
     ]);
   });
 
+  it("reports spend the moment a request is billed, so a later throw does not lose it", async () => {
+    // A cache dir that is a file: the answer is billed, then the cache write throws. The caller still knows the cost.
+    const cacheDir = path.join(tmp(), "not-a-dir");
+    fs.writeFileSync(cacheDir, "");
+    const spends: number[] = [];
+
+    await expect(analyze([job()], { cacheDir, onSpend: (t) => spends.push(t) }, fakeClient(0.9).client)).rejects.toThrow();
+    expect(spends).toEqual([42]);
+  });
+
+  it("waits for in-flight requests to bill before it throws, so no spend lands after the caller gave up", async () => {
+    // One request fails fast while a slower sibling is still in flight: the slow one bills, and its tokens must
+    // be known before analyze rejects — the caller records spend once, on the way out.
+    const spends: number[] = [];
+    let call = 0;
+    const client: Client = {
+      async systemOne(request) {
+        if (++call === 1) throw new Error("boom");
+        await new Promise((r) => setTimeout(r, 30));
+        return {
+          model: "fake",
+          usage: { input_tokens: 42, output_tokens: 1 },
+          answers: Object.fromEntries(Object.keys(request.questions).map((id) => [id, { type: "noul" as const, noul: 0 }])),
+        };
+      },
+    };
+
+    await expect(
+      analyze([job(), job({ test_code: "it('other', () => {})" })], { concurrency: 2, onSpend: (t) => spends.push(t) }, client),
+    ).rejects.toThrow("boom");
+
+    expect(spends).toEqual([42]);           // billed before the rejection, not after it
+    await new Promise((r) => setTimeout(r, 60));
+    expect(spends).toEqual([42]);           // and nothing bills once the caller has moved on
+  });
+
   it("answers a repeated state from the cache instead of calling the API again", async () => {
     const cacheDir = tmp();
     const first = fakeClient(0.9);

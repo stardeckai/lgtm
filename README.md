@@ -276,6 +276,7 @@ The key lives in `~/.config/lgtm/config.json`. `TYPESAFE_API_KEY` in the environ
 
 ```sh
 lgtm key <new-key>           # swap the saved key; `lgtm key` alone prompts
+lgtm usage                   # cost so far: all time, last day, last week, this worktree
 lgtm clear-cache             # drop this project's cached answers (node_modules/.cache/lgtm)
 lgtm skill                   # (re)install the /lgtm and /actually-test skills, e.g. to add another agent
 lgtm init                    # both steps again

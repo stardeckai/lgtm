@@ -10,6 +10,7 @@ import { CATEGORY_OF, CHECKS, GESTURE, usd } from "./checks/index.js";
 import { askKey, askSkillMode, init, installSkill, resolveApiKey, saveKey, SKILL_MODES, type SkillMode } from "./init.js";
 import { c, formatClasses, formatReport, real, tests, type Format } from "./report.js";
 import { ignoreMatcher } from "./ignore.js";
+import { recordRun, usageReport, worktreeRoot } from "./usage.js";
 import readline from "node:readline/promises";
 
 const IGNORED_DIRS = new Set(["node_modules", "dist", "build", ".git"]);
@@ -18,6 +19,7 @@ const USAGE = `lgtm <files|dirs...>   (e.g. lgtm .)
 
   init                 save your TypeSafe API key, then install the /lgtm and /actually-test skills
   key [value]          swap the saved API key (prompts when no value is given)
+  usage                total cost so far: all time, last day, last week, this worktree
   clear-cache          delete cached answers for this project (node_modules/.cache/lgtm)
   skill                install the /lgtm and /actually-test skills again (to add more agents)
   --key <value>        (init) use this key instead of prompting
@@ -148,6 +150,11 @@ async function main(): Promise<number> {
     return 0;
   }
 
+  if (positionals[0] === "usage") {
+    console.log(usageReport(Date.now(), worktreeRoot()));
+    return 0;
+  }
+
   if (positionals[0] === "clear-cache") {
     const dir = cacheDir();
     const count = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(".json")).length : 0;
@@ -264,6 +271,9 @@ async function main(): Promise<number> {
   let result;
 
   let durationMs = 0;
+  // Tokens are billed the moment a request returns; a later throw (a failed cache write, a revoked key mid-run)
+  // must not lose the spend, so the log is written from a finally, not from the success path.
+  let spent = 0;
   try {
     // 10s per attempt is the SDK default; states can be large, so allow more.
     const client = new TypeSafeClient({ apiKey, timeout: 60_000 });
@@ -276,7 +286,7 @@ async function main(): Promise<number> {
           if (done === total) process.stderr.write("\r" + " ".repeat(60) + "\r");
         }
       : undefined;
-    result = await analyze(jobs, { ...opts, ...(progress ? { onProgress: progress } : {}) }, client);
+    result = await analyze(jobs, { ...opts, onSpend: (t) => (spent = t), ...(progress ? { onProgress: progress } : {}) }, client);
     durationMs = Date.now() - startedAt;
   } catch (err) {
     if (err instanceof AuthenticationError) {
@@ -284,6 +294,8 @@ async function main(): Promise<number> {
       return 2;
     }
     throw err;
+  } finally {
+    if (spent > 0) recordRun({ at: new Date().toISOString(), tokens: spent, worktree: worktreeRoot() });
   }
 
   if (values.classes && format === "text") console.log(formatClasses(result.classes) + "\n");
