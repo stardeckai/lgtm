@@ -192,25 +192,32 @@ async function runLive(cases: Case[], only?: string[]): Promise<{ answers: Map<s
   const apiKey = resolveApiKey();
   if (!apiKey) throw new Error("no API key — run `lgtm init` or set TYPESAFE_API_KEY");
   const client = new TypeSafeClient({ apiKey, timeout: 60_000 });
+  // Two cases may name the same test block (dogfood); send that state once.
+  const jobs = [...new Map(cases.map((c) => [`${c.job.block.file}:${c.job.block.line}`, c.job])).values()];
   const result = await analyze(
-    cases.map((c) => c.job),
+    jobs,
     { threshold: 0, verbose: false, cacheDir: path.join(ROOT, "evals", ".cache"), concurrency: 8, ...(only ? { only } : {}) },
     client,
   );
 
   // On a warm cache analyze reports no model; keep the one the corpus was answered with.
   const model = result.model ?? (fs.existsSync(RUN_META) ? (JSON.parse(fs.readFileSync(RUN_META, "utf8")).model as string | undefined) : undefined);
-  // Key by file AND line: dogfood cases share a file, so file alone would collapse them onto one case.
-  const byBlock = new Map(cases.map((c) => [`${c.job.block.file}:${c.job.block.line}`, c]));
+  // Key by file AND line: dogfood cases share a file, so file alone would collapse them onto one case. Two
+  // cases may still name the same test; each gets the answer, or one would keep stale answers forever.
+  const byBlock = new Map<string, Case[]>();
+  for (const c of cases) {
+    const key = `${c.job.block.file}:${c.job.block.line}`;
+    byBlock.set(key, [...(byBlock.get(key) ?? []), c]);
+  }
   const fresh = new Map<string, Answered>();
-  const get = (file: string, line: number) => {
-    const c = byBlock.get(`${file}:${line}`)!;
-    let a = fresh.get(c.id);
-    if (!a) fresh.set(c.id, (a = { probabilities: {}, ...(model ? { model } : {}) }));
-    return a;
-  };
-  for (const f of result.findings) get(f.file, f.line).probabilities[f.checkId] = f.probability;
-  for (const k of result.classes) get(k.file, k.line).class = k.testClass;
+  const get = (file: string, line: number) =>
+    (byBlock.get(`${file}:${line}`) ?? []).map((c) => {
+      let a = fresh.get(c.id);
+      if (!a) fresh.set(c.id, (a = { probabilities: {}, ...(model ? { model } : {}) }));
+      return a;
+    });
+  for (const f of result.findings) for (const a of get(f.file, f.line)) a.probabilities[f.checkId] = f.probability;
+  for (const k of result.classes) for (const a of get(k.file, k.line)) a.class = k.testClass;
 
   // A --only run must never drop the probabilities it did not ask about: merge into what is on disk.
   // Several --only runs may be in flight at once (one per check being tuned), so the merge re-reads the
@@ -469,18 +476,25 @@ function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inpu
   // what the cache did not have.
   const questionChars = JSON.stringify(CHECKS.map((c) => [c.instructions, c.criteria])).length;
   const coldTokens = Math.round(cases.reduce((n, c) => n + JSON.stringify(c.job.state).length + questionChars, 0) / 4);
+  // Pooled over every scored (check, case) pair at each check's own threshold: the number a PR reviewer feels.
+  const pooled = (subset: Scored[]) => scoreAt(subset.map((r) => ({ label: r.label, p: (r.p ?? -1) - (own.get(r.checkId) ?? DEFAULT_THRESHOLD) })), 0);
+  const pooledAll = pooled(rows);
+  const pooledHold = pooled(rows.filter((r) => r.split === "holdout"));
+  const nReal = cases.filter((c) => c.root.private || c.id.startsWith("dogfood/")).length;
   const readme = [
     "## Evals",
     "",
-    `The corpus is ${countedReadme} labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. The ground truth is kept in \`expect.json\` so it never reaches the model.`,
+    `**Precision first, by construction.** Each check's threshold is fitted to the lowest point where precision stays at or above 0.95, so high precision is what the fit buys, not something the model earned on its own; the honest numbers are the false-positive count and recall. At those thresholds lgtm raises ${pooledAll.tp + pooledAll.fp} findings across ${rows.length} scored (check, case) pairs, ${pooledAll.fp} of them wrong, and misses ${pooledAll.fn} of ${pooledAll.tp + pooledAll.fn} labelled smells (recall ${pct(pooledAll.recall)}). Thresholds are fitted on every case including holdout, since a one-parameter fit cannot overfit; holdout guards the prompt wording, and ${pooledHold.fp} of ${pooledHold.tp + pooledHold.fp} holdout findings are wrong there. A linter you can ignore is a linter you will ignore, so recall is the number we trade away.`,
+    "",
+    `The corpus is ${countedReadme} labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. ${nReal} of them are real tests, from production apps and from this repo, read against their implementation and labelled. The ground truth is kept in \`expect.json\` so it never reaches the model.`,
     "",
     ...(nPrivate === 0
       ? []
       : [
-          `The ${nPrivate} private cases come from real Stardeck customer apps and from Stardeck's own codebase, each read against its implementation, labelled, and anonymized. They are scored in these numbers but not published, because anonymization removes names, not shape. The ${cases.length - nPrivate} public cases in \`evals/cases\` reproduce with \`pnpm eval\` alone.`,
+          `The ${nPrivate} private cases come from real Stardeck customer apps and from Stardeck's own codebase, harvested by scoring 15,000+ real test blocks and sampling around each check's threshold. That harvest is what set the thresholds: synthetic negatives were too easy, and several checks that scored 1.00 on synthetic cases were 0–30% precise on real code until they were rewritten against it. The private cases are scored in these numbers but not published, because anonymization removes names, not shape. The ${cases.length - nPrivate} public cases in \`evals/cases\` reproduce with \`pnpm eval\` alone.`,
           "",
         ]),
-    `Scores are at each check's own threshold. ${holdoutCases.length} of the cases are holdout, never used to fit a threshold or a prompt.`,
+    `Scores are at each check's own threshold. ${holdoutCases.length} of the cases are holdout: thresholds are fitted on every case, prompts are never tuned against these.`,
     "",
     "| check | cases | threshold | precision (holdout) | recall (holdout) | precision (all) | recall (all) |",
     "|---|---|---|---|---|---|---|",
@@ -488,6 +502,7 @@ function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inpu
       (r) =>
         `| \`${r.check.id}\` | ${r.nPos + r.nNeg} | ${r.check.threshold.toFixed(2)} | ${pct(r.holdoutOwn.precision)} | ${pct(r.holdoutOwn.recall)} | ${pct(r.allOwn.precision)} | ${pct(r.allOwn.recall)} |`,
     ),
+    `| **all checks** | ${rows.length} | | ${pct(pooledHold.precision)} | ${pct(pooledHold.recall)} | ${pct(pooledAll.precision)} | ${pct(pooledAll.recall)} |`,
     "",
     `Test class accuracy: ${acc(classAll)} on all cases, ${acc(classHold)} on holdout.`,
     "",

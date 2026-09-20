@@ -15,9 +15,8 @@ It runs on [Jev by TypeSafe](https://typesafe.ai), with your own `TYPESAFE_API_K
 
 With this, you can prove that your agent actually wrote code that actually works, so you can say it lgtm 😐👍.
 
-_Evaluated and hill-climbed on real live apps built by [Stardeck](https://stardeck.ai): 15,000+ real test blocks scored,
-262 each read against its implementation and labelled, every check's threshold fitted so that when lgtm points at a test, the test is
-worth your time._
+_Evaluated on real live apps built by [Stardeck](https://stardeck.ai), 15,000+ test blocks scored and 262 read against their
+implementation and labelled, and optimized for precision: when lgtm points at a test, the test is worth your time. [Evals](#evals)._
 
 ## What you get
 
@@ -125,7 +124,7 @@ until it proves the code is actually tested.
 | `--concurrency <n>` | parallel requests, default 4 |
 | `--no-impl` | don't send implementation source |
 | `--ignore <pattern>` | skip paths; repeatable. Also reads `.lgtmignore` in the cwd, one gitignore-style pattern per line (`evals/`, `**/fixtures/**`, `*.stories.test.ts`) |
-| `--lean` | send ~2.5x fewer tokens (8k of implementation, no test file or guidelines). Thresholds are calibrated on full context, so expect several times more false positives; only for rate limits or enormous test files |
+| `--lean` | send ~3x fewer tokens (8k of implementation, no test file or guidelines). Thresholds are calibrated on full context, so expect several times more false positives; only for rate limits or enormous test files |
 | `--no-cache` | ignore the answer cache |
 | `--fail` | exit 1 when there are findings |
 | `--fail-on-error` | exit 1 when a block was skipped by an API error |
@@ -197,35 +196,38 @@ Retiring three unit tests for one wider test that really fails is a win, not a c
 <!-- evals:start -->
 ## Evals
 
-The corpus is 521 public + 262 private labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. The ground truth is kept in `expect.json` so it never reaches the model.
+**Precision first, by construction.** Each check's threshold is fitted to the lowest point where precision stays at or above 0.95, so high precision is what the fit buys, not something the model earned on its own; the honest numbers are the false-positive count and recall. At those thresholds lgtm raises 315 findings across 1482 scored (check, case) pairs, 4 of them wrong, and misses 148 of 459 labelled smells (recall 0.68). Thresholds are fitted on every case including holdout, since a one-parameter fit cannot overfit; holdout guards the prompt wording, and 2 of 69 holdout findings are wrong there. A linter you can ignore is a linter you will ignore, so recall is the number we trade away.
 
-The 262 private cases come from real Stardeck customer apps and from Stardeck's own codebase, each read against its implementation, labelled, and anonymized. They are scored in these numbers but not published, because anonymization removes names, not shape. The 521 public cases in `evals/cases` reproduce with `pnpm eval` alone.
+The corpus is 521 public + 262 private labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. 283 of them are real tests, from production apps and from this repo, read against their implementation and labelled. The ground truth is kept in `expect.json` so it never reaches the model.
 
-Scores are at each check's own threshold. 165 of the cases are holdout, never used to fit a threshold or a prompt.
+The 262 private cases come from real Stardeck customer apps and from Stardeck's own codebase, harvested by scoring 15,000+ real test blocks and sampling around each check's threshold. That harvest is what set the thresholds: synthetic negatives were too easy, and several checks that scored 1.00 on synthetic cases were 0–30% precise on real code until they were rewritten against it. The private cases are scored in these numbers but not published, because anonymization removes names, not shape. The 521 public cases in `evals/cases` reproduce with `pnpm eval` alone.
+
+Scores are at each check's own threshold. 165 of the cases are holdout: thresholds are fitted on every case, prompts are never tuned against these.
 
 | check | cases | threshold | precision (holdout) | recall (holdout) | precision (all) | recall (all) |
 |---|---|---|---|---|---|---|
-| `would-pass-if-broken` | 99 | 0.60 | 1.00 | 0.36 | 0.96 | 0.47 |
+| `would-pass-if-broken` | 99 | 0.60 | 0.83 | 0.36 | 0.96 | 0.47 |
 | `vacuous-assertion` | 179 | 0.70 | 1.00 | 0.63 | 1.00 | 0.69 |
 | `assertion-weaker-than-name` | 82 | 0.60 | 1.00 | 1.00 | 0.98 | 0.95 |
 | `reimplements-logic` | 206 | 0.85 | 1.00 | 0.50 | 1.00 | 0.67 |
 | `mocks-seam-under-test` | 121 | 0.80 | 1.00 | 0.33 | 1.00 | 0.23 |
 | `mock-mirrors-implementation` | 36 | 0.60 | 1.00 | 0.50 | 1.00 | 0.83 |
 | `tests-calls-not-outcomes` | 74 | 0.65 | 1.00 | 1.00 | 1.00 | 0.87 |
-| `tests-internals` | 64 | 0.65 | 1.00 | 0.80 | 1.00 | 0.70 |
+| `tests-internals` | 64 | 0.65 | 0.80 | 0.80 | 0.94 | 0.70 |
 | `setup-dominates` | 60 | 0.60 | 1.00 | 1.00 | 1.00 | 0.94 |
 | `broad-snapshot` | 51 | 0.35 | 1.00 | 1.00 | 1.00 | 0.94 |
 | `swallowed-error-as-success` | 76 | 0.80 | 1.00 | 0.80 | 1.00 | 0.46 |
 | `impossible-fixture` | 63 | 0.55 | 1.00 | 1.00 | 1.00 | 0.75 |
 | `happy-path-only-of-risky-boundary` | 88 | 0.70 | 1.00 | 0.50 | 1.00 | 0.50 |
 | `trivial-primitive` | 122 | 0.85 | 1.00 | 0.71 | 1.00 | 0.66 |
-| `over-mocked` | 84 | 0.55 | 1.00 | 0.20 | 1.00 | 0.38 |
+| `over-mocked` | 84 | 0.55 | 1.00 | 0.20 | 0.90 | 0.38 |
 | `regression-does-not-distinguish` | 41 | 0.35 | 1.00 | 0.75 | 1.00 | 0.82 |
 | `changed-in-lockstep` | 36 | 0.75 | 1.00 | 1.00 | 1.00 | 0.94 |
+| **all checks** | 1482 | | 0.97 | 0.68 | 0.99 | 0.68 |
 
-Test class accuracy: 665/783 (0.85) on all cases, 145/165 (0.88) on holdout.
+Test class accuracy: 668/783 (0.85) on all cases, 140/165 (0.85) on holdout.
 
-A full cold run of the corpus is about 3,988,609 input tokens ≈ $0.1675 (estimated from the states; the last run spent $0.0301 after cache hits).
+A full cold run of the corpus is about 3,909,061 input tokens ≈ $0.1642 (estimated from the states; the last run spent $0.0301 after cache hits).
 
 Every miss and false positive is listed in [`evals/RESULTS.md`](evals/RESULTS.md). The public cases reproduce with `pnpm eval`.
 <!-- evals:end -->
@@ -255,7 +257,7 @@ lgtm is advisory by default: it prints findings and exits 0. Fetch enough histor
 TypeSafe bills $0.042 per million input tokens and nothing for output, so lgtm is cheap enough to run on every PR.
 One request per test block. Each state is trimmed to at most 100,000 chars (~25,000 tokens, under TypeSafe's 32k
 state limit): the test code, the whole test file with the block fenced, the file's imports and sibling test names,
-up to 60,000 chars of the imported implementation (one hop deep) and the test sections of any CLAUDE.md/AGENTS.md
+up to 60,000 chars of the directly imported implementation and the test sections of any CLAUDE.md/AGENTS.md
 above it. `--lean` cuts that back to an 8,000-char implementation and no test file or guidelines.
 
 | run | blocks | input tokens | cost |

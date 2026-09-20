@@ -1,5 +1,5 @@
 {
-  "test": "src/analyze.test.ts::includes a module imported by two implementation modules exactly once",
+  "test": "src/analyze.test.ts::sends the value imports and what a barrel forwards: no transitive hop, no type-only modules",
   "fire": [],
   "not_fire": [
     "trivial-primitive"

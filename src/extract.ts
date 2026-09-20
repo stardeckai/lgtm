@@ -15,8 +15,10 @@ export type Extracted = {
   tests: TestBlock[];
   /** imports, mocks, hooks and top-level helpers of the file, capped */
   fileContext: string;
-  /** import specifiers (relative or aliased), for resolving implementation source */
+  /** value import specifiers (relative or aliased), for resolving implementation source */
   imports: string[];
+  /** `export … from` specifiers: what a barrel forwards, followed so a test that imports an index reaches the module */
+  reexports: string[];
 };
 
 export const CONTEXT_CAP = 16000;
@@ -48,7 +50,7 @@ export function extractTests(source: string, filePath: string): Extracted {
     ast = parse(source, { sourceType: "module", plugins: ["typescript", "jsx"], errorRecovery: true });
   } catch (err) {
     console.warn(`[lgtm] could not parse ${filePath}: ${(err as Error).message}`);
-    return { tests: [], fileContext: "", imports: [] };
+    return { tests: [], fileContext: "", imports: [], reexports: [] };
   }
 
   const tests: TestBlock[] = [];
@@ -90,14 +92,18 @@ export function extractTests(source: string, filePath: string): Extracted {
 
   const contextSlices: string[] = [];
   const imports: string[] = [];
+  const reexports: string[] = [];
+  // A type-only import or re-export is erased at runtime; the test cannot exercise that file, so it is not implementation.
+  const typeOnly = (stmt: any, kind: "importKind" | "exportKind") =>
+    stmt[kind] === "type" || (stmt.specifiers?.length > 0 && stmt.specifiers.every((sp: any) => sp[kind] === "type"));
   for (const stmt of ast.program.body as any[]) {
     let keep = false;
     if (stmt.type === "ImportDeclaration") {
       keep = true;
-      imports.push(stmt.source.value);
+      if (!typeOnly(stmt, "importKind")) imports.push(stmt.source.value);
     } else if (typeof stmt.source?.value === "string") {
-      // `export * from "./x"` / `export { a } from "./x"` — a barrel hop, same as an import.
-      imports.push(stmt.source.value);
+      // `export * from "./x"` / `export { a } from "./x"`
+      if (!typeOnly(stmt, "exportKind")) reexports.push(stmt.source.value);
     } else if (stmt.type === "FunctionDeclaration") {
       keep = true;
     } else if (stmt.type === "VariableDeclaration" && stmt.kind === "const") {
@@ -117,5 +123,5 @@ export function extractTests(source: string, filePath: string): Extracted {
     fileContext = fileContext.slice(0, CONTEXT_CAP) + "\n/* …truncated… */";
   }
 
-  return { tests, fileContext, imports };
+  return { tests, fileContext, imports, reexports };
 }

@@ -8,21 +8,21 @@ Split: 618 train · 165 holdout.
 
 | check | pos | neg | own t | train P/R/F1 @own | holdout P/R/F1 @own | P/R/F1 @0.50 | best F1 (train) |
 |---|---|---|---|---|---|---|---|
-| `would-pass-if-broken` | 57 | 42 | 0.60 | 0.96/0.51/0.67 | 1.00/0.36/0.53 | 0.94/0.54/0.69 | 0.87 @ 0.23 |
-| `vacuous-assertion` | 39 | 140 | 0.70 | 1.00/0.71/0.83 | 1.00/0.63/0.77 | 0.92/0.90/0.91 | 0.91 @ 0.45 |
+| `would-pass-if-broken` | 57 | 42 | 0.60 | 1.00/0.51/0.68 | 0.83/0.36/0.50 | 0.97/0.54/0.70 | 0.88 @ 0.23 |
+| `vacuous-assertion` | 39 | 140 | 0.70 | 1.00/0.71/0.83 | 1.00/0.63/0.77 | 0.92/0.90/0.91 | 0.92 @ 0.38 |
 | `assertion-weaker-than-name` | 60 | 22 | 0.60 | 0.98/0.94/0.96 | 1.00/1.00/1.00 | 0.92/0.95/0.93 | 0.96 @ 0.61 |
 | `reimplements-logic` | 30 | 176 | 0.85 | 1.00/0.71/0.83 | 1.00/0.50/0.67 | 0.81/1.00/0.90 | 0.98 @ 0.62 |
 | `mocks-seam-under-test` | 26 | 95 | 0.80 | 1.00/0.20/0.33 | 1.00/0.33/0.50 | 0.73/0.92/0.81 | 0.88 @ 0.65 |
 | `mock-mirrors-implementation` | 18 | 18 | 0.60 | 1.00/0.93/0.96 | 1.00/0.50/0.67 | 0.95/1.00/0.97 | 0.97 @ 0.50 |
-| `tests-calls-not-outcomes` | 23 | 51 | 0.65 | 1.00/0.84/0.91 | 1.00/1.00/1.00 | 0.78/0.91/0.84 | 0.91 @ 0.67 |
-| `tests-internals` | 23 | 41 | 0.65 | 1.00/0.67/0.80 | 1.00/0.80/0.89 | 0.91/0.87/0.89 | 0.92 @ 0.33 |
+| `tests-calls-not-outcomes` | 23 | 51 | 0.65 | 1.00/0.84/0.91 | 1.00/1.00/1.00 | 0.95/0.91/0.93 | 0.94 @ 0.53 |
+| `tests-internals` | 23 | 41 | 0.65 | 1.00/0.67/0.80 | 0.80/0.80/0.80 | 0.91/0.87/0.89 | 0.95 @ 0.33 |
 | `setup-dominates` | 16 | 44 | 0.60 | 1.00/0.92/0.96 | 1.00/1.00/1.00 | 0.94/1.00/0.97 | 1.00 @ 0.53 |
 | `broad-snapshot` | 16 | 35 | 0.35 | 1.00/0.92/0.96 | 1.00/1.00/1.00 | 1.00/0.81/0.90 | 1.00 @ 0.22 |
 | `swallowed-error-as-success` | 24 | 52 | 0.80 | 1.00/0.37/0.54 | 1.00/0.80/0.89 | 0.92/0.92/0.92 | 0.92 @ 0.57 |
 | `impossible-fixture` | 16 | 47 | 0.55 | 1.00/0.67/0.80 | 1.00/1.00/1.00 | 1.00/0.88/0.93 | 0.91 @ 0.52 |
 | `happy-path-only-of-risky-boundary` | 22 | 66 | 0.70 | 1.00/0.50/0.67 | 1.00/0.50/0.67 | 0.83/0.86/0.84 | 0.88 @ 0.61 |
-| `trivial-primitive` | 32 | 90 | 0.85 | 1.00/0.64/0.78 | 1.00/0.71/0.83 | 0.76/1.00/0.86 | 0.89 @ 0.57 |
-| `over-mocked` | 24 | 60 | 0.55 | 1.00/0.42/0.59 | 1.00/0.20/0.33 | 1.00/0.50/0.67 | 0.81 @ 0.29 |
+| `trivial-primitive` | 32 | 90 | 0.85 | 1.00/0.64/0.78 | 1.00/0.71/0.83 | 0.80/1.00/0.89 | 0.93 @ 0.57 |
+| `over-mocked` | 24 | 60 | 0.55 | 0.89/0.42/0.57 | 1.00/0.20/0.33 | 0.92/0.50/0.65 | 0.86 @ 0.34 |
 | `regression-does-not-distinguish` | 17 | 24 | 0.35 | 1.00/0.85/0.92 | 1.00/0.75/0.86 | 1.00/0.76/0.87 | 0.96 @ 0.23 |
 | `changed-in-lockstep` | 16 | 20 | 0.75 | 1.00/0.92/0.96 | 1.00/1.00/1.00 | 0.89/1.00/0.94 | 1.00 @ 0.74 |
 
@@ -32,12 +32,12 @@ Checks with no labelled case are omitted.
 
 ## Test class
 
-Accuracy — all: 665/783 (0.85) · holdout: 145/165 (0.88).
+Accuracy — all: 668/783 (0.85) · holdout: 140/165 (0.85).
 
 | actual \ predicted | pure_logic | mocked_seam_unit | contract_integration |
 |---|---|---|---|
-| **pure_logic** | 443 | 56 | 14 |
-| **mocked_seam_unit** | 1 | 131 | 7 |
+| **pure_logic** | 445 | 54 | 14 |
+| **mocked_seam_unit** | 0 | 132 | 7 |
 | **contract_integration** | 25 | 15 | 91 |
 
 ## Misses (labelled fire, p below the check's own threshold)
@@ -193,6 +193,8 @@ Accuracy — all: 665/783 (0.85) · holdout: 145/165 (0.88).
 
 ## False positives (labelled not_fire, p at or above the check's own threshold)
 
+- `dogfood/03-asks-for-the-test-class-as-a-choice-and` · `over-mocked` · p=0.64 · the assertions pin exact values the named behaviour produces; a plausible break changes them; the only fake is the model client, a vendor SDK at the external edge; the threshold filter, verbose band, diff gating, class mapping and cache are real analyze code, and the assertions pin exact finding arrays and the exact question set sent, not that a double was touched
+- `dogfood/21-records-every-test-with-its-name-line-de` · `tests-internals` · p=0.67 · the assertions read the return value of extractTests (names, lines, describe paths, source slices, fileContext), which is the module's whole contract surface; nothing private is peeked
 - `private/realworld/assertions-a-sd/17-streak-cleared-on-enforce` · `assertion-weaker-than-name` · p=0.82 · clearing the streak is a call into another module, so the call with the enforced org's id is the observable behaviour the name names, and it fails if the clear is skipped or passed the wrong org
 - `private/realworld/assertions-a/01-legacy-overstay-zero` · `would-pass-if-broken` · p=0.74 · returning zero for every overstay is the whole behaviour the name claims, so reinstating any overage band for a full-day pass makes the second or third assertion fail
 

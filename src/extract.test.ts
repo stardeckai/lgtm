@@ -61,4 +61,21 @@ describe("extractTests", () => {
     expect(fileContext).not.toContain("top level");
     expect(imports).toEqual(["vitest", "./user.js"]);
   });
+
+  it("leaves type-only imports and re-exports out, and lists value re-exports separately", () => {
+    const src = [
+      'import type { A } from "./a.js";',
+      'import { type B, type C } from "./b.js";',
+      'import { type D, d } from "./d.js";',
+      'import { e } from "./e.js";',
+      'import "./setup.js";',
+      'export * from "./f.js";',
+      'export type { G } from "./g.js";',
+      'export { type H } from "./h.js";',
+      'it("works", () => { expect(d(e)).toBe(1); });',
+    ].join("\n");
+    const { imports, reexports } = extractTests(src, "a.test.ts");
+    expect(imports).toEqual(["./d.js", "./e.js", "./setup.js"]);
+    expect(reexports).toEqual(["./f.js"]);
+  });
 });
