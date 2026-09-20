@@ -23,19 +23,21 @@ concurrency: release
 
 jobs:
   release:
+    # A dispatch can name any ref, and this job holds npm publish rights.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
       - name: remember the pre-bump commit
         id: head
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1  # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
         with:
           node-version: 22
           cache: pnpm
           registry-url: https://registry.npmjs.org
-      - run: npm install -g npm@latest  # trusted publishing needs npm >= 11.5.1
+      - run: npm install -g npm@11.19.1  # trusted publishing needs npm >= 11.5.1
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test
@@ -60,16 +62,21 @@ jobs:
           echo "publish=$publish" >> "$GITHUB_OUTPUT"
           echo "v$version — publish=$publish" >> "$GITHUB_STEP_SUMMARY"
 
+      # Push BEFORE publish. A rejected push (main advanced, branch protection)
+      # then costs nothing, and a failed publish after it is retried by the run
+      # this very push triggers. Publishing first is the one unrecoverable order:
+      # npm versions are immutable, so the guard would skip the retry forever.
+      - name: push the version commit and tag
+        if: steps.check.outputs.publish == 'true'
+        run: |
+          version="${{ steps.check.outputs.version }}"
+          git tag -a "v$version" -m "v$version" 2>/dev/null || true  # dispatch's npm version already made one
+          git push origin "HEAD:main" "v$version"
+
       # prepack runs gen:skill && build, so no separate build step.
       - name: publish
         if: steps.check.outputs.publish == 'true'
         run: npm publish
-
-      - name: push the version commit and tag
-        if: steps.check.outputs.publish == 'true'
-        run: |
-          git tag "v${{ steps.check.outputs.version }}" || true  # dispatch's npm version already made it
-          git push --follow-tags
 
       - name: comment on the released PR
         if: steps.check.outputs.publish == 'true'
@@ -78,9 +85,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SHA: ${{ steps.head.outputs.sha }}
           VERSION: ${{ steps.check.outputs.version }}
-          PKG: ${{ github.repository }}
+          REPO: ${{ github.repository }}
         run: |
           body="📦 Shipped in [\`v$VERSION\`](https://www.npmjs.com/package/@stardeckai/lgtm/v/$VERSION) — \`npm i @stardeckai/lgtm@$VERSION\`"
-          for pr in $(gh api "repos/$PKG/commits/$SHA/pulls" --jq '.[].number'); do
+          for pr in $(gh api "repos/$REPO/commits/$SHA/pulls" --jq '.[].number'); do
             gh pr comment "$pr" --body "$body"
           done

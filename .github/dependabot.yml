@@ -1,0 +1,7 @@
+# Pinned action SHAs rot silently without something bumping them.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
