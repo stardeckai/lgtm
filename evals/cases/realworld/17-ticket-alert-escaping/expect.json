@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["tests-calls-not-outcomes", "impossible-fixture"],
+  "class": "mocked_seam_unit",
+  "why": "the posted message is the observable output of this function and its exact escaped text is asserted, and the fields the cast omits are ones the rendered alert never reads"
+}

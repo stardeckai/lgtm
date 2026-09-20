@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["setup-dominates", "reimplements-logic"],
+  "class": "pure_logic",
+  "why": "each of the eight bookings is a distinct discriminator and every one of them is named or deliberately absent in the three expected id lists"
+}

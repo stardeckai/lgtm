@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "every expected split is a literal that sums back to the total, covering the indivisible cent, a zero total and the all-zero weights refusal"
+}

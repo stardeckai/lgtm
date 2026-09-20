@@ -1,0 +1,6 @@
+{
+  "fire": ["vacuous-assertion", "assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic", "over-mocked"],
+  "class": "pure_logic",
+  "why": "any non-empty token string passes, and the scope list the name is about is never read"
+}

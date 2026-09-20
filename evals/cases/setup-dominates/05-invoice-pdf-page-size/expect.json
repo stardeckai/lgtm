@@ -1,0 +1,6 @@
+{
+  "fire": ["setup-dominates"],
+  "not_fire": ["would-pass-if-broken"],
+  "class": "pure_logic",
+  "why": "a full seller, buyer, invoice and totals fixture is built so that one string field of the address can be passed to a country lookup"
+}

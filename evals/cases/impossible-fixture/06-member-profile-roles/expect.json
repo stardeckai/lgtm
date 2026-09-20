@@ -1,0 +1,6 @@
+{
+  "fire": ["impossible-fixture"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "parseMember refuses an active member with no acceptedAt, so the fallback branch under test is reached only by a partial object the membership reader would have rejected"
+}

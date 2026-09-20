@@ -1,0 +1,6 @@
+{
+  "fire": ["mock-mirrors-implementation"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "mocked_seam_unit",
+  "why": "the sanitizer under the assertion is a second copy of the shipped allowlist and its regexes, so weakening the real allowlist would not move this expectation"
+}

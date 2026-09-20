@@ -1,0 +1,11 @@
+{
+  "fire": [
+    "assertion-weaker-than-name"
+  ],
+  "not_fire": [
+    "reimplements-logic",
+    "over-mocked"
+  ],
+  "class": "pure_logic",
+  "why": "the word only promises a refusal for anyone else, but only the author's successful delete is exercised"
+}

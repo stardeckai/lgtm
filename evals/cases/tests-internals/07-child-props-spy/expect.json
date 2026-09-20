@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-internals", "tests-calls-not-outcomes"],
+  "not_fire": ["reimplements-logic"],
+  "class": "mocked_seam_unit",
+  "why": "it counts renders of a stubbed child component instead of asserting the tax and total amounts shown to the shopper"
+}

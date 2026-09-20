@@ -1,0 +1,6 @@
+{
+  "fire": ["over-mocked"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "mocked_seam_unit",
+  "why": "the only real code is a constant lookup, since preferences, templates and every transport are stubs that always succeed"
+}

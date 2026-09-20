@@ -1,0 +1,6 @@
+{
+  "fire": ["changed-in-lockstep"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the idle limit went from 30 to 120 minutes and both assertion arguments were rewritten to the new number, so the test cannot disagree with the constant"
+}

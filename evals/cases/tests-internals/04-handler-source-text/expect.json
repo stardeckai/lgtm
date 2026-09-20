@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-internals", "would-pass-if-broken"],
+  "not_fire": ["impossible-fixture"],
+  "class": "pure_logic",
+  "why": "it greps the function's source text, so an org-wide lookup that leaked members across tenants would still pass"
+}

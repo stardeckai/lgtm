@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["over-mocked", "happy-path-only-of-risky-boundary"],
+  "class": "contract_integration",
+  "why": "only the clock is faked while the real store and the real middleware run together, and the sliding idle renewal must not outlive the absolute expiry"
+}

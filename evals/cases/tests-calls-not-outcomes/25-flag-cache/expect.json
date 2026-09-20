@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["tests-calls-not-outcomes", "mocks-seam-under-test"],
+  "class": "mocked_seam_unit",
+  "why": "the fetch counts prove the caching behaviour and each returned variant across the ttl boundary is asserted"
+}

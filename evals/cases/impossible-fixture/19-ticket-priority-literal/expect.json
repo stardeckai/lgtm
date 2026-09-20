@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["impossible-fixture", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the cast only narrows a string literal to the priority union — every field is present and consistent with what openTicket and a first response produce"
+}

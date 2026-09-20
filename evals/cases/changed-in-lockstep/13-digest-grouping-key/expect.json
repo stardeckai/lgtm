@@ -1,0 +1,6 @@
+{
+  "fire": ["changed-in-lockstep"],
+  "not_fire": ["tests-internals"],
+  "class": "pure_logic",
+  "why": "the grouping key gained the channel and the expected keys and count were rewritten to match, so the test still claims one digest per user while now asserting two"
+}

@@ -1,0 +1,10 @@
+{
+  "fire": [
+    "happy-path-only-of-risky-boundary"
+  ],
+  "not_fire": [
+    "tests-internals"
+  ],
+  "class": "pure_logic",
+  "why": "the sibling covers an unknown member, but nothing demotes the only owner, which is the refusal that keeps an organisation from locking everyone out"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["over-mocked", "happy-path-only-of-risky-boundary"],
+  "not_fire": ["reimplements-logic"],
+  "class": "mocked_seam_unit",
+  "why": "the loader, the permission check and the database are all stubbed to agree, and the assertion echoes the loader's own object"
+}

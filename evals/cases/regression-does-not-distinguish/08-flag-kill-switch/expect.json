@@ -1,0 +1,6 @@
+{
+  "fire": ["regression-does-not-distinguish"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the kill switch is false in both assertions, so the pre-fix function that ignores it returns exactly the same two answers"
+}

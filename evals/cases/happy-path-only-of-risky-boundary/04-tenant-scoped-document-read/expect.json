@@ -1,0 +1,10 @@
+{
+  "fire": [
+    "happy-path-only-of-risky-boundary"
+  ],
+  "not_fire": [
+    "vacuous-assertion"
+  ],
+  "class": "pure_logic",
+  "why": "read hides documents belonging to another organisation, and every block reads within one organisation \u2014 the unknown-id sibling exercises a different branch"
+}

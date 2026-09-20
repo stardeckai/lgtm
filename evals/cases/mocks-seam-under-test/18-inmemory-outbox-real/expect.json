@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mocks-seam-under-test", "tests-calls-not-outcomes"],
+  "class": "contract_integration",
+  "why": "the outbox that records publication is real, so the second drain returning zero comes from the code under test rather than from a scripted fake"
+}

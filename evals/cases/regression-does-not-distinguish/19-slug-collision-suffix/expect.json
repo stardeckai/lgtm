@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the pre-fix class hands out team-sync three times, so the second and third assertions fail against before"
+}

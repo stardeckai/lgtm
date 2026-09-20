@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the expected column is a set of written-down cent amounts from the price sheet, so a wrong band boundary changes the output without changing the expectation"
+}

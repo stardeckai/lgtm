@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["trivial-primitive", "reimplements-logic"],
+  "class": "contract_integration",
+  "why": "the literals cover 11 against 21 and 13 against 3, the exact pairs that separate a correct CLDR rule from a naive last-digit one, plus polish differing from russian at 21"
+}

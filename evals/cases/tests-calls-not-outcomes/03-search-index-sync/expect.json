@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-calls-not-outcomes"],
+  "not_fire": ["broad-snapshot"],
+  "class": "mocked_seam_unit",
+  "why": "the excerpt truncation and tag lowercasing that make up the document are never inspected, only that upsert ran"
+}

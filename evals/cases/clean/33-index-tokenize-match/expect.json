@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["trivial-primitive", "mocks-seam-under-test"],
+  "class": "contract_integration",
+  "why": "the same real tokenizer runs on both the indexed text and the query, so an accent or minimum-length rule applied on only one side would break these results"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["changed-in-lockstep", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the function gained a required currency argument and every existing expected string is unchanged, with the two new rows stating the published minor-unit counts for JPY and KWD"
+}

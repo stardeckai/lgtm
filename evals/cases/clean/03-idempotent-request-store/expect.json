@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mocks-seam-under-test", "over-mocked"],
+  "class": "contract_integration",
+  "why": "the real store, the real fingerprint function and the real handler run together, and the assertions pin the replayed body, the conflict response and that the work ran only once"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["swallowed-error-as-success"],
+  "not_fire": ["mocks-seam-under-test", "happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "the catch in the test flattens every rejection to null, so a lookup crash reads the same as the refusal and only a returned tenant would fail"
+}

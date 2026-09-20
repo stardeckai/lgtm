@@ -1,0 +1,6 @@
+{
+  "fire": ["impossible-fixture"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "buildEntry refuses single-posting entries that do not net to zero, so the trial balance is computed over two entries the ledger could never have posted"
+}

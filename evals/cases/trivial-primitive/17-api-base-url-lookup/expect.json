@@ -1,0 +1,6 @@
+{
+  "fire": ["trivial-primitive"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the test restates a constant map key by key, and any endpointUrl test would already show a base url pointing at the wrong environment"
+}

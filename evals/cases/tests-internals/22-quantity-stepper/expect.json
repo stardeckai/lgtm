@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["tests-internals", "happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "both clamp boundaries are exercised through the rendered controls and asserted on the value the shopper sees"
+}

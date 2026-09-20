@@ -1,0 +1,6 @@
+{
+  "fire": ["assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic", "mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "no second store is ever built from the durable map, so the restart the name promises is never simulated"
+}

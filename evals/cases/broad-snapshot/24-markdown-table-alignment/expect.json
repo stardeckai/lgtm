@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["broad-snapshot", "tests-internals"],
+  "class": "pure_logic",
+  "why": "the rendered text is four short lines and the alignment under test is the visible shape of those lines, so a diff cannot be waved through"
+}

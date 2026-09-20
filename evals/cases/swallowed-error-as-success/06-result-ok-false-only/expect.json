@@ -1,0 +1,6 @@
+{
+  "fire": ["swallowed-error-as-success"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "an unknown account, a thrown exception and an overdraft all produce the identical ok false, and no balance is read back to show nothing moved"
+}

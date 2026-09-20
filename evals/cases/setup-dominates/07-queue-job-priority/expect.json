@@ -1,0 +1,6 @@
+{
+  "fire": ["setup-dominates"],
+  "not_fire": ["over-mocked"],
+  "class": "pure_logic",
+  "why": "a Redis client, worker pool, queue table and metrics block surround a single arithmetic assertion that reads only the job record"
+}

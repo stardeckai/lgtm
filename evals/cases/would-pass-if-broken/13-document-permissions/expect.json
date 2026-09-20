@@ -1,0 +1,11 @@
+{
+  "fire": [
+    "would-pass-if-broken"
+  ],
+  "not_fire": [
+    "reimplements-logic",
+    "impossible-fixture"
+  ],
+  "class": "pure_logic",
+  "why": "the admin in the fixture is also the owner, so the owner branch returns true first and deleting the admin rule changes nothing"
+}

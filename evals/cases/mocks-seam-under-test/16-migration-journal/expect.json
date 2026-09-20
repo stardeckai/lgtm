@@ -1,0 +1,6 @@
+{
+  "fire": ["mocks-seam-under-test"],
+  "not_fire": ["reimplements-logic"],
+  "class": "mocked_seam_unit",
+  "why": "what makes a migration run once is that recording it changes what the journal reports, and both the read and the write of that journal are fakes that never influence each other"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["vacuous-assertion", "would-pass-if-broken"],
+  "not_fire": ["reimplements-logic", "broad-snapshot"],
+  "class": "pure_logic",
+  "why": "expect.any accepts failed, delivered or any other string in the status the name pins to queued"
+}

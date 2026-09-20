@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "swallowed-error-as-success",
+    "happy-path-only-of-risky-boundary"
+  ],
+  "class": "pure_logic",
+  "why": "the early attempt is required to rethrow, the dead letter is pinned with its attempt count, and the processed list proves the failed message was never acknowledged"
+}

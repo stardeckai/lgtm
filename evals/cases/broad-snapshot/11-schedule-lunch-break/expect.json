@@ -1,0 +1,6 @@
+{
+  "fire": ["broad-snapshot"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the recorded list of seven slot objects hides the only thing that matters, the single missing midday entry, which one expected array of gaps would state outright"
+}

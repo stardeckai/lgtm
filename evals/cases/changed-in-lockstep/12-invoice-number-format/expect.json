@@ -1,0 +1,10 @@
+{
+  "fire": [
+    "changed-in-lockstep"
+  ],
+  "not_fire": [
+    "reimplements-logic"
+  ],
+  "class": "contract_integration",
+  "why": "the invoice number format changed and the expected string was replaced with the new output in the same diff, so the test cannot disagree with whatever invoiceNumber now returns"
+}

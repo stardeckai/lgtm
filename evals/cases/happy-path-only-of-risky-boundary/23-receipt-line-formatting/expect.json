@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "there is no refusal or failure branch in receipt layout to leave untested — the risk here is column arithmetic, and both the normal and overflow widths are pinned"
+}

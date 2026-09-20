@@ -1,0 +1,6 @@
+{
+  "fire": ["changed-in-lockstep"],
+  "not_fire": ["trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the slug limit moved from 60 to 80 and the expected length in the test was edited to 80 in the same commit, so nothing pins the column width the limit is supposed to respect"
+}

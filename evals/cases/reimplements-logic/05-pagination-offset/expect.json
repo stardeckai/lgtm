@@ -1,0 +1,6 @@
+{
+  "fire": ["reimplements-logic"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "every field of the expected window is recomputed with the production clamping expressions instead of being written down as the numbers the requirement asks for"
+}

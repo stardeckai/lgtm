@@ -1,0 +1,10 @@
+{
+  "fire": [
+    "happy-path-only-of-risky-boundary"
+  ],
+  "not_fire": [
+    "tests-calls-not-outcomes"
+  ],
+  "class": "pure_logic",
+  "why": "invite refuses members, viewers and non-owners granting ownership, and every block here invites from a role that is already allowed"
+}

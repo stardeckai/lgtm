@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-calls-not-outcomes", "would-pass-if-broken"],
+  "not_fire": ["over-mocked"],
+  "class": "mocked_seam_unit",
+  "why": "expect.any(String) for the session id means revoking the session that was meant to be kept still passes"
+}

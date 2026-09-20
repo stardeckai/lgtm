@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "only the input list is built by a loop; the four expected averages are written-down numbers that a wrong window offset would break"
+}

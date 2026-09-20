@@ -1,0 +1,6 @@
+{
+  "fire": ["reimplements-logic"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the expected slug is built by the identical chain of replaces, so a wrong character class would be applied to both sides equally"
+}

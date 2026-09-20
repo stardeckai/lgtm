@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["tests-internals", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "every assertion is on text and button names the user sees, driven by a real click"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["swallowed-error-as-success", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "each row requires the exact RangeError message a silently coerced value would not produce, and the accepted duration is pinned alongside"
+}

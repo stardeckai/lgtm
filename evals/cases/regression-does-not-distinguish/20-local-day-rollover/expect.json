@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "trivial-primitive"],
+  "class": "contract_integration",
+  "why": "the pre-fix function ignores the offset and calls both timestamps 2026-03-01, so the last two assertions fail against before"
+}

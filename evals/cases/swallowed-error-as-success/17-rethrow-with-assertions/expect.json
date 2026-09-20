@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "swallowed-error-as-success",
+    "setup-dominates"
+  ],
+  "class": "pure_logic",
+  "why": "expect.assertions(4) makes a missing throw fail, an unexpected error type is rethrown, and the stored row is read back to prove nothing was written"
+}

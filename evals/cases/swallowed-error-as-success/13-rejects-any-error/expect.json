@@ -1,0 +1,6 @@
+{
+  "fire": ["swallowed-error-as-success"],
+  "not_fire": ["happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "toThrow with no argument accepts any rejection, so a type error thrown before the holder comparison would pass as if the lease had been defended"
+}

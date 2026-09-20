@@ -1,0 +1,6 @@
+{
+  "fire": ["trivial-primitive"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "a one-line string concatenation with no edge cases, covered for free by any screen that renders an account"
+}

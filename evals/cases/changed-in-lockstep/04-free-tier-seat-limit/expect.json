@@ -1,0 +1,6 @@
+{
+  "fire": ["changed-in-lockstep"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the free seat cap moved from 5 to 3 and the seat counts in both assertions were moved down with it, so the test tracks the constant rather than a pricing rule"
+}

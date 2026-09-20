@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "changed-in-lockstep",
+    "broad-snapshot"
+  ],
+  "class": "pure_logic",
+  "why": "both totals are unchanged at 31500 and 13500; only the return shape changed, with two component fields added that sum to the same total"
+}

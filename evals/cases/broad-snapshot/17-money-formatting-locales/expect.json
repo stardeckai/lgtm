@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["broad-snapshot", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the only snapshot is a single formatted amount sitting beside two exact assertions, and the sign placement it pins is visible in the literal"
+}

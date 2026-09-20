@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "happy-path-only-of-risky-boundary",
+    "mocks-seam-under-test"
+  ],
+  "class": "pure_logic",
+  "why": "the real membership and grant state of the store is driven for real, so the revocation must remove the inherited permission without touching the direct one or the other member's"
+}

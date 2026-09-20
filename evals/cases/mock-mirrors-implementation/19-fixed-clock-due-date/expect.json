@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mock-mirrors-implementation", "reimplements-logic"],
+  "class": "pure_logic",
+  "why": "only the clock is fixed, and the leap-year end-of-month date and grace date are written down rather than recomputed or supplied by a fake"
+}

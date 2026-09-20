@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["would-pass-if-broken", "swallowed-error-as-success"],
+  "class": "pure_logic",
+  "why": "the second before and the exact second of expiry are both asserted, and the thrown type and message are pinned"
+}

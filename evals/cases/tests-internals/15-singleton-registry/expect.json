@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-internals", "assertion-weaker-than-name"],
+  "not_fire": ["over-mocked"],
+  "class": "pure_logic",
+  "why": "it inspects the private transport map and static instance field instead of sending through the registry"
+}

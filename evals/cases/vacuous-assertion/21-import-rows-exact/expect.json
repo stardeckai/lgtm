@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["vacuous-assertion", "assertion-weaker-than-name"],
+  "class": "pure_logic",
+  "why": "the not.toThrow line is backed by the exact parsed row and by the rejection of a row without an at sign"
+}

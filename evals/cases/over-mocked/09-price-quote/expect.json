@@ -1,0 +1,6 @@
+{
+  "fire": ["over-mocked"],
+  "not_fire": ["reimplements-logic"],
+  "class": "mocked_seam_unit",
+  "why": "all three rule modules that decide the rates are stubbed, leaving only the multiply-and-add glue real"
+}

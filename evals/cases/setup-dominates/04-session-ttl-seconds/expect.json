@@ -1,0 +1,6 @@
+{
+  "fire": ["setup-dominates"],
+  "not_fire": ["over-mocked", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "five module mocks, a tenant, a device and an actor sit in file context for a pure arithmetic assertion that touches none of them"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["swallowed-error-as-success", "tests-calls-not-outcomes"],
+  "class": "pure_logic",
+  "why": "the fallback is accepted only together with the exact logged reason, and the second resolver requires the malformed payload to reject rather than fall back"
+}

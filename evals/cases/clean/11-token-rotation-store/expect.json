@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mocks-seam-under-test", "happy-path-only-of-risky-boundary"],
+  "class": "contract_integration",
+  "why": "the real store and the real rotation run together and the assertions show the replay is refused and the still-valid successor token was revoked with it"
+}

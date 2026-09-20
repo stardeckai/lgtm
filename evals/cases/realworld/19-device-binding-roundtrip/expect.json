@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "mocks-seam-under-test",
+    "happy-path-only-of-risky-boundary"
+  ],
+  "class": "pure_logic",
+  "why": "the writer and the reader are the same real registry, the listed and fetched bindings are pinned exactly, and a duplicate alias and a lookup after unpairing must both be refused with their codes"
+}

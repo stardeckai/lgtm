@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mocks-seam-under-test", "over-mocked", "trivial-primitive"],
+  "class": "contract_integration",
+  "why": "the real encoder and decoder meet through the real queue, and the drained jobs must equal what was pushed in"
+}

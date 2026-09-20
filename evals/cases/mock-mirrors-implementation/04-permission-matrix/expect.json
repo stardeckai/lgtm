@@ -1,0 +1,6 @@
+{
+  "fire": ["mock-mirrors-implementation"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "mocked_seam_unit",
+  "why": "the authorizer passed in is a second copy of the exported role matrix, so the deletion refusal is decided by the test's own rules rather than the shipped ones"
+}

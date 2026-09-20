@@ -1,0 +1,6 @@
+{
+  "fire": ["vacuous-assertion", "assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic", "over-mocked"],
+  "class": "pure_logic",
+  "why": "the range spans every fare the function could produce, so an uncapped ninety-times multiplier still lands inside it"
+}

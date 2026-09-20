@@ -1,0 +1,6 @@
+{
+  "fire": ["vacuous-assertion", "would-pass-if-broken"],
+  "not_fire": ["reimplements-logic", "mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "every string the function can return satisfies toBeDefined, so any hold length or weekend rule passes"
+}

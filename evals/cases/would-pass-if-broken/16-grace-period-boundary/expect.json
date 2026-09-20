@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["would-pass-if-broken", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "day 30 and day 31 are both asserted with exact cents, so moving the boundary by one day or dropping the charge fails immediately"
+}

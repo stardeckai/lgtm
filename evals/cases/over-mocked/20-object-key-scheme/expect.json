@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["over-mocked", "tests-internals"],
+  "class": "pure_logic",
+  "why": "the object store is the one external edge faked and the real key sanitising and content-type lookup are asserted"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "tests-calls-not-outcomes"],
+  "class": "pure_logic",
+  "why": "the pre-fix book creates ch_2 for the replay and keeps two charges, so both assertions fail against before"
+}

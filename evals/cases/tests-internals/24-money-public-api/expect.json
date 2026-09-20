@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["tests-internals", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "only the public factory and methods are used and the remainder distribution is asserted down to the last satang"
+}

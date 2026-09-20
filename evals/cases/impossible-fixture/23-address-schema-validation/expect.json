@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["impossible-fixture", "trivial-primitive"],
+  "class": "contract_integration",
+  "why": "the address is produced by the real validator, so the normalisation the comparison depends on is the one production performs rather than one the fixture assumed"
+}

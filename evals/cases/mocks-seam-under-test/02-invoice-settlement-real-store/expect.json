@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mocks-seam-under-test", "over-mocked"],
+  "class": "contract_integration",
+  "why": "only the payment gateway and the clock are faked; the store the assertion reads back through is real"
+}

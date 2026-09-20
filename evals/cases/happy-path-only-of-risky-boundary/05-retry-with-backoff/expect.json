@@ -1,0 +1,6 @@
+{
+  "fire": ["happy-path-only-of-risky-boundary"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "retry, backoff and giving up after the attempt budget are the entire behaviour, and no block here ever makes the operation fail once"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "the pre-fix authenticate returns the closed account instead of null, so the second assertion fails against before"
+}

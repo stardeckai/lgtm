@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["over-mocked", "mocks-seam-under-test"],
+  "class": "contract_integration",
+  "why": "nothing is stubbed to agree — the overlap rule and a real store run together and the stored rows are read back"
+}

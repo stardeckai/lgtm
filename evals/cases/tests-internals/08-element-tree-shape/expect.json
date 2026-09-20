@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-internals", "would-pass-if-broken"],
+  "not_fire": ["setup-dominates"],
+  "class": "pure_logic",
+  "why": "it asserts tag names and child counts of the markup, so a wrong unread count in the heading would pass"
+}

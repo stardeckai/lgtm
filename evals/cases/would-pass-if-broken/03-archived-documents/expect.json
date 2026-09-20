@@ -1,0 +1,6 @@
+{
+  "fire": ["would-pass-if-broken"],
+  "not_fire": ["vacuous-assertion", "reimplements-logic"],
+  "class": "pure_logic",
+  "why": "no fixture document is archived, so removing the archived filter changes nothing about the exact id list this asserts"
+}

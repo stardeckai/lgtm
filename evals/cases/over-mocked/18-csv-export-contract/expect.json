@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["over-mocked", "tests-calls-not-outcomes"],
+  "class": "contract_integration",
+  "why": "only the upload edge is faked while the real escaping and key construction produce the exact bytes asserted"
+}

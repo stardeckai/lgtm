@@ -1,0 +1,6 @@
+{
+  "fire": ["trivial-primitive"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "a length check on an array, covered for free by any checkout test that goes through checkoutState"
+}

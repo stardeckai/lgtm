@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "swallowed-error-as-success",
+    "happy-path-only-of-risky-boundary"
+  ],
+  "class": "pure_logic",
+  "why": "the exact authorization code is required, an admin outsider rules out the role branch, and the stored name proves the refusal happened before any write"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["setup-dominates", "vacuous-assertion"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "thirty lines of fingerprint, currency, plan and savings fixture feed a single not.toThrow, and the only field the gate reads is expiresAt"
+}

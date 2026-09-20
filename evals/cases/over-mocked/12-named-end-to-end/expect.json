@@ -1,0 +1,6 @@
+{
+  "fire": ["over-mocked"],
+  "not_fire": ["reimplements-logic"],
+  "class": "mocked_seam_unit",
+  "why": "session, cart, payment call and order creation are all faked, so nothing end to end about the flow actually runs"
+}

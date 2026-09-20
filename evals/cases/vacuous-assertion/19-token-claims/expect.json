@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["vacuous-assertion", "mocks-seam-under-test"],
+  "class": "contract_integration",
+  "why": "the toBeTruthy line is followed by the exact decoded claims and a wrong-key refusal, both from the real signer and reader"
+}

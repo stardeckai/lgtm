@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["impossible-fixture", "over-mocked"],
+  "class": "contract_integration",
+  "why": "the cast is on a stub of a third-party HTTP edge, and both response bodies are shapes that service really returns, so no internal validation boundary is bypassed"
+}

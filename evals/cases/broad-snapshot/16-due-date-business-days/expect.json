@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["broad-snapshot", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the snapshot is one date string, so a reviewer reads the whole expected value in the diff and can tell at once whether the holiday was skipped"
+}

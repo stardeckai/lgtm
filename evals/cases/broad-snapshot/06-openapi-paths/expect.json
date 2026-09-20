@@ -1,0 +1,6 @@
+{
+  "fire": ["broad-snapshot"],
+  "not_fire": ["tests-internals"],
+  "class": "pure_logic",
+  "why": "forty lines of generated document are pinned for one claim about a path key, so the shared response and security blocks drown the behavior under test"
+}

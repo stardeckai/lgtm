@@ -1,0 +1,6 @@
+{
+  "fire": ["vacuous-assertion", "assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "every arithmetic result this function returns is a finite number, so the proration factor is never checked"
+}

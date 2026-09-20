@@ -1,0 +1,6 @@
+{
+  "fire": ["broad-snapshot"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the whole serialized envelope is recorded when the named behavior is the single null next link, so any attribute change re-records the block"
+}

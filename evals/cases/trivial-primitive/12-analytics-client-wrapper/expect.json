@@ -1,0 +1,10 @@
+{
+  "fire": [
+    "trivial-primitive"
+  ],
+  "not_fire": [
+    "tests-calls-not-outcomes"
+  ],
+  "class": "pure_logic",
+  "why": "track only forwards its two arguments unchanged, and any trackPurchase test \u2014 where the payload is actually built \u2014 exercises that forwarding as well"
+}

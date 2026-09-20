@@ -1,0 +1,6 @@
+{
+  "fire": ["trivial-primitive"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "a field-renaming mapper with no transformation, and any endpoint test that returns a project would catch a mistyped key"
+}

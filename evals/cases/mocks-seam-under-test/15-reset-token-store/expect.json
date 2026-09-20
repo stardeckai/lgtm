@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "mocks-seam-under-test",
+    "reimplements-logic"
+  ],
+  "class": "mocked_seam_unit",
+  "why": "the store only supplies a canned row; the already-used refusal is decided by the real usedAt guard in consumeResetToken, so the code owning the behaviour runs for real"
+}

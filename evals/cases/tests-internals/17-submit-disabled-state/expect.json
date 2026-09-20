@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["tests-internals", "happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "the disabled state of the submit button is what the user can and cannot do, and the over-balance refusal is the case covered"
+}

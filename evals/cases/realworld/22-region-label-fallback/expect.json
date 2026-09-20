@@ -1,0 +1,6 @@
+{
+  "fire": ["vacuous-assertion", "would-pass-if-broken"],
+  "not_fire": ["impossible-fixture"],
+  "class": "pure_logic",
+  "why": "nothing makes Intl.DisplayNames fail and the only assertion is a non-empty string, so returning the raw code \"DE\" from a broken fallback still passes"
+}

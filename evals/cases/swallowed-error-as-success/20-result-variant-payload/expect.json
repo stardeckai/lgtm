@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["swallowed-error-as-success", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "each refusal is pinned to its exact variant and payload, so a generic failure result would not satisfy either assertion"
+}

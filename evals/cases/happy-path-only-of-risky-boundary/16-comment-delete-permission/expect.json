@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["happy-path-only-of-risky-boundary", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "a sibling refuses a viewer deleting another member's comment, so the permission refusal this function turns on is covered"
+}

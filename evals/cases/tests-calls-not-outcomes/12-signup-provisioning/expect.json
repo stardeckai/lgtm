@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-calls-not-outcomes", "vacuous-assertion"],
+  "not_fire": ["setup-dominates"],
+  "class": "mocked_seam_unit",
+  "why": "two bare call assertions plus toBeDefined leave the seat limit and the trimmed org name unchecked"
+}

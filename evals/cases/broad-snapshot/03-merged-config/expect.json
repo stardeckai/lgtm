@@ -1,0 +1,6 @@
+{
+  "fire": ["broad-snapshot"],
+  "not_fire": ["would-pass-if-broken"],
+  "class": "pure_logic",
+  "why": "the snapshot captures every default key so the one claim that matters, that poolMin survives next to poolMax, is indistinguishable from unrelated defaults"
+}

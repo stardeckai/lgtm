@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["would-pass-if-broken", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "two entries share a score and are supplied in the wrong order, so losing the finish-time tiebreak swaps early and late and fails"
+}

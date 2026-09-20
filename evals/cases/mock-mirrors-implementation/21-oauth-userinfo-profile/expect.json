@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mock-mirrors-implementation", "impossible-fixture"],
+  "class": "pure_logic",
+  "why": "the fake returns a raw claim set of the shape providers really send, and every normalisation the assertion pins is performed by the code under test"
+}

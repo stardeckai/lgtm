@@ -1,0 +1,6 @@
+{
+  "fire": ["would-pass-if-broken"],
+  "not_fire": ["vacuous-assertion", "impossible-fixture"],
+  "class": "pure_logic",
+  "why": "every seeded ticket belongs to acme, so dropping the tenant filter entirely leaves the asserted id list unchanged"
+}

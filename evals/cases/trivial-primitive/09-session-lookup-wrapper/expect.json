@@ -1,0 +1,10 @@
+{
+  "fire": [
+    "trivial-primitive"
+  ],
+  "not_fire": [
+    "vacuous-assertion"
+  ],
+  "class": "pure_logic",
+  "why": "find is a one-line wrapper over Map.get with a null fallback, and every activeUserId test exercises it already"
+}

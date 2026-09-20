@@ -1,0 +1,6 @@
+{
+  "fire": ["broad-snapshot"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the single snapshot call records the header, three priced lines and the footer, so the fifty-unit band the name promises is one field among twenty"
+}

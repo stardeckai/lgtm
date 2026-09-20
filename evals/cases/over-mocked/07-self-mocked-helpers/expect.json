@@ -1,0 +1,6 @@
+{
+  "fire": ["over-mocked", "would-pass-if-broken"],
+  "not_fire": ["setup-dominates"],
+  "class": "mocked_seam_unit",
+  "why": "the version bump and manifest building are stubbed out, so choosing a patch bump for 40 files would still report 2.4.0"
+}

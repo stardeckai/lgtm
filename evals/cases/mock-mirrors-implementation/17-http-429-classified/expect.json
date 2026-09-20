@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mock-mirrors-implementation"],
+  "class": "pure_logic",
+  "why": "the fake returns a raw provider response and contains none of the classification logic, which the assertion pins to the throttled shape with the header value parsed"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mock-mirrors-implementation", "happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "the downloader fake returns a CSV string and nothing else; the parsing, the rounding and the line numbering of the two rejected rows are all the real code's work"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["regression-does-not-distinguish"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the fix stops two coupons compounding but the test only ever passes one coupon or none, cases the pre-fix loop already priced identically"
+}

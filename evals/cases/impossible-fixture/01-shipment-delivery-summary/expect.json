@@ -1,0 +1,6 @@
+{
+  "fire": ["impossible-fixture"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "createShipment refuses a delivered shipment with no shippedAt, so the cast builds a row the transit-time branch can never actually receive and pins 0 days as the expected answer"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["vacuous-assertion", "happy-path-only-of-risky-boundary", "would-pass-if-broken"],
+  "class": "pure_logic",
+  "why": "a single status assertion, but it is the refusal the route exists for: dropping the production guard returns 201 with this exact correct secret and the test goes red"
+}

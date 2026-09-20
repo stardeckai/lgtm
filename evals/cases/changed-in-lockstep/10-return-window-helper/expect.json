@@ -1,0 +1,6 @@
+{
+  "fire": ["changed-in-lockstep"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the window helper went from 30 to 14 days and the two day offsets in the test were moved to 14 and 15 in the same change, so the test restates the helper instead of the returns policy"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["changed-in-lockstep", "tests-internals"],
+  "class": "pure_logic",
+  "why": "the statuses moved into a const object and the fixtures use the new names, but every expected value is still the literal string the API returns and the reopen rule is unchanged"
+}

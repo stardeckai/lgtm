@@ -1,0 +1,6 @@
+{
+  "fire": ["happy-path-only-of-risky-boundary"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the sibling covers the mime refusal but nothing anywhere pushes an upload past the storage limit, which is the refusal that decides whether a paying tenant can keep writing"
+}

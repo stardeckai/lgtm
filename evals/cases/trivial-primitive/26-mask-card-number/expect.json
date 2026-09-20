@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["trivial-primitive", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "how many digits stay visible on 13, 15 and 16 digit cards is a cardholder-data rule, and the star count is what a wider test would never look at"
+}

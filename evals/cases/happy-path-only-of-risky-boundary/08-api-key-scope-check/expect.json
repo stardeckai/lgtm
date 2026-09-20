@@ -1,0 +1,6 @@
+{
+  "fire": ["happy-path-only-of-risky-boundary"],
+  "not_fire": ["trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the two refusals that matter — a missing scope and a revoked key — are never exercised here or in any sibling, which all use the same fully scoped live key"
+}

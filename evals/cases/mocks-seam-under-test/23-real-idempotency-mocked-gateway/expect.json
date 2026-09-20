@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "contract_integration",
+  "why": "the deduplication log is real, so the replay returns the first charge only because the code actually recorded it; the gateway fake would have produced a different id"
+}

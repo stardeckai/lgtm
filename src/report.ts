@@ -1,6 +1,6 @@
 import { styleText } from "node:util";
 import type { Classified, Finding } from "./analyze.js";
-import { CHECKS, CLASS_EMOJI } from "./checks.js";
+import { CHECKS, CLASS_EMOJI, usd } from "./checks/index.js";
 
 type Style = Parameters<typeof styleText>[0];
 const COLOR = !process.env.NO_COLOR && (Boolean(process.env.FORCE_COLOR) || Boolean(process.stdout.isTTY));
@@ -88,6 +88,6 @@ export function formatReport(findings: Finding[], format: Format, summary: Summa
   }
   out.push(distribution(summary.classes));
   if (summary.skipped > 0) out.push(`😐❓  ${c("magenta", `${summary.skipped} tests skipped (API errors).`)}`);
-  out.push(c("dim", `${summary.inputTokens} input tokens used`));
+  out.push(c("dim", `${summary.inputTokens} input tokens used (≈ ${usd(summary.inputTokens)})`));
   return out.join("\n");
 }

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["vacuous-assertion", "assertion-weaker-than-name"],
+  "class": "pure_logic",
+  "why": "the null is asserted at the exact revocation instant with the millisecond before it still resolving to the org"
+}

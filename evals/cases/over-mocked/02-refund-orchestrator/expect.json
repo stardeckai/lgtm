@@ -1,0 +1,6 @@
+{
+  "fire": ["over-mocked"],
+  "not_fire": ["impossible-fixture"],
+  "class": "mocked_seam_unit",
+  "why": "every collaborator is a stub tuned so the policy limit and the outstanding balance coincide, leaving no real decision to fail"
+}

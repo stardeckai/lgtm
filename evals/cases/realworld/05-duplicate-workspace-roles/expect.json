@@ -1,0 +1,6 @@
+{
+  "fire": ["over-mocked", "setup-dominates"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "mocked_seam_unit",
+  "why": "eight collaborators covering the whole duplication path are stubbed and forty lines of setup lead to one not-called assertion, so nothing about the copied app, the repository fork or the remapped role grants could fail here"
+}

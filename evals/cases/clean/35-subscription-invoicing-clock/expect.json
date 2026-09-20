@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["over-mocked", "happy-path-only-of-risky-boundary"],
+  "class": "contract_integration",
+  "why": "only the clock is faked while the real trial transition and the real invoicing loop run together, and the catch-up issues exactly two invoices dated at the period starts"
+}

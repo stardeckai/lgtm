@@ -1,0 +1,6 @@
+{
+  "fire": ["broad-snapshot"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "four fully expanded user records stand in for two boolean bits, and a reviewer cannot see which of the twenty-eight recorded fields the test protects"
+}

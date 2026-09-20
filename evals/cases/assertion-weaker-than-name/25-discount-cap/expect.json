@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["assertion-weaker-than-name", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "an under-cap stack, the exact cap and an over-cap stack are each pinned to exact cents"
+}

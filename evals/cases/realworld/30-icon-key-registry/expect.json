@@ -1,0 +1,6 @@
+{
+  "fire": ["trivial-primitive"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the code is a constant lookup with a name-hint fallback, and any test that renders a session card with a chosen icon already covers this precedence"
+}

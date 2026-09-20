@@ -1,0 +1,6 @@
+{
+  "fire": ["vacuous-assertion", "assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the pattern only requires one lowercase letter anywhere, so a slug that collides with the taken one passes too"
+}

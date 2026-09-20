@@ -1,0 +1,6 @@
+{
+  "fire": ["vacuous-assertion", "assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic", "over-mocked"],
+  "class": "pure_logic",
+  "why": "200, 503 and 404 all satisfy not.toBe(500), so the saturation rule the name promises is unchecked"
+}

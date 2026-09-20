@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["trivial-primitive", "reimplements-logic"],
+  "class": "contract_integration",
+  "why": "the encoder output is pinned to a literal encoded word and the real decoder must read back both that word and a quoted-printable one written by another mail client"
+}

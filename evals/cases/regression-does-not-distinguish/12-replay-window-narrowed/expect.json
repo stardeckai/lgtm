@@ -1,0 +1,6 @@
+{
+  "fire": ["regression-does-not-distinguish"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the tolerance moved from 600 to 300 seconds and the test only uses ages of 60 and 1000 seconds, which fall the same side of both limits"
+}

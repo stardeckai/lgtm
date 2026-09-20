@@ -1,0 +1,6 @@
+{
+  "fire": ["would-pass-if-broken"],
+  "not_fire": ["vacuous-assertion", "mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the first warehouse stocks the whole order, so the carry-over logic the name describes never executes and could be deleted"
+}

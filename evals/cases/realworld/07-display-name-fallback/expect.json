@@ -1,0 +1,6 @@
+{
+  "fire": ["trivial-primitive"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the whole function is one trimmed-string fallback with no edge case of its own, and any test that renders an account header would already show the wrong name"
+}

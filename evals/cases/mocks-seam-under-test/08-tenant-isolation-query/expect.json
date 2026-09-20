@@ -1,0 +1,6 @@
+{
+  "fire": ["mocks-seam-under-test"],
+  "not_fire": ["reimplements-logic"],
+  "class": "mocked_seam_unit",
+  "why": "the tenant filter lives in the gateway query, and that query is mocked to return only one tenant's rows, so the isolation claim is true of the fake by construction"
+}

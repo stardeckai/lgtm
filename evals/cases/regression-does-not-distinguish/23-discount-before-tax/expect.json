@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the pre-fix order of operations gives 10000 for the discounted case instead of 9600, so the first assertion fails against before"
+}

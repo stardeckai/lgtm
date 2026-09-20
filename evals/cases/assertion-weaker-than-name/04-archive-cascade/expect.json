@@ -1,0 +1,6 @@
+{
+  "fire": ["assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic", "impossible-fixture"],
+  "class": "pure_logic",
+  "why": "the cascade named in the title is never asserted, so both tasks could still be open"
+}

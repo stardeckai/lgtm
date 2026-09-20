@@ -1,0 +1,6 @@
+{
+  "fire": ["trivial-primitive"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "a constant lookup in a record whose keys and values the test simply restates, already covered by any test that renders an order row"
+}

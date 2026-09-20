@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["setup-dominates", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the five shifts are chosen so the Sunday one lands in the earlier week and the totals show the forty-hour split, and both weeks appear in the expected object"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "vacuous-assertion"],
+  "class": "contract_integration",
+  "why": "the real splitter and the real reassembler must agree on the original list while every batch is measured against the byte budget and the oversized item is refused"
+}

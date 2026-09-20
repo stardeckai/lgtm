@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["broad-snapshot", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "one short URL literal is recorded and a leaked secret would appear directly in it, so the snapshot is as readable as an equality assertion"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["impossible-fixture"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "book() rejects overlapping bookings, so only rows pushed straight in through seedRaw can make a room read as busy for 240 minutes out of a 180-minute span"
+}

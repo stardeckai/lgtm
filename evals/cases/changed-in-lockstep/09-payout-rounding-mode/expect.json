@@ -1,0 +1,6 @@
+{
+  "fire": ["changed-in-lockstep"],
+  "not_fire": ["trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the fee rounding switched from floor to round and the expected payout was edited from 1025 to 1024 to match, so the cent the seller loses is decided by the implementation"
+}

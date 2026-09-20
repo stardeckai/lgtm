@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "trivial-primitive"],
+  "class": "contract_integration",
+  "why": "the real serializer and the real parser are composed and the cells that carry a comma, a doubled quote and a line break must survive the round trip unchanged"
+}

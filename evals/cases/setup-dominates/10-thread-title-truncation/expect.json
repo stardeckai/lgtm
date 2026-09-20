@@ -1,0 +1,6 @@
+{
+  "fire": ["setup-dominates"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "seventeen of the eighteen messages plus attachments, reactions and read receipts are irrelevant to a title taken from the first message alone"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic", "tests-internals"],
+  "class": "pure_logic",
+  "why": "the outbox the name promises is available on the object and never inspected, so a receipt sent to nobody passes"
+}

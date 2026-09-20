@@ -1,0 +1,6 @@
+{
+  "fire": ["setup-dominates"],
+  "not_fire": ["happy-path-only-of-risky-boundary", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "role definitions, a resource tree, memberships and generated audit entries are never consulted by an assertion that passes two role literals and a boolean"
+}

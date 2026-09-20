@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["would-pass-if-broken", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the replay is actually performed and the final ledger is pinned to two rows, so a lost dedupe check produces three and fails"
+}

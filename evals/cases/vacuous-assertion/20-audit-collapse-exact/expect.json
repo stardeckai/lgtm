@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["vacuous-assertion", "would-pass-if-broken"],
+  "class": "pure_logic",
+  "why": "the full entry list is pinned, so both a missing collapse and an over-eager one that also drops the 6.5 second entry fail"
+}

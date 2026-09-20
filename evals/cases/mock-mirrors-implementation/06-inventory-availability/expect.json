@@ -1,0 +1,6 @@
+{
+  "fire": ["mock-mirrors-implementation"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "mocked_seam_unit",
+  "why": "the stand-in reader repeats the warehouse availability formula, so the incoming-stock rule the test name claims to check is never taken from the real reader"
+}

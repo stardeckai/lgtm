@@ -1,0 +1,6 @@
+{
+  "fire": ["broad-snapshot"],
+  "not_fire": ["tests-internals"],
+  "class": "pure_logic",
+  "why": "the entire plan with per-step row estimates and a derived cost is pinned when the named behavior is only which step comes first"
+}

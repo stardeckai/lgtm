@@ -1,0 +1,6 @@
+{
+  "fire": ["mocks-seam-under-test"],
+  "not_fire": ["reimplements-logic"],
+  "class": "mocked_seam_unit",
+  "why": "the transaction whose atomicity is the point of the test is entirely fake, so nothing would notice if the two writes landed in separate transactions"
+}

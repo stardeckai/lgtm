@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["would-pass-if-broken", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the whole schedule is pinned past the point the cap bites, so neither a wrong factor nor a missing cap survives"
+}

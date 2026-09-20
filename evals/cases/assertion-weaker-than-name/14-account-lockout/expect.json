@@ -1,0 +1,6 @@
+{
+  "fire": ["assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic", "impossible-fixture"],
+  "class": "pure_logic",
+  "why": "only the counter is asserted, so an account that counts to five and stays wide open satisfies a test named for the lock"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["changed-in-lockstep", "reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the timestamps moved because the function now takes the site's offset, and the rule the test states is unchanged: 16:59 local is inside the shift and 17:00 local is not"
+}

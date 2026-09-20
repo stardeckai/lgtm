@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mocks-seam-under-test", "over-mocked"],
+  "class": "contract_integration",
+  "why": "the store applies the scope filter for real against rows from two workspaces and two authors, and only the metrics sink is faked"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["regression-does-not-distinguish"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the fix ignores a repeated request id but the test only issues one refund, so the pre-fix service returns the same 2500 and stays green"
+}

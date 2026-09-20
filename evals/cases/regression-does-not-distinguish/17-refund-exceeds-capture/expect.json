@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "swallowed-error-as-success"],
+  "class": "pure_logic",
+  "why": "the pre-fix function happily returns 5001 refunded cents instead of throwing, so the second assertion goes red against before"
+}

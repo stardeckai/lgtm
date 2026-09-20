@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["over-mocked", "happy-path-only-of-risky-boundary"],
+  "class": "contract_integration",
+  "why": "the real outbox is read back after a partial failure and only the carrier transport is faked"
+}

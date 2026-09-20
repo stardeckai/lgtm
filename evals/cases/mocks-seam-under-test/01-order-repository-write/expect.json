@@ -1,0 +1,6 @@
+{
+  "fire": ["mocks-seam-under-test"],
+  "not_fire": ["reimplements-logic"],
+  "class": "mocked_seam_unit",
+  "why": "the repository whose write is the behaviour under test is itself the mock, and the only evidence is that the mock was called"
+}

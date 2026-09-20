@@ -1,0 +1,6 @@
+{
+  "fire": ["changed-in-lockstep"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the minimum dropped from 12 to 8 and the two fixture passwords were shortened to sit either side of the new number, so the test only ever restates whatever the code does"
+}

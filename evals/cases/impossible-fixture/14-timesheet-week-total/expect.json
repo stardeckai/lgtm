@@ -1,0 +1,10 @@
+{
+  "fire": [
+    "impossible-fixture"
+  ],
+  "not_fire": [
+    "vacuous-assertion"
+  ],
+  "class": "pure_logic",
+  "why": "log() refuses non-positive minutes, so the -20 minute entry loaded straight into the sheet is a row no consultant can record, and it is what makes the expected three hours come out"
+}

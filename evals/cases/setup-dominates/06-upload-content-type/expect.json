@@ -1,0 +1,6 @@
+{
+  "fire": ["setup-dominates"],
+  "not_fire": ["over-mocked", "mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "a storage client, a virus scanner, a quota record and a multipart upload are constructed to supply one filename string to a lookup table"
+}

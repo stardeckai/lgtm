@@ -1,0 +1,6 @@
+{
+  "fire": ["broad-snapshot"],
+  "not_fire": ["swallowed-error-as-success"],
+  "class": "pure_logic",
+  "why": "the snapshot includes the stack trace, so it changes with every unrelated edit and nobody will notice if the leaked message reappears in it"
+}

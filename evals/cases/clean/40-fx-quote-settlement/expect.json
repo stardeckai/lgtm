@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "trivial-primitive"],
+  "class": "contract_integration",
+  "why": "the real quote feeds the real settlement and every minor-unit figure is a literal, with the expiry pinned on both sides of the last valid millisecond"
+}

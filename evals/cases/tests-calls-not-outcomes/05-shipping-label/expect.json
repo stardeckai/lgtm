@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-calls-not-outcomes", "assertion-weaker-than-name"],
+  "not_fire": ["setup-dominates"],
+  "class": "pure_logic",
+  "why": "the chosen service level and the insurance cap are the behaviour and only the fact of the call is asserted"
+}

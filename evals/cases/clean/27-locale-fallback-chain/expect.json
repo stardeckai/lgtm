@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["trivial-primitive", "reimplements-logic"],
+  "class": "pure_logic",
+  "why": "each assertion names both the text and the locale it came from, so a chain that skipped the region step or reached english too early would fail"
+}

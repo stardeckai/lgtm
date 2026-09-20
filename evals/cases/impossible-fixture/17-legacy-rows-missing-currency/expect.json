@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["impossible-fixture", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the missing currency is the point of the test — it pins how rows persisted before that column existed are read back, which is exactly the corrupt-legacy-data case"
+}

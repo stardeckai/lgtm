@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["vacuous-assertion", "happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "booleans are asserted on both sides of the lock rule and across an org boundary, so each branch is pinned"
+}

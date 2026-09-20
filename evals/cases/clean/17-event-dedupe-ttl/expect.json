@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["over-mocked", "trivial-primitive"],
+  "class": "contract_integration",
+  "why": "the clock is the only fake and the real dedupe store drives the filter, with assertions on which ids pass and how many entries survive each sweep"
+}

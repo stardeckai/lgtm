@@ -1,0 +1,6 @@
+{
+  "fire": ["reimplements-logic"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the accrual loop, the day-seven cutover and the cap are all repeated in the test rather than the requirement's fee being written as a number"
+}

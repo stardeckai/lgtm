@@ -1,0 +1,6 @@
+{
+  "fire": ["trivial-primitive"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "a ternary that appends an s, with no irregular-plural handling to get wrong, and any inbox summary test covers it"
+}

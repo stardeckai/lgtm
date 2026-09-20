@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["assertion-weaker-than-name", "would-pass-if-broken"],
+  "class": "pure_logic",
+  "why": "status, restored stock level and the repeat-cancel guard named in the title each have their own exact assertion"
+}

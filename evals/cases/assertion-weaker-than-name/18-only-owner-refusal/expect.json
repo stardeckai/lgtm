@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["assertion-weaker-than-name", "happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "the refusal comes with the error type and the unchanged note, and the owner's delete is asserted afterwards"
+}

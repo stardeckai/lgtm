@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "impossible-fixture",
+    "reimplements-logic"
+  ],
+  "class": "contract_integration",
+  "why": "every fixture row goes through the real parseRefundRow, so the rows under test are exactly the ones production accepts"
+}

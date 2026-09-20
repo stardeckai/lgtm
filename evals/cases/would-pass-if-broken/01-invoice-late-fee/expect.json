@@ -1,0 +1,6 @@
+{
+  "fire": ["would-pass-if-broken"],
+  "not_fire": ["reimplements-logic", "mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the fixture is 5 days late so the late-fee branch never runs, and deleting that whole branch leaves the single assertion true"
+}

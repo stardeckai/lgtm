@@ -1,0 +1,6 @@
+{
+  "fire": ["swallowed-error-as-success", "assertion-weaker-than-name"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the fallback comes back whether the helper retried three times or gave up immediately, and the attempt count the name promises is never checked"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic", "tests-calls-not-outcomes"],
+  "class": "pure_logic",
+  "why": "neither the 24 hour lead nor the sent marker is asserted, only that one reminder came out at all"
+}

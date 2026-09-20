@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mock-mirrors-implementation", "happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "the lookup fake returns only the null an unknown address produces; the zone table, the free-shipping threshold and the day estimate come from the real function"
+}

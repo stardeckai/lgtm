@@ -1,0 +1,6 @@
+{
+  "fire": ["trivial-primitive"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the array makes it look substantial, but toCards is a map over a field-renaming mapper with no transformation, covered by any catalogue listing test"
+}

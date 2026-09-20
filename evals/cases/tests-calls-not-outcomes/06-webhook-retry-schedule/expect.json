@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-calls-not-outcomes"],
+  "not_fire": ["impossible-fixture"],
+  "class": "mocked_seam_unit",
+  "why": "the backoff delay that the name is about is passed to the mock and never asserted, only that one call happened"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mocks-seam-under-test", "trivial-primitive", "would-pass-if-broken"],
+  "class": "contract_integration",
+  "why": "the real signer and the real verifier run together and the assertions pin both agreement and the three refusals"
+}

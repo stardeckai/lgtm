@@ -1,0 +1,6 @@
+{
+  "fire": ["over-mocked"],
+  "not_fire": ["broad-snapshot"],
+  "class": "mocked_seam_unit",
+  "why": "every hook is stubbed and the formatter returns a fixed string, so neither the open-order filter nor the total is exercised"
+}

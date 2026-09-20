@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["happy-path-only-of-risky-boundary", "mocks-seam-under-test"],
+  "class": "contract_integration",
+  "why": "the real picker feeds the real packer over a partially stocked order, and the assertions pin the shortfall lines, the padded box per fragile item and the drained bin"
+}

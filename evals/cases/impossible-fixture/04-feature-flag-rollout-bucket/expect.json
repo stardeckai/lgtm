@@ -1,0 +1,6 @@
+{
+  "fire": ["impossible-fixture"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "parseFlag caps rolloutPercent at 100, so a flag at 250 cannot exist and the test proves nothing about how real rollout percentages bucket users"
+}

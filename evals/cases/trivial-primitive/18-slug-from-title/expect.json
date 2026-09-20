@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["trivial-primitive", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "diacritic folding, punctuation collapsing and the trailing hyphen left behind by the length cut are real edge cases that no page-level test would pin"
+}

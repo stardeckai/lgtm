@@ -1,0 +1,6 @@
+{
+  "fire": ["would-pass-if-broken"],
+  "not_fire": ["reimplements-logic", "mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "only the first delay and the array length are pinned, so a schedule that never doubles and never caps still satisfies both"
+}

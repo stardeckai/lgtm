@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["broad-snapshot", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the inline literal is one short sentence that states the joining behavior directly, and a second exact assertion covers the other branch"
+}

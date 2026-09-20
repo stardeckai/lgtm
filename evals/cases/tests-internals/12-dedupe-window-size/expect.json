@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-internals", "assertion-weaker-than-name"],
+  "not_fire": ["impossible-fixture"],
+  "class": "pure_logic",
+  "why": "it asserts the size of the internal bookkeeping map instead of whether a repeated event id is accepted again"
+}

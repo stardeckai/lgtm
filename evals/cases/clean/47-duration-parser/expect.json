@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["trivial-primitive", "vacuous-assertion"],
+  "class": "contract_integration",
+  "why": "the ms and m suffixes are pinned to different values in both directions and two malformed inputs must raise rather than parse to a partial number"
+}

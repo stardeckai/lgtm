@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-calls-not-outcomes", "assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic"],
+  "class": "mocked_seam_unit",
+  "why": "two ledger entries are posted for any fee arithmetic, correct or not, and neither amount is asserted"
+}

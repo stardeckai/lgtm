@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "happy-path-only-of-risky-boundary",
+    "vacuous-assertion"
+  ],
+  "class": "pure_logic",
+  "why": "the block itself registers the duplicate and asserts both the rejection and that no second row was created"
+}

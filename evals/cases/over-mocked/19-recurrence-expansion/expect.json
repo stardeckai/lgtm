@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["over-mocked", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "there is nothing to mock and the expanded dates across a skipped occurrence are pinned exactly"
+}

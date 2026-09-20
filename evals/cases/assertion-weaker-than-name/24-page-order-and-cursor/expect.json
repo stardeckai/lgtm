@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["assertion-weaker-than-name", "would-pass-if-broken"],
+  "class": "pure_logic",
+  "why": "both pages are pinned by exact id order and the cursor is actually used, so a wrong sort or a repeated row fails"
+}

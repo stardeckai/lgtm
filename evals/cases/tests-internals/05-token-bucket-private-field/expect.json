@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-internals"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "it reads the private bucket map instead of asserting which consume calls are allowed or refused"
+}

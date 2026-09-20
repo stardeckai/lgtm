@@ -1,0 +1,6 @@
+{
+  "fire": ["swallowed-error-as-success"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the catch logs and returns the same empty array, so a filter that crashed would look exactly like the tenant scoping this test is named for"
+}

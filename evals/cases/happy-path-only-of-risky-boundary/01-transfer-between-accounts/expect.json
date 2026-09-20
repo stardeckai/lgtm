@@ -1,0 +1,10 @@
+{
+  "fire": [
+    "happy-path-only-of-risky-boundary"
+  ],
+  "not_fire": [
+    "vacuous-assertion"
+  ],
+  "class": "pure_logic",
+  "why": "transferBatch exists to roll every leg back when one move fails, and neither this test nor any sibling ever makes a leg fail"
+}

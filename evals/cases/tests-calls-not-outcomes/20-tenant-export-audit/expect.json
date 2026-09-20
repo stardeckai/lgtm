@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["tests-calls-not-outcomes", "assertion-weaker-than-name"],
+  "class": "mocked_seam_unit",
+  "why": "emitting the compliance record is the entire public contract and every field of it is asserted exactly"
+}

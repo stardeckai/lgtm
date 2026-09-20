@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "setup-dominates",
+    "swallowed-error-as-success"
+  ],
+  "class": "pure_logic",
+  "why": "the first balanced posting exists so the two balance assertions can prove the rejected posting wrote nothing"
+}

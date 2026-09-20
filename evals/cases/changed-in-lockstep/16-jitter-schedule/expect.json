@@ -1,0 +1,6 @@
+{
+  "fire": ["changed-in-lockstep"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the jitter formula was halved and the three expected delays were replaced with the numbers the new formula prints, so nothing states the property that a delay is never below its base"
+}

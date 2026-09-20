@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["tests-calls-not-outcomes", "mocks-seam-under-test"],
+  "class": "contract_integration",
+  "why": "the outbound request is the public contract, so the fake stands in for the network only and the assertion pins the url, headers and exact json bytes a subscriber would receive"
+}

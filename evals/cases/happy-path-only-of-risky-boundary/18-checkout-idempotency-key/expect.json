@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "happy-path-only-of-risky-boundary",
+    "tests-calls-not-outcomes"
+  ],
+  "class": "pure_logic",
+  "why": "a sibling replays the same idempotency key and asserts no second charge, so the duplicate-submit risk is covered"
+}

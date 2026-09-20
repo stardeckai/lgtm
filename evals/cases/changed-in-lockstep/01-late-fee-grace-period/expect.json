@@ -1,0 +1,6 @@
+{
+  "fire": ["changed-in-lockstep"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the grace boundary moved by one day and the test's literals were shifted by one day to match it, so the test no longer states the billing rule"
+}

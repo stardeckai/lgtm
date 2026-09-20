@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["vacuous-assertion", "would-pass-if-broken"],
+  "class": "pure_logic",
+  "why": "the whole response is pinned on both sides of the ten thousand boundary, so an off-by-one or a lost 503 fails"
+}

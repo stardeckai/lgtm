@@ -1,0 +1,6 @@
+{
+  "fire": ["mocks-seam-under-test"],
+  "not_fire": ["reimplements-logic"],
+  "class": "mocked_seam_unit",
+  "why": "the cache always answers with a hit whatever key is asked for, so the write-then-read key agreement the test claims to prove is faked on both sides"
+}

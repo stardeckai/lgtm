@@ -1,0 +1,6 @@
+{
+  "fire": ["vacuous-assertion", "assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic", "setup-dominates"],
+  "class": "pure_logic",
+  "why": "toContain passes for a list that also pages the whole directory, which is exactly what the word only rules out"
+}

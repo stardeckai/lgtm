@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "over-mocked",
+    "mocks-seam-under-test"
+  ],
+  "class": "pure_logic",
+  "why": "only the clock is faked while the real buffer does the grouping, and the assertions pin which key flushes at which point and how many repeats it carries"
+}

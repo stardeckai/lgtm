@@ -1,0 +1,6 @@
+{
+  "fire": ["regression-does-not-distinguish"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the index only ever holds documents from org_a, so the unfiltered pre-fix search returns the same two ids and the leak the test is named for never happens"
+}

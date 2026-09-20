@@ -1,0 +1,6 @@
+{
+  "fire": ["broad-snapshot"],
+  "not_fire": ["happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "three full log lines with timestamps, padding and every field are recorded for a redaction claim that two exact substring assertions would pin"
+}

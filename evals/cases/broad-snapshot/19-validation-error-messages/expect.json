@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["broad-snapshot", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the four recorded strings are exactly the behavior under test, so dropping a rule changes a line a reviewer cannot miss"
+}

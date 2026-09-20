@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "over-mocked",
+    "happy-path-only-of-risky-boundary"
+  ],
+  "class": "pure_logic",
+  "why": "only the clock is faked and the real queue is driven across the invisibility edge, the redelivery count and the dead letter threshold"
+}

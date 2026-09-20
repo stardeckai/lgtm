@@ -1,0 +1,6 @@
+{
+  "fire": ["swallowed-error-as-success", "vacuous-assertion"],
+  "not_fire": ["tests-calls-not-outcomes"],
+  "class": "pure_logic",
+  "why": "a dispatcher that accepted the empty payload would skip the catch and still satisfy a count assertion that every integer meets"
+}

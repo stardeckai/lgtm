@@ -1,0 +1,6 @@
+{
+  "fire": ["reimplements-logic"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the expected total is produced by the same reduce-and-round expression the implementation uses, so a wrong rounding rule would be wrong identically on both sides"
+}

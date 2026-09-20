@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["setup-dominates", "happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "all four actors and all five documents are named in the nine assertions, which cover every cross-tenant pair as well as the permitted reads"
+}

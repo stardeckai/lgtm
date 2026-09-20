@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "swallowed-error-as-success",
+    "tests-calls-not-outcomes"
+  ],
+  "class": "pure_logic",
+  "why": "an accepted third upload would leave expect.assertions(3) one short, a wrong error type is rethrown, and the counter proves the refused upload was not recorded"
+}

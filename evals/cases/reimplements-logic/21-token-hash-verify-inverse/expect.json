@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "mocks-seam-under-test"],
+  "class": "contract_integration",
+  "why": "the oracle is the inverse function rather than a second scrypt derivation, and the refusals pin the wrong-token and wrong-scheme cases"
+}

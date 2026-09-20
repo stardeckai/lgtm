@@ -1,0 +1,6 @@
+{
+  "fire": ["mock-mirrors-implementation"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "mocked_seam_unit",
+  "why": "the counter handed to the limiter is the fixed-window class rebuilt as a literal, including the window-start rounding that the retryAfter figure depends on"
+}

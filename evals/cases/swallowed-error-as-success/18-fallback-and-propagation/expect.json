@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["swallowed-error-as-success", "mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the stale flag and converted amount are pinned exactly, and two further assertions require the error to propagate when there is no fallback and when the input is wrong"
+}

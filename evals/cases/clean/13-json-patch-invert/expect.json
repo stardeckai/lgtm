@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "broad-snapshot"],
+  "class": "contract_integration",
+  "why": "the real patcher and the real inverter are composed and the restored document must match the original literal, including the absence of the key the patch added"
+}

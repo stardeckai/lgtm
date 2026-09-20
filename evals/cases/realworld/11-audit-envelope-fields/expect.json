@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["vacuous-assertion", "tests-internals"],
+  "class": "pure_logic",
+  "why": "the one toBeDefined sits beside five exact field values and a frozen-clock timestamp, so any envelope that dropped or mislabelled a field would fail"
+}

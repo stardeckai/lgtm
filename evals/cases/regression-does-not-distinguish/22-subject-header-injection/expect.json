@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the pre-fix renderer emits four header lines including the injected Bcc, so the array comparison fails against before"
+}

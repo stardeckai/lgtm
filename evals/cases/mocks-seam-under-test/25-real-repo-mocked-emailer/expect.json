@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mocks-seam-under-test", "happy-path-only-of-risky-boundary"],
+  "class": "contract_integration",
+  "why": "the duplicate refusal comes from the real repository's uniqueness rule against the normalised address it actually stored; only the mail edge is faked"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["impossible-fixture"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "readEvent refuses a cancellation with an empty reason, so mapping the raw rows through a cast produces a timeline entry the event reader would never emit and the expected 'cancelled ()' label is unreachable"
+}

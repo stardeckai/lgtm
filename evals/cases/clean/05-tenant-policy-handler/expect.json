@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mocks-seam-under-test", "happy-path-only-of-risky-boundary"],
+  "class": "contract_integration",
+  "why": "the real policy and the real handler run over a real store and the assertions separate the 403 for an own-org refusal from the 404 that must hide another tenant's record"
+}

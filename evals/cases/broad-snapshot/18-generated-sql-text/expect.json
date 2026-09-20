@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["broad-snapshot", "tests-internals"],
+  "class": "pure_logic",
+  "why": "the snapshot is the one generated statement whose exact text is the contract, and the placeholder numbering it pins is checked against the values array beside it"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "broad-snapshot"],
+  "class": "pure_logic",
+  "why": "the expected summary is a hand-written four-field fixture, so a wrong size unit, kind mapping or staleness cutoff fails the comparison"
+}

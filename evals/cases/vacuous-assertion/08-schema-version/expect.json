@@ -1,0 +1,6 @@
+{
+  "fire": ["vacuous-assertion", "would-pass-if-broken"],
+  "not_fire": ["reimplements-logic", "mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "comparing the latest version against an older number and checking the row count is non-empty says nothing about the rename"
+}

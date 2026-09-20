@@ -1,0 +1,6 @@
+{
+  "fire": ["regression-does-not-distinguish"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "five attempts top out at 16000 ms, below the new 60000 ms ceiling, so the uncapped pre-fix schedule produces the same array"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["broad-snapshot", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the recorded value is a single header string whose directives are the contract, and the private case it pins is contrasted with an exact public assertion"
+}

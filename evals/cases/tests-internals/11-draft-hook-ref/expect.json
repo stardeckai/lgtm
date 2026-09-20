@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-internals"],
+  "not_fire": ["swallowed-error-as-success"],
+  "class": "pure_logic",
+  "why": "the assertion is on a bookkeeping ref rather than the status the UI renders or the draft handed to save"
+}

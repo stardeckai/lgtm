@@ -1,0 +1,6 @@
+{
+  "fire": ["mock-mirrors-implementation"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "mocked_seam_unit",
+  "why": "the fake sequence source is the gapless sequence class rewritten as an object literal, so the no-gaps guarantee is provided by the test rather than checked in the shipped one"
+}

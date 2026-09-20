@@ -1,0 +1,10 @@
+{
+  "fire": [
+    "swallowed-error-as-success"
+  ],
+  "not_fire": [
+    "mocks-seam-under-test"
+  ],
+  "class": "pure_logic",
+  "why": "a search that never called the backend and always returned the cached array would pass this test unchanged"
+}

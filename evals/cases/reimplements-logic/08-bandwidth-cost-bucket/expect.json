@@ -1,0 +1,6 @@
+{
+  "fire": ["reimplements-logic"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the test re-derives the rounded gigabyte count and the overage multiplication from the same plan constants the implementation reads"
+}

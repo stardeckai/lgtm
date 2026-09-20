@@ -1,0 +1,6 @@
+{
+  "fire": ["setup-dominates"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "KYC records, bank accounts, fee schedules and four transfers are built for an assertion that reads one string copied straight from the merchant row"
+}

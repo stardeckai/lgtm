@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-internals"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "visibility is inferred from a styling class selector rather than from the warning text being present to the user"
+}

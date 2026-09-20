@@ -1,0 +1,6 @@
+{
+  "fire": ["swallowed-error-as-success"],
+  "not_fire": ["tests-calls-not-outcomes"],
+  "class": "pure_logic",
+  "why": "the same null and the same failure counter come back for a provider outage or any internal crash, so the E.164 rule the name claims is not what is being proved"
+}

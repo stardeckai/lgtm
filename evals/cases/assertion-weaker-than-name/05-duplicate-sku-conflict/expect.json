@@ -1,0 +1,11 @@
+{
+  "fire": [
+    "assertion-weaker-than-name"
+  ],
+  "not_fire": [
+    "reimplements-logic",
+    "mocks-seam-under-test"
+  ],
+  "class": "pure_logic",
+  "why": "the status code and error code in the name go unchecked, so a 422 invalid_price thrown by mistake satisfies the bare toThrow"
+}

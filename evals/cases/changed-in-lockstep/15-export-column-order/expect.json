@@ -1,0 +1,6 @@
+{
+  "fire": ["changed-in-lockstep"],
+  "not_fire": ["broad-snapshot"],
+  "class": "contract_integration",
+  "why": "both the header list and the row order changed and both expected strings were rewritten together, so a header and row that drifted apart would still be accepted as long as both were edited"
+}

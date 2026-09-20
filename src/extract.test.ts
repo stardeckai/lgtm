@@ -59,6 +59,6 @@ describe("extractTests", () => {
     expect(fileContext).toContain("const seed");
     expect(fileContext).not.toContain("creates the user");
     expect(fileContext).not.toContain("top level");
-    expect(imports).toEqual(["./user.js"]);
+    expect(imports).toEqual(["vitest", "./user.js"]);
   });
 });

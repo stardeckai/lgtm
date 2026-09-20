@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "broad-snapshot"],
+  "class": "contract_integration",
+  "why": "the real differ and the real revert are composed and the change list is pinned to literals that must also be enough to restore the original config exactly"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["swallowed-error-as-success"],
+  "not_fire": ["tests-calls-not-outcomes"],
+  "class": "mocked_seam_unit",
+  "why": "the catch also answers 200 with an empty rows array, so a thrown error inside the handler is indistinguishable from the range check the test is named for"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic", "setup-dominates"],
+  "class": "pure_logic",
+  "why": "the ordering and the cursor named in the title are both unasserted; only the page size is checked"
+}

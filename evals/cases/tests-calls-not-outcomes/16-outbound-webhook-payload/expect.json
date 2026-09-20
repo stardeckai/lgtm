@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["tests-calls-not-outcomes", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the outbound request is the public contract and the full url, envelope and headers are pinned exactly"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["tests-calls-not-outcomes", "mocks-seam-under-test"],
+  "class": "mocked_seam_unit",
+  "why": "not looking the defaults up is the behavior under test and the stub is loaded with a value that would show if it leaked, while both returned fields are pinned exactly"
+}

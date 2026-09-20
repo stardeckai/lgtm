@@ -1,0 +1,6 @@
+{
+  "fire": ["vacuous-assertion"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "any non-zero number satisfies both assertions, so dropping the tax term entirely keeps this green"
+}

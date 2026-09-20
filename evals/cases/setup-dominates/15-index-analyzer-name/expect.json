@@ -1,0 +1,6 @@
+{
+  "fire": ["setup-dominates"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "an index mapping, thirty documents, a bulk body and aggregation definitions surround a two-argument call into a lookup table"
+}

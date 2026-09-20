@@ -1,0 +1,6 @@
+{
+  "fire": ["assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "every line is already in EUR, so the conversion the name is about never runs even though the rate table is supplied"
+}

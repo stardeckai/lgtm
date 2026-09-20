@@ -1,0 +1,6 @@
+{
+  "fire": ["changed-in-lockstep"],
+  "not_fire": ["tests-calls-not-outcomes"],
+  "class": "pure_logic",
+  "why": "the attempt cap went from 3 to 5 and the fixture's attempt count was bumped from 2 to 4 so the same assertion keeps passing"
+}

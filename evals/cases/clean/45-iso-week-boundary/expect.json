@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["trivial-primitive", "reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the labels either side of new year are literals from the ISO 8601 calendar, so an off-by-one in the thursday rule would show up immediately"
+}

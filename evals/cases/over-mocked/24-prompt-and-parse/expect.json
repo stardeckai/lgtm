@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["over-mocked", "swallowed-error-as-success"],
+  "class": "contract_integration",
+  "why": "only the model call is faked while the real prompt assembly and the parser's arithmetic check both run and are asserted"
+}

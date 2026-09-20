@@ -1,0 +1,10 @@
+{
+  "fire": [
+    "impossible-fixture"
+  ],
+  "not_fire": [
+    "mocks-seam-under-test"
+  ],
+  "class": "contract_integration",
+  "why": "the beforeEach writes straight into the levels map a row with more reserved than on hand, which reserve() exists precisely to prevent, so the clamp is tested against stock the warehouse cannot reach"
+}

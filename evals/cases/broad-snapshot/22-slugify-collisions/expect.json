@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["broad-snapshot", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the four recorded slugs are the whole output and the suffix numbering the name promises is legible in the literal"
+}

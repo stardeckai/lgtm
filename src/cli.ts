@@ -6,8 +6,8 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import { AuthenticationError, TypeSafeClient } from "@typesafe-ai/sdk";
 import { analyze, buildStates, checksFor } from "./analyze.js";
-import { CHECKS } from "./checks.js";
-import { askKey, init, resolveApiKey, saveKey } from "./init.js";
+import { CHECKS } from "./checks/index.js";
+import { askKey, askSkillMode, init, installSkill, resolveApiKey, saveKey, SKILL_MODES, type SkillMode } from "./init.js";
 import { formatClasses, formatReport, real, type Format } from "./report.js";
 
 const TEST_FILE = /\.(test|spec)\.(ts|tsx|js|jsx|mts|cts)$/;
@@ -15,9 +15,12 @@ const IGNORED_DIRS = new Set(["node_modules", "dist", "build", ".git"]);
 
 const USAGE = `lgtm [files|dirs...]
 
-  init                 save your TypeSafe API key and install the Claude Code skill
+  init                 save your TypeSafe API key, then install the /lgtm agent skill
   key [value]          swap the saved API key (prompts when no value is given)
+  skill                install the /lgtm skill again (to add more agents)
   --key <value>        (init) use this key instead of prompting
+  --skill <where>      (init/skill) global | project | claude | none — skip the prompt
+  --yes                (init/skill) take the defaults: key from --key, skill installed globally
   --diff <base>        only test files changed vs base, and include the diff in the state
   --threshold <0..1>   override every check's threshold
   --only <ids,...>     run only these checks
@@ -25,6 +28,7 @@ const USAGE = `lgtm [files|dirs...]
   --format <fmt>       text | github | json (default text)
   --concurrency <n>    parallel requests (default 4)
   --no-impl            don't send implementation source
+  --lean               smaller states: 8k of implementation, no test file, no repo guidelines
   --no-cache           ignore the answer cache
   --fail               exit 1 if there are findings
   --fail-on-error      exit 1 if any test block was skipped by an API error
@@ -66,6 +70,8 @@ async function main(): Promise<number> {
     allowPositionals: true,
     options: {
       key: { type: "string" },
+      skill: { type: "string" },
+      yes: { type: "boolean" },
       diff: { type: "string" },
       threshold: { type: "string" },
       only: { type: "string" },
@@ -73,6 +79,7 @@ async function main(): Promise<number> {
       format: { type: "string", default: "text" },
       concurrency: { type: "string" },
       "no-impl": { type: "boolean" },
+      lean: { type: "boolean" },
       "no-cache": { type: "boolean" },
       fail: { type: "boolean" },
       "fail-on-error": { type: "boolean" },
@@ -89,9 +96,21 @@ async function main(): Promise<number> {
     return 0;
   }
 
+  if (values.skill !== undefined && !SKILL_MODES.includes(values.skill as SkillMode)) {
+    console.error(`--skill must be one of ${SKILL_MODES.join(" | ")}, got ${values.skill}`);
+    return 2;
+  }
+  const skill = values.skill as SkillMode | undefined;
+
   if (positionals[0] === "init") {
-    for (const file of await init({ key: values.key })) console.log(`wrote ${file}`);
+    for (const file of await init({ key: values.key, skill, yes: values.yes })) console.log(`wrote ${file}`);
     console.log("😐👍  You're set. Run: lgtm --diff main");
+    return 0;
+  }
+
+  if (positionals[0] === "skill") {
+    const file = installSkill(skill ?? (values.yes ? "global" : await askSkillMode()));
+    if (file) console.log(`wrote ${file}`);
     return 0;
   }
 
@@ -132,7 +151,7 @@ async function main(): Promise<number> {
   }
 
   const files = discover(positionals, values.diff);
-  const jobs = buildStates(files, { impl: !values["no-impl"], diffBase: values.diff });
+  const jobs = buildStates(files, { impl: !values["no-impl"], diffBase: values.diff, lean: values.lean });
   if (jobs.length === 0) {
     console.error(`no test blocks found in ${files.length} file(s)`);
     return 0;

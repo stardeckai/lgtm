@@ -1,0 +1,6 @@
+{
+  "fire": ["regression-does-not-distinguish", "assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "no field in the test contains a double quote, so the pre-fix wrapper that never doubled quotes produces the same three rows"
+}

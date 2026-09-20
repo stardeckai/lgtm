@@ -1,0 +1,10 @@
+{
+  "fire": [
+    "happy-path-only-of-risky-boundary"
+  ],
+  "not_fire": [
+    "reimplements-logic"
+  ],
+  "class": "pure_logic",
+  "why": "the version column exists to reject a second concurrent reservation built on a stale read, and every block passes the current version"
+}

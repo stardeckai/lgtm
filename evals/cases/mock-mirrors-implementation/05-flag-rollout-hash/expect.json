@@ -1,0 +1,6 @@
+{
+  "fire": ["mock-mirrors-implementation"],
+  "not_fire": ["trivial-primitive"],
+  "class": "mocked_seam_unit",
+  "why": "the bucketer handed in duplicates the shipped FNV hashing line for line, so the rollout decision under test is made by the copy that lives in the test file"
+}

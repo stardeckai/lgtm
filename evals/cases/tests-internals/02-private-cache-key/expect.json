@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-internals"],
+  "not_fire": ["reimplements-logic"],
+  "class": "mocked_seam_unit",
+  "why": "a private method is called through an any-cast and the string it builds is asserted, not that two tenants get different rows"
+}

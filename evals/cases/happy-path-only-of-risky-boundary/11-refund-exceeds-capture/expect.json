@@ -1,0 +1,10 @@
+{
+  "fire": [
+    "happy-path-only-of-risky-boundary"
+  ],
+  "not_fire": [
+    "vacuous-assertion"
+  ],
+  "class": "pure_logic",
+  "why": "the sibling covers an unknown charge id, but nothing ever refunds more than was captured, which is the refusal that stops money leaving twice"
+}

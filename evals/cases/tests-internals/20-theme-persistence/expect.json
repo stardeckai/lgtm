@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["tests-internals", "mocks-seam-under-test"],
+  "class": "contract_integration",
+  "why": "the real storage is written and read back, so the persisted value a reload would see is the thing asserted"
+}

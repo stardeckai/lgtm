@@ -1,0 +1,6 @@
+{
+  "fire": ["regression-does-not-distinguish", "assertion-weaker-than-name"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the two reservations are awaited one after the other so they never interleave, and the pre-fix read-await-write order gives the same three results"
+}

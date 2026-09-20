@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-internals", "assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "it counts React renders and never asserts which rows are visible before and after archived rows are shown"
+}

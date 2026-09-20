@@ -1,0 +1,6 @@
+{
+  "fire": ["would-pass-if-broken", "vacuous-assertion"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "contract_integration",
+  "why": "the handler returns undefined on every path, so dropping the event-type guard and settling the seeded invoice would leave this assertion green"
+}

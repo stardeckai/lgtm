@@ -1,0 +1,6 @@
+{
+  "fire": ["reimplements-logic"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the expected instant is derived with the same ceil-of-elapsed-steps arithmetic and the same strictly-after nudge the scheduler uses"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["swallowed-error-as-success", "happy-path-only-of-risky-boundary"],
+  "class": "contract_integration",
+  "why": "the real runner drives real migrations into a partial failure and the assertions pin which ids applied, the checkpoint contents and that the caller's table was never mutated"
+}

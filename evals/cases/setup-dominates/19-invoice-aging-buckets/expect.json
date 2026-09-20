@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["setup-dominates", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the ten invoices include the pair straddling each bucket edge and the powers-of-two amounts make every row's bucket readable from the expected totals"
+}

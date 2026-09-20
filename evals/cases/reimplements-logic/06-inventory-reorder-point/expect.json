@@ -1,0 +1,6 @@
+{
+  "fire": ["reimplements-logic"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the safety-stock square-root formula is written out a second time in the test, so an error in the formula is invisible to the assertion"
+}

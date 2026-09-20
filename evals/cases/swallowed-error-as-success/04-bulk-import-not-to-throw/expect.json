@@ -1,0 +1,6 @@
+{
+  "fire": ["swallowed-error-as-success", "vacuous-assertion"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the only assertion is that nothing threw, which importing every row unchecked would also satisfy"
+}

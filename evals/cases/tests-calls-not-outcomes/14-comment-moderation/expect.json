@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-calls-not-outcomes", "assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic"],
+  "class": "mocked_seam_unit",
+  "why": "a hand-counted call length says nothing about the high priority or the banned-word reason the name promises"
+}

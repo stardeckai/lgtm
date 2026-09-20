@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["regression-does-not-distinguish", "mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the pre-fix counter never resets, so the fourth call is still refused and the last assertion fails against before"
+}

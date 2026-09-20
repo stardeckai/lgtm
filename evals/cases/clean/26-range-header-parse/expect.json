@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["trivial-primitive", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "each expected range is a literal from the HTTP range rules, covering the suffix form, the clamp past the end and the two distinct refusals"
+}

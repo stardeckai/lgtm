@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["impossible-fixture", "mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the beforeEach seeds through the store's own push method, so every row under test was created the way production creates them"
+}

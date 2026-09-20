@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["trivial-primitive", "reimplements-logic"],
+  "class": "contract_integration",
+  "why": "the formatted line is pinned to a literal and the real parser must recover the same record from it despite the quotes and the equals sign inside the message"
+}

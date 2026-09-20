@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["trivial-primitive", "reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the 23-hour spring-forward day is the time-zone edge that silently shifts every daily report, and no dashboard test would notice it"
+}

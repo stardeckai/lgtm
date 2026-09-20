@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["trivial-primitive", "vacuous-assertion", "happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "small function, but it is a money boundary whose NaN and negative cases each pin a distinct refusal message that a coercing implementation would fail"
+}

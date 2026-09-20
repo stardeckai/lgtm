@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["tests-calls-not-outcomes", "over-mocked"],
+  "class": "mocked_seam_unit",
+  "why": "the call count sits beside exact assertions on the real draft's line labels and prorated total"
+}

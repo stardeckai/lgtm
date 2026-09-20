@@ -1,0 +1,6 @@
+{
+  "fire": ["setup-dominates"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "working hours, holidays, rooms and generated bookings are all inert next to the single call that formats a minute offset"
+}

@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "broad-snapshot",
+    "trivial-primitive"
+  ],
+  "class": "contract_integration",
+  "why": "the real redactor runs on the way into the real log and the read-back asserts the nested card number is a placeholder while the last four digits and roles survive"
+}

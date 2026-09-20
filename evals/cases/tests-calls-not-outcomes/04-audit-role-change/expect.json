@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-calls-not-outcomes", "assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic"],
+  "class": "mocked_seam_unit",
+  "why": "the name promises the actor and the previous role are recorded, and the test never looks at the recorded event"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mocks-seam-under-test", "trivial-primitive"],
+  "class": "contract_integration",
+  "why": "only time is controlled; the real issuer and reader must agree on the payload and mac, and tampering with the room id is rejected by the genuine comparison"
+}

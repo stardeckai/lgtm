@@ -1,0 +1,6 @@
+{
+  "fire": ["broad-snapshot"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the whole serialized document, cursor and word counts are pinned so the one defaulted boolean the name is about will be re-recorded along with everything else"
+}

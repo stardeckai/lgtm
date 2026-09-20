@@ -1,0 +1,6 @@
+{
+  "fire": ["impossible-fixture"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "contract_integration",
+  "why": "hydrate skips the insert validation, so the only way an empty observed checksum counts as a match is a zero-byte row with an empty checksum that insert would have refused"
+}

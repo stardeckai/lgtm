@@ -1,0 +1,6 @@
+{
+  "fire": ["would-pass-if-broken"],
+  "not_fire": ["reimplements-logic", "over-mocked"],
+  "class": "pure_logic",
+  "why": "u-7 is on the allow list so it returns true before any bucketing runs, and a bucket function that always returned 99 would still pass"
+}

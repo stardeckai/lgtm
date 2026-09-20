@@ -1,0 +1,6 @@
+{
+  "fire": ["regression-does-not-distinguish"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the fix removed image/svg+xml from the allowlist but the test only exercises png and text/html, both decided the same way before the fix"
+}

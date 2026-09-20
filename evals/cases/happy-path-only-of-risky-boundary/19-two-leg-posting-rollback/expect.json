@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "happy-path-only-of-risky-boundary",
+    "swallowed-error-as-success"
+  ],
+  "class": "pure_logic",
+  "why": "a sibling drives the credit leg into a frozen account and asserts the debit was reversed, so the partial-failure path is covered"
+}

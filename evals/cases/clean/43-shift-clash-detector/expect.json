@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "the expected list names both clash kinds with literal values while the third staff member sits exactly on the eleven hour rest boundary and must not appear"
+}

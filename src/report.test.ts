@@ -53,7 +53,7 @@ describe("formatReport", () => {
   it("closes with the pointing finger when there are findings and the thumb when there are none", () => {
     const accusing = formatReport([finding(), finding({ line: 9 })], "text", summary);
     expect(accusing.split("\n").slice(-5, -2)).toEqual(["2 tests prove nothing.", "", "😐🫵"]);
-    expect(accusing.split("\n").at(-1)).toBe("100 input tokens used");
+    expect(accusing.split("\n").at(-1)).toBe("100 input tokens used (≈ $0.0000)");
 
     const suspicionOnly = formatReport([finding({ probability: 0.6, threshold: 0.8 })], "text", summary);
     expect(suspicionOnly).toContain("😐👍  4 tests. fine. allegedly.");

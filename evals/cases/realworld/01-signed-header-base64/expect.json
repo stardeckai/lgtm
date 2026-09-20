@@ -1,0 +1,6 @@
+{
+  "fire": ["vacuous-assertion"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "any JSON object at all satisfies toBeDefined, so a header that encoded the wrong workspace, the wrong app or no claims but one stray key would still pass"
+}

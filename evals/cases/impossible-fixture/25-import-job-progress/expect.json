@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "impossible-fixture",
+    "trivial-primitive"
+  ],
+  "class": "contract_integration",
+  "why": "every job state in the test is reached by calling startImport and recordRow, the same transitions the importer uses, including the zero-row job the guard allows"
+}

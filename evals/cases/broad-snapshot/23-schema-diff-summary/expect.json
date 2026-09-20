@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["broad-snapshot", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the snapshot holds exactly one line and that line is the distinction the test is named for"
+}

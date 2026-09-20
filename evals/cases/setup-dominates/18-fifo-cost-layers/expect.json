@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["setup-dominates", "reimplements-logic"],
+  "class": "pure_logic",
+  "why": "three layers in deliberately shuffled receipt order are the minimum needed to show ordering, full drain and partial drain, and all three are reflected in the two assertions"
+}

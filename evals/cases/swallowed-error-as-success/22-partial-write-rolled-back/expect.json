@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "swallowed-error-as-success",
+    "setup-dominates"
+  ],
+  "class": "pure_logic",
+  "why": "the throw is pinned to the conflicting seat and the free list afterwards proves the two available seats were not quietly held"
+}

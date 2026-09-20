@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["would-pass-if-broken", "assertion-weaker-than-name"],
+  "class": "pure_logic",
+  "why": "buckets 49 and 50 straddle the threshold, so an off-by-one in the comparison flips one of the two asserted booleans"
+}

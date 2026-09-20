@@ -1,0 +1,6 @@
+{
+  "fire": ["swallowed-error-as-success", "would-pass-if-broken"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "if the duplicate check disappeared the second register would return an account, the catch would never run and the test would still be green"
+}

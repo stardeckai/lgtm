@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["tests-internals", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the class string is this function's return value and public contract, and conflicting-utility resolution is real logic"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["setup-dominates", "happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "three interleaved keys and the millisecond either side of the window edge are each asserted, so every timestamp in the body carries a claim"
+}

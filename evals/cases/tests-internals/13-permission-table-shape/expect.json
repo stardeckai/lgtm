@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-internals", "would-pass-if-broken"],
+  "not_fire": ["setup-dominates"],
+  "class": "pure_logic",
+  "why": "it asserts the shape of a lookup table, so adding billing to the admin row would leave the test green"
+}

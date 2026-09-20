@@ -1,0 +1,23 @@
+{
+  "probabilities": {
+    "would-pass-if-broken": 0.23,
+    "vacuous-assertion": 0.03,
+    "assertion-weaker-than-name": 0.2,
+    "reimplements-logic": 0.17,
+    "mocks-seam-under-test": 0.08,
+    "mock-mirrors-implementation": 0.09,
+    "tests-calls-not-outcomes": 0.02,
+    "tests-internals": 0.04,
+    "setup-dominates": 0.53,
+    "broad-snapshot": 0.05,
+    "swallowed-error-as-success": 0.29,
+    "impossible-fixture": 0.05,
+    "happy-path-only-of-risky-boundary": 0.22,
+    "trivial-primitive": 0.47,
+    "over-mocked": 0.1,
+    "regression-does-not-distinguish": 0.18,
+    "changed-in-lockstep": 0.42
+  },
+  "model": "jev-1.13.0",
+  "class": "pure_logic"
+}

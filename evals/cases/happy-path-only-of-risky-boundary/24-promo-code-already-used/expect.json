@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "happy-path-only-of-risky-boundary",
+    "vacuous-assertion"
+  ],
+  "class": "pure_logic",
+  "why": "a sibling names and covers the already-redeemed refusal, which is the duplicate risk in this service"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-calls-not-outcomes", "assertion-weaker-than-name"],
+  "not_fire": ["trivial-primitive"],
+  "class": "mocked_seam_unit",
+  "why": "cache-key composition and the per-channel fanout are the point, and a single unchecked call satisfies the test"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["changed-in-lockstep"],
+  "not_fire": ["impossible-fixture"],
+  "class": "pure_logic",
+  "why": "the default role for an invite changed from member to admin and the expected object was edited to admin, so a privilege escalation passes under a test whose name still promises the least privileged role"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["reimplements-logic"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the test recomputes the regular/overtime split and the 1.5 multiplier itself, so changing the overtime rate in both places keeps it green"
+}

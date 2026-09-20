@@ -1,0 +1,6 @@
+{
+  "fire": ["trivial-primitive"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the function is one object spread over a constant, and any embed-snippet test would show a default that failed to apply"
+}

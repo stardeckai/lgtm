@@ -1,0 +1,6 @@
+{
+  "fire": ["impossible-fixture"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the helper's base invoice has no lines and the override sets a discount above the subtotal, two things createInvoice rejects, so the clamp branch is exercised on an invoice billing can never build"
+}

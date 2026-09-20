@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["setup-dominates", "would-pass-if-broken"],
+  "class": "pure_logic",
+  "why": "the owner is deliberately the least recently active so both sort keys are exercised, and all four members appear in the expected ordering"
+}

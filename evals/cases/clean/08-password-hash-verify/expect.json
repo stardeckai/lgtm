@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["over-mocked", "vacuous-assertion"],
+  "class": "contract_integration",
+  "why": "the real hasher and the real verifier are composed with no fakes, and the assertions pin acceptance, refusal of a near miss, refusal of an unknown scheme and that the salt differs per hash"
+}

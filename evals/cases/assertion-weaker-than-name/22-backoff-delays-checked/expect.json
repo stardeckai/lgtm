@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["assertion-weaker-than-name", "tests-calls-not-outcomes"],
+  "class": "pure_logic",
+  "why": "the exact sleep durations named in the title are recorded and asserted alongside the full attempt log"
+}

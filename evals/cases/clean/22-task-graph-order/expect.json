@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "the expected order is a literal sequence and the two refusals pin the cycle trail and the dangling dependency message"
+}

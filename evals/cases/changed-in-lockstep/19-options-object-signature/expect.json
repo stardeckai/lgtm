@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["changed-in-lockstep", "tests-internals"],
+  "class": "pure_logic",
+  "why": "the third parameter became an options object and nothing else moved: the same ten minute gap is still expected to clash at a fifteen minute buffer and not at zero"
+}

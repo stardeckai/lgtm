@@ -1,0 +1,6 @@
+{
+  "fire": ["swallowed-error-as-success", "vacuous-assertion"],
+  "not_fire": ["impossible-fixture"],
+  "class": "pure_logic",
+  "why": "any error message satisfies the catch and an authorization that wrongly succeeded would skip the catch entirely, leaving nothing asserted"
+}

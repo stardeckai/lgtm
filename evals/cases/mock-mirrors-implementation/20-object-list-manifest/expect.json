@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mock-mirrors-implementation"],
+  "class": "pure_logic",
+  "why": "the store fake returns a plain listing as the provider would, and the partial-file exclusion, the byte total and the largest key are all computed by the code under test"
+}

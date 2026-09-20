@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["setup-dominates", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the three shared discount constants are the whole fixture and every table row turns one of them into an exact expected total"
+}

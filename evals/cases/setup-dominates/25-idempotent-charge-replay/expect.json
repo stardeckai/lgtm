@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "setup-dominates",
+    "tests-calls-not-outcomes"
+  ],
+  "class": "pure_logic",
+  "why": "every line either performs a charge or asserts on it, and the count assertions prove no second charge was created"
+}

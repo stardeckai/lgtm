@@ -1,0 +1,6 @@
+{
+  "fire": ["over-mocked"],
+  "not_fire": ["impossible-fixture"],
+  "class": "mocked_seam_unit",
+  "why": "the sheet reader, the mapper that decides which rows survive and the store are all stubs kept consistent by hand"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["would-pass-if-broken", "trivial-primitive"],
+  "class": "contract_integration",
+  "why": "the escaper and the parser both run for real on comma, quote and newline values, and the exact wire form plus the round trip are asserted"
+}

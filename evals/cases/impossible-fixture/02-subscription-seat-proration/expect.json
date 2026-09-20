@@ -1,0 +1,6 @@
+{
+  "fire": ["impossible-fixture"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "openSubscription enforces the five-seat floor on the business plan, so a zero-seat business subscription is a state proration code never sees in production"
+}

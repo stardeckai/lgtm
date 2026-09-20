@@ -1,0 +1,6 @@
+{
+  "fire": ["changed-in-lockstep"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the VAT constant moved from 0.2 to 0.17 and both expected totals were replaced with what the new constant produces, with no tax authority figure anywhere in the test"
+}

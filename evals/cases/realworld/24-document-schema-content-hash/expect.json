@@ -1,0 +1,6 @@
+{
+  "fire": ["reimplements-logic"],
+  "not_fire": ["setup-dominates"],
+  "class": "contract_integration",
+  "why": "the expected hash is produced by calling the same hashing function the code under test calls, so any change to canonicalization or digest keeps both sides equal"
+}

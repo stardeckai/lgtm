@@ -1,0 +1,6 @@
+{
+  "fire": ["mock-mirrors-implementation"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "mocked_seam_unit",
+  "why": "the fixed clock is a fair fake but the calculator beside it re-implements the trial offset and period stepping the test claims to verify"
+}

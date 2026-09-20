@@ -1,0 +1,6 @@
+{
+  "fire": ["broad-snapshot"],
+  "not_fire": ["trivial-primitive"],
+  "class": "pure_logic",
+  "why": "an entire HTML document with inline styles and class names is pinned for a claim about one arithmetic cell, so any markup edit forces a re-record"
+}

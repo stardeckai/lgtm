@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["tests-calls-not-outcomes", "mocks-seam-under-test"],
+  "class": "contract_integration",
+  "why": "the real outbox and the real relay run together and the assertions pin the published topics and payloads in order plus the store being empty on the second pass"
+}

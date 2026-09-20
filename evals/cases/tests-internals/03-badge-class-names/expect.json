@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-internals", "assertion-weaker-than-name"],
+  "not_fire": ["broad-snapshot"],
+  "class": "pure_logic",
+  "why": "only styling class names are asserted while the label and the capped 9+ text the user reads go unchecked"
+}

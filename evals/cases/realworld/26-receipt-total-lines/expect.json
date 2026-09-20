@@ -1,0 +1,6 @@
+{
+  "fire": ["reimplements-logic"],
+  "not_fire": ["trivial-primitive"],
+  "class": "contract_integration",
+  "why": "every expected column is produced by the same formatter the renderer uses and the grand total is recomputed in the test with the production arithmetic, so a wrong separator or a flipped discount sign agrees on both sides"
+}

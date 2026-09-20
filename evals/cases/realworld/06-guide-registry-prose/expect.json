@@ -1,0 +1,8 @@
+{
+  "fire": [],
+  "not_fire": [
+    "vacuous-assertion"
+  ],
+  "class": "pure_logic",
+  "why": "the assertions pin required phrases in a generated guidance document, which is the document's actual contract; left unscored for tests-internals because reasonable reviewers disagree"
+}

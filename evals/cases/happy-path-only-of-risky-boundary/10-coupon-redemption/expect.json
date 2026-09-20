@@ -1,0 +1,10 @@
+{
+  "fire": [
+    "happy-path-only-of-risky-boundary"
+  ],
+  "not_fire": [
+    "reimplements-logic"
+  ],
+  "class": "pure_logic",
+  "why": "the siblings cover expiry and a second customer, but the once-per-customer refusal \u2014 the same customer redeeming twice \u2014 is never exercised"
+}

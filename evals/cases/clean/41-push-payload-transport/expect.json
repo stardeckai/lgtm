@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["tests-calls-not-outcomes", "over-mocked"],
+  "class": "pure_logic",
+  "why": "the envelope handed to the push service is the entire public output and both envelopes are pinned in full, including the german strings and the english fallback"
+}

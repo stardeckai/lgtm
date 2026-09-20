@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-internals"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "it reaches into the component instance and asserts React state fields instead of the heading the shopper now sees"
+}

@@ -1,0 +1,11 @@
+{
+  "fire": [
+    "would-pass-if-broken"
+  ],
+  "not_fire": [
+    "vacuous-assertion",
+    "mocks-seam-under-test"
+  ],
+  "class": "pure_logic",
+  "why": "no fixture field contains a comma or a quote, so deleting the quoting branch produces exactly the asserted string"
+}

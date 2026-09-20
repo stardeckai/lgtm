@@ -1,0 +1,6 @@
+{
+  "fire": ["impossible-fixture"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "acceptIncoming rejects an empty body, so the last message in the fixture is one the send path can never store and the expected empty preview describes an unreachable thread"
+}

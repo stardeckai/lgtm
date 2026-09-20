@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["trivial-primitive", "reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the three caret tiers are pinned with literals either side of each boundary, which is where a range check that treated 0.x like 1.x would go wrong"
+}

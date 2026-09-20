@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "trivial-primitive"],
+  "class": "contract_integration",
+  "why": "the real bump, comparison and merge run together so a merge that silently picked a side for concurrent edits would fail the last assertion"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["would-pass-if-broken"],
+  "not_fire": ["reimplements-logic", "over-mocked"],
+  "class": "pure_logic",
+  "why": "both assertions read back fields copied straight from the input, so a discount of zero or of the whole subtotal still passes"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["trivial-primitive", "reimplements-logic"],
+  "class": "pure_logic",
+  "why": "zero-decimal and three-decimal currencies, thousands grouping and the placement of the minus sign are money-formatting edges a refund screen would quietly get wrong"
+}

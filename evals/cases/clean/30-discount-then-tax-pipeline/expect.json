@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "broad-snapshot"],
+  "class": "contract_integration",
+  "why": "the real promotion rule and the real tax function are composed and every field of the receipt is a literal, so taxing the undiscounted subtotal would fail"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["changed-in-lockstep"],
+  "not_fire": ["happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "cancelling an already shipped order flipped from forbidden to allowed and the assertion that forbade it was rewritten into one that permits it, so the lifecycle rule was never checked independently"
+}

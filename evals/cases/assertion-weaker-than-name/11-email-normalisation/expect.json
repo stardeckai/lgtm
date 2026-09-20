@@ -1,0 +1,6 @@
+{
+  "fire": ["assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the two addresses are byte-identical, so the dot and plus-tag normalisation the name promises is never exercised"
+}

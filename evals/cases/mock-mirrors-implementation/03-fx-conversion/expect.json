@@ -1,0 +1,6 @@
+{
+  "fire": ["mock-mirrors-implementation"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "mocked_seam_unit",
+  "why": "the fake converter reproduces the real converter's minor-unit scaling and rounding, so the zero-decimal currency handling under test lives entirely in the stub"
+}

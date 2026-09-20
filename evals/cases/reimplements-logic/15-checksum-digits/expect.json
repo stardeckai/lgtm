@@ -1,0 +1,6 @@
+{
+  "fire": ["reimplements-logic"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the account number under test is constructed with the very weight table and modulo rule the validator applies, so any wrong weight still produces a matching pair"
+}

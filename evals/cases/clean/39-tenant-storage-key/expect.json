@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mocks-seam-under-test", "trivial-primitive"],
+  "class": "contract_integration",
+  "why": "the real key builder and the real store run together so the key written is the key read, and the cross-tenant read and the traversing id are both refused"
+}

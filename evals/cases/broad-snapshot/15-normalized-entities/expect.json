@@ -1,0 +1,6 @@
+{
+  "fire": ["broad-snapshot"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "three entity tables covering two tickets, three users and three comments are recorded for a claim about one deduplicated tag array"
+}

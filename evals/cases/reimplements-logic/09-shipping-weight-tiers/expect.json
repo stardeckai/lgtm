@@ -1,0 +1,6 @@
+{
+  "fire": ["reimplements-logic"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the file-level priceFor helper is a line-for-line copy of the pricing function, so the assertion compares the implementation with itself"
+}

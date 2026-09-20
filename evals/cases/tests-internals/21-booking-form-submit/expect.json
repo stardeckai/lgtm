@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["tests-internals", "tests-calls-not-outcomes"],
+  "class": "pure_logic",
+  "why": "the form is driven through real user interactions and the submitted booking payload is asserted field by field"
+}

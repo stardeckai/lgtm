@@ -1,0 +1,6 @@
+{
+  "fire": ["impossible-fixture"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "attempts starts at zero in enqueueDelivery and only ever increases, so a delivery with -1 attempts and a recorded 502 is a row the delivery pipeline cannot write, and the 500ms answer never occurs in production"
+}

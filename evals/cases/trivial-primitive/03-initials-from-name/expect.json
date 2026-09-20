@@ -1,0 +1,6 @@
+{
+  "fire": ["trivial-primitive"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "a one-line split-and-take-first-letter with no edge cases, exercised by any test that renders a contact card"
+}

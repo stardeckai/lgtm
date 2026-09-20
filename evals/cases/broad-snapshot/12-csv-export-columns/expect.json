@@ -1,0 +1,6 @@
+{
+  "fire": ["broad-snapshot"],
+  "not_fire": ["trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the full ten-column export for two contacts is recorded although the claim is about one doubled quote in a single cell"
+}

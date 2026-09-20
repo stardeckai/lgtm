@@ -1,0 +1,8 @@
+{
+  "fire": [],
+  "not_fire": [
+    "reimplements-logic"
+  ],
+  "class": "contract_integration",
+  "why": "the real checksum function guards the real session, and the corrupted chunk is refused and still reported missing until the correct bytes arrive"
+}

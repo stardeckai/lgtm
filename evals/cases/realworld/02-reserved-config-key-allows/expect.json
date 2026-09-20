@@ -1,0 +1,6 @@
+{
+  "fire": ["vacuous-assertion", "tests-calls-not-outcomes"],
+  "not_fire": ["swallowed-error-as-success"],
+  "class": "mocked_seam_unit",
+  "why": "the stubbed insert always resolves to an object so toBeDefined accepts anything, and nothing checks that the key, the encrypted value or the targets actually reached the write"
+}

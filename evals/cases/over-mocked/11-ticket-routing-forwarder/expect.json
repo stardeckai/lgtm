@@ -1,0 +1,6 @@
+{
+  "fire": ["over-mocked", "would-pass-if-broken"],
+  "not_fire": ["setup-dominates"],
+  "class": "mocked_seam_unit",
+  "why": "station resolution, redirects and printer lookup are all stubs, so the asserted route is what the stubs were told to say"
+}

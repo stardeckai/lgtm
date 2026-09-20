@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["changed-in-lockstep", "happy-path-only-of-risky-boundary"],
+  "class": "pure_logic",
+  "why": "the original 9500 expectation is untouched and the two added assertions state the new waiver threshold from both sides rather than echoing whatever the code returns"
+}

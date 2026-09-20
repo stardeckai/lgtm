@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-internals"],
+  "not_fire": ["impossible-fixture"],
+  "class": "pure_logic",
+  "why": "it greps the module's source text for a loop shape instead of calling clearPreselect and checking that the returned query string has lost every supported param"
+}

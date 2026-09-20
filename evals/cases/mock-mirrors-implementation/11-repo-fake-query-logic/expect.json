@@ -1,0 +1,6 @@
+{
+  "fire": ["mock-mirrors-implementation"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "mocked_seam_unit",
+  "why": "the in-memory repository repeats the filter, the two-key sort and the limit of the SQL repository, so the ordering rule the test names is decided by the duplicate"
+}

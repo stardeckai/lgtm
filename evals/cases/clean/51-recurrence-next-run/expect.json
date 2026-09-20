@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "the expected instants are literal UTC timestamps that move by an hour across the offset change while the local time stays at nine, and the weekend is skipped"
+}

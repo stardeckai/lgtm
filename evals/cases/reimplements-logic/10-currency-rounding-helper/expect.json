@@ -1,0 +1,6 @@
+{
+  "fire": ["reimplements-logic"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "contract_integration",
+  "why": "the expected payouts are produced by calling the same rounding helper the implementation calls with the same basis-point arithmetic, so a broken half-even rule passes"
+}

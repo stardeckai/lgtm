@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "contract_integration",
+  "why": "the fake file system only moves bytes, so the real encoder and decoder must actually agree on escaping the separators the fixture contains"
+}

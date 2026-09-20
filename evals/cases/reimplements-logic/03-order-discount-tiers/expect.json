@@ -1,0 +1,6 @@
+{
+  "fire": ["reimplements-logic"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "every threshold, increment and the 12 percent cap are copied into the test, so the assertion can never disagree with the implementation"
+}

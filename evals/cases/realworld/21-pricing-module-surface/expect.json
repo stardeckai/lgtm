@@ -1,0 +1,6 @@
+{
+  "fire": ["vacuous-assertion", "assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the name promises the module leaks no browser client and no secret, but the only assertions are that three unrelated exports are defined, which any version of the module satisfies"
+}

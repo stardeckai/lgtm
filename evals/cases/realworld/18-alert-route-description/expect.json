@@ -1,0 +1,6 @@
+{
+  "fire": ["assertion-weaker-than-name", "would-pass-if-broken"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the name promises that such a request is routed to this playbook but the routing function is never called, so a matcher that returned the billing playbook for every request would still pass"
+}

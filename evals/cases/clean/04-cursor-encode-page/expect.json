@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "trivial-primitive"],
+  "class": "contract_integration",
+  "why": "the cursor encoder and decoder meet through the real pager, and the walk asserts every id appears once in order even where two rows share a timestamp"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["setup-dominates"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "carriers, inbound shipments, cycle counts and two of the three warehouses exist only to pad a test that needs one stock row"
+}

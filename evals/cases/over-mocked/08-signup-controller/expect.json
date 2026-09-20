@@ -1,0 +1,6 @@
+{
+  "fire": ["over-mocked", "happy-path-only-of-risky-boundary"],
+  "not_fire": ["impossible-fixture"],
+  "class": "mocked_seam_unit",
+  "why": "captcha, lookup, hashing and session issue are all stubs, so the ids asserted are the stubs' own return values"
+}

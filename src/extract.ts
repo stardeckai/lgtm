@@ -7,17 +7,19 @@ export type TestBlock = {
   describePath: string[];
   /** exact source slice of the whole it(...) call */
   code: string;
+  /** last line of the it(...) call, 1-based and inclusive */
+  endLine: number;
 };
 
 export type Extracted = {
   tests: TestBlock[];
   /** imports, mocks, hooks and top-level helpers of the file, capped */
   fileContext: string;
-  /** relative import specifiers, for resolving implementation source */
+  /** import specifiers (relative or aliased), for resolving implementation source */
   imports: string[];
 };
 
-const CONTEXT_CAP = 8000;
+export const CONTEXT_CAP = 16000;
 
 /** `it`, `it.only`, `it.skip.each` -> "it"; anything not rooted at an identifier -> null. */
 function rootName(node: any): string | null {
@@ -68,6 +70,7 @@ export function extractTests(source: string, filePath: string): Extracted {
         name,
         describePath: [...describePath],
         code: source.slice(node.start, node.end),
+        endLine: node.loc.end.line,
       });
       return;
     }
@@ -91,7 +94,10 @@ export function extractTests(source: string, filePath: string): Extracted {
     let keep = false;
     if (stmt.type === "ImportDeclaration") {
       keep = true;
-      if (stmt.source.value.startsWith(".")) imports.push(stmt.source.value);
+      imports.push(stmt.source.value);
+    } else if (typeof stmt.source?.value === "string") {
+      // `export * from "./x"` / `export { a } from "./x"` — a barrel hop, same as an import.
+      imports.push(stmt.source.value);
     } else if (stmt.type === "FunctionDeclaration") {
       keep = true;
     } else if (stmt.type === "VariableDeclaration" && stmt.kind === "const") {

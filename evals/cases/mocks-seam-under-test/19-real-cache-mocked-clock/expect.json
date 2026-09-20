@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mocks-seam-under-test", "over-mocked"],
+  "class": "contract_integration",
+  "why": "only the clock is controlled; the real cache stores, expires and evicts the entry, and the loader count shows the expiry actually took effect"
+}

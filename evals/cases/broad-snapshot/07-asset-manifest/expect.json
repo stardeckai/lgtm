@@ -1,0 +1,6 @@
+{
+  "fire": ["broad-snapshot"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the recorded manifest is four entries of content hashes that change with any fixture edit, so the filename shape the name promises will never be read out of the diff"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["trivial-primitive", "mocks-seam-under-test"],
+  "class": "contract_integration",
+  "why": "the real key builder and the real cache run together, so a key that dropped the org prefix or stopped sorting filters would change the returned value and the load count"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["over-mocked"],
+  "not_fire": ["reimplements-logic"],
+  "class": "mocked_seam_unit",
+  "why": "auth, validation, persistence and mail are all replaced, so only the handler's four lines of glue are real"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["regression-does-not-distinguish"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the clamp only matters for anchor days past the 28th and every assertion uses day 15, so the pre-fix concatenation produces the same four dates"
+}

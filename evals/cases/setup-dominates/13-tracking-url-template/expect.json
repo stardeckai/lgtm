@@ -1,0 +1,6 @@
+{
+  "fire": ["setup-dominates"],
+  "not_fire": ["trivial-primitive"],
+  "class": "pure_logic",
+  "why": "packages, scan events, recipient and customs data pad a shipment fixture whose only two used fields are the carrier code and the tracking number"
+}

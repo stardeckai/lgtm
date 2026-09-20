@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-calls-not-outcomes", "would-pass-if-broken"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "sending to the muted device as well would still leave the single toHaveBeenCalled assertion green"
+}

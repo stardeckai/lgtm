@@ -1,0 +1,6 @@
+{
+  "fire": ["regression-does-not-distinguish"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the fix is about JPY having no minor units, and every row in the table is USD or EUR, which the pre-fix hard-coded two decimals already formatted correctly"
+}

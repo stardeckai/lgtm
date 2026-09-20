@@ -1,0 +1,6 @@
+{
+  "fire": ["tests-calls-not-outcomes", "would-pass-if-broken"],
+  "not_fire": ["impossible-fixture"],
+  "class": "pure_logic",
+  "why": "the only matched argument is the charge id echoed back from the input, leaving the capped amount unasserted"
+}

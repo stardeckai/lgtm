@@ -1,0 +1,6 @@
+{
+  "fire": ["regression-does-not-distinguish"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the second redeem is refused only because the token was already used, so the pre-fix code without any TTL check returns the same values"
+}

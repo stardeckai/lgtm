@@ -1,0 +1,9 @@
+{
+  "fire": [],
+  "not_fire": [
+    "assertion-weaker-than-name",
+    "trivial-primitive"
+  ],
+  "class": "pure_logic",
+  "why": "the dot, plus-tag and googlemail rules each collide for real, and a non-gmail domain proves the stripping is not applied everywhere"
+}

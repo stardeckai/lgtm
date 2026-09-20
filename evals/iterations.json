@@ -1,0 +1,208 @@
+[
+  {
+    "check": "happy-path-only-of-risky-boundary",
+    "variant": "baseline",
+    "instructions": "Is `test_code` a cosmetic happy-path permutation of a path whose real risk is a refusal or failure case \u2014 permissions, tenant isolation, duplicates, retries, concurrency, partial failure \u2014 that nothing in `sibling_tests` covers either?",
+    "train_f1": 0.6,
+    "holdout_f1": 0.4,
+    "fitted_t": 0.5,
+    "kept": false
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "baseline",
+    "instructions": "Does `test_code` (with `file_context`) mock or stub the exact collaborator whose integration with the code under test is the thing being tested \u2014 both sides of a write/read, producer/consumer, authorization, persistence, cache-key, queue, signature or serialization boundary faked so they agree by construction?",
+    "train_f1": 0.23,
+    "holdout_f1": 0.4,
+    "fitted_t": 0.8,
+    "kept": false
+  },
+  {
+    "check": "over-mocked",
+    "variant": "baseline",
+    "instructions": "Does `test_code` with `file_context` mock or stub so many collaborators that the only real code left running is glue, so a wiring or contract bug between the real components could not be observed?",
+    "train_f1": 0.59,
+    "holdout_f1": 0.67,
+    "fitted_t": 0.6,
+    "kept": false
+  },
+  {
+    "check": "happy-path-only-of-risky-boundary",
+    "variant": "enumerate-branches-procedure",
+    "instructions": "Procedure. 1. List every refusal or failure branch in `implementation`: authorization and tenant guards, duplicate or already-used rejections, version/concurrency conflicts, quota and limit caps, retry exhaustion, rollback on partial failure, over-amount money guards. 2. Name the riskiest one. 3. Search `test_code` and every `sibling_tests` name for that exact condition. A sibling covering a different branch \u2014 unknown id, not found, expiry, bad input, empty result \u2014 does not count. Answer yes when the riskiest branch is exercised by nothing. Answer no when this block or a sibling drives it, or `implementation` has no refusal branch.",
+    "train_f1": 0.88,
+    "holdout_f1": 0.86,
+    "fitted_t": 0.65,
+    "kept": false
+  },
+  {
+    "check": "swallowed-error-as-success",
+    "variant": "baseline",
+    "instructions": "Does `test_code` pass when an unexpected error is swallowed, logged or answered with a fallback, or use try/catch in a way that also passes when nothing throws at all?",
+    "train_f1": 0.15,
+    "holdout_f1": 0,
+    "fitted_t": 0.8,
+    "kept": false
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "ownership-of-named-behaviour",
+    "instructions": "Name the behaviour the test title claims \u2014 a refusal, a signature match, single-use, atomicity, a key agreeing. In `implementation`, find which collaborator decides it. Is that collaborator replaced in `test_code` by a scripted mock, so the asserted outcome is just what the mock was told (or two fakes tuned to agree)? Answer no when only neighbours are faked \u2014 signer, mailer, notifier, clock, metrics, downstream HTTP \u2014 and the asserted values, including the arguments handed to those fakes, are computed by real code, or real code's own branch is why a fake went uncalled.",
+    "train_f1": 0.8,
+    "holdout_f1": 0.67,
+    "fitted_t": 0.55,
+    "kept": false
+  },
+  {
+    "check": "over-mocked",
+    "variant": "collaborators-of-impl + first-party-vs-external-edge",
+    "instructions": "List the collaborators the `implementation` actually calls \u2014 imported modules, injected objects. Ignore objects built in `test_code` that never reach it. Answer yes when the faked collaborators include first-party code (repositories, stores, ORM or transaction handles, policy or rule modules, hooks, helpers) and what stays real is glue \u2014 returning a stub's value, interpolation, arithmetic, assembling stub returns \u2014 so no two real components could disagree. Two faked collaborators can be enough. Answer no when only true external edges are faked (clock, randomness, HTTP, third-party gateway, filesystem) and real logic computes the asserted value.",
+    "train_f1": 0.96,
+    "holdout_f1": 0.86,
+    "fitted_t": 0.8,
+    "kept": true
+  },
+  {
+    "check": "happy-path-only-of-risky-boundary",
+    "variant": "risk-ranked-branches",
+    "instructions": "Procedure. 1. List `implementation`'s refusal branches: authorization and tenant guards, duplicates or conflicts with existing state, version conflicts, quota and limit caps, retry exhaustion, rollback on partial failure, over-amount money guards. Argument-shape validation and not-found are the low-risk ones. 2. Name the riskiest. 3. Search `test_code` and every `sibling_tests` name for that exact condition. A sibling covering a different branch does not count. Answer yes when the riskiest branch is driven by nothing. Answer no when this block itself drives it, a sibling names it, or `implementation` has no refusal branch.",
+    "train_f1": 0.88,
+    "holdout_f1": 0.67,
+    "fitted_t": 0.55,
+    "kept": false
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "ownership + canned-read/called-only arms",
+    "instructions": "Name the behaviour the test title claims \u2014 a refusal, a match, single-use, atomicity, a write landing, a key agreeing. In `implementation`, find which collaborator decides it. Smell if that collaborator is a scripted mock in `test_code`: the asserted outcome is what the mock was told, its canned read cannot reflect the write, or the only evidence is that it was called. No when just neighbours are faked \u2014 signer, mailer, clock, metrics, downstream HTTP \u2014 and the asserted values, including arguments passed to them, come from real code, or real code's own branch kept a fake uncalled.",
+    "train_f1": 0.84,
+    "holdout_f1": 1,
+    "fitted_t": 0.5,
+    "kept": false
+  },
+  {
+    "check": "swallowed-error-as-success",
+    "variant": "decision-procedure-4-steps",
+    "instructions": "Is this test's green independent of the specific failure it claims to cover? Decide in order: (1) `test_code` exercises no refusal, invalid input, failure or fallback path at all \u2192 no. (2) Its expects sit inside a test-side try/catch or `.catch()` and nothing (`expect.assertions`, `rejects.`, a throw at the end of the try) forces them to run \u2192 yes, however specific the matcher inside. (3) The error matcher accepts any error: bare `toThrow()`/`rejects.toThrow()`, `toThrow(Error)`, `toBeInstanceOf(Error)`, `toBeDefined()`, or a lone `not.toThrow()` \u2192 yes. (4) `implementation` funnels every exception on that path into the asserted value \u2014 null, [], false, `ok:false`, defaults, a cached value, status 200, an error count or length, a logged line, a counter \u2192 yes. Else no.",
+    "train_f1": 0.86,
+    "holdout_f1": 0.67,
+    "fitted_t": 0.75,
+    "kept": false
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "+ hands-back-the-compared-value arm",
+    "instructions": "Name the behaviour the test title claims \u2014 a refusal, a match, single-use, atomicity, a write landing, a key agreeing. In `implementation`, find which collaborator decides it. Smell if that collaborator is a scripted mock in `test_code`: the asserted outcome is what the mock was told, its canned read cannot reflect the write, it hands back the very value the real code is meant to check against, or the only evidence is that it was called. No when just neighbours are faked \u2014 signer, mailer, clock, metrics, downstream HTTP \u2014 and the asserted values, including arguments passed to them, come from real code, or real code's own branch kept a fake uncalled.",
+    "train_f1": 0.89,
+    "holdout_f1": 1,
+    "fitted_t": 0.6,
+    "kept": true
+  },
+  {
+    "check": "happy-path-only-of-risky-boundary",
+    "variant": "procedure+self-refusal-negative",
+    "instructions": "Procedure. 1. List every refusal or failure branch in `implementation`: authorization and tenant guards, duplicate or already-used rejections, version/concurrency conflicts, quota and limit caps, retry exhaustion, rollback on partial failure, over-amount money guards. 2. Name the riskiest one. 3. Search `test_code` and every `sibling_tests` name for that exact condition. A sibling covering a different branch \u2014 unknown id, not found, expiry, bad input, empty result \u2014 does not count. Answer yes when the riskiest branch is exercised by nothing. Answer no when this block itself drives that refusal (even alongside the allowed path), when a sibling drives it, or when `implementation` has no refusal branch.",
+    "train_f1": 0.92,
+    "holdout_f1": 0.86,
+    "fitted_t": 0.55,
+    "kept": true
+  },
+  {
+    "check": "setup-dominates",
+    "variant": "baseline",
+    "instructions": "Is most of the setup in `test_code` and `file_context` unrelated to the behavior under test, so that the actual assertion is hard to find?",
+    "train_f1": 0.38,
+    "holdout_f1": 0.4,
+    "fitted_t": 0.5,
+    "kept": false
+  },
+  {
+    "check": "setup-dominates",
+    "variant": "inventory-vs-read",
+    "instructions": "Inventory everything `test_code` and `file_context` construct: `vi.mock` calls, top-level consts, fixture objects and their fields, inserted records. Then trace the asserted call through `implementation`: which of those does the exercised path actually read, so that changing it would change the asserted value? Is most of that setup inert \u2014 deletable without touching the assertion?",
+    "criteria": {
+      "true": "Most mocks, fixtures or fields never reach the asserted value; they exist to make the test look realistic.",
+      "false": "Every fixture and mock is read by the exercised path or named in an assertion \u2014 or the setup is only a few lines, whatever else is wrong with the test."
+    },
+    "train_f1": 1,
+    "holdout_f1": 1,
+    "fitted_t": 0.85,
+    "kept": true
+  },
+  {
+    "check": "setup-dominates",
+    "variant": "inventory-vs-read + discriminator clause",
+    "instructions": "Inventory everything `test_code` and `file_context` construct: `vi.mock` calls, top-level consts, fixture objects and their fields, inserted records. Then trace the asserted call through `implementation`: which of those does the exercised path actually read, so that changing it would change the asserted value? Is most of that setup inert \u2014 deletable without touching the assertion?",
+    "criteria": {
+      "true": "Most mocks, fixtures or fields never reach the asserted value; they exist to make the test look realistic.",
+      "false": "Every fixture and mock is read by the exercised path or named in an assertion \u2014 or the setup is only a few lines, whatever else is wrong with the test. A row the path reads and deliberately filters out, or a mock whose return value becomes the asserted value, is a discriminator, not padding."
+    },
+    "train_f1": 1,
+    "holdout_f1": 1,
+    "fitted_t": 0.7,
+    "kept": false
+  },
+  {
+    "check": "swallowed-error-as-success",
+    "variant": "v2-constant-fallback-and-rigged-mock",
+    "instructions": "Is this test's green independent of the specific failure it claims to cover? Decide in order: (1) `test_code` exercises no refusal, invalid input, failure or fallback path \u2192 no. (2) Its expects sit inside a test-side try/catch or `.catch()` and nothing \u2014 `expect.assertions`, `rejects.`, a throw at the end of the try \u2014 forces them to run \u2192 yes, however specific the matcher inside and however surely the rigged mock throws. (3) The assertion on the caught error or rejection accepts any error: bare `toThrow()`/`rejects.toThrow()`, `toThrow(Error)`, `toBeInstanceOf(Error)`, `toBeDefined()`, or a lone `not.toThrow()` \u2192 yes. (4) `implementation` funnels every exception on that path into the asserted value \u2014 a constant fallback or default, a cached value, null, [], `ok:false`, status 200, an error count, a logged line, a counter \u2014 and nothing in the assertion is derived from the specific failure \u2192 yes, even when that value is matched exactly. Else no.",
+    "train_f1": 0.91,
+    "holdout_f1": 0.86,
+    "fitted_t": 0.8,
+    "kept": false
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "+ called-with-right-arguments (rejected)",
+    "instructions": "Name the behaviour the test title claims \u2014 a refusal, a match, single-use, atomicity, a write landing, a key agreeing. In `implementation`, find which collaborator decides it. Smell if that collaborator is a scripted mock in `test_code`: the asserted outcome is what the mock was told, its canned read cannot reflect the write, it hands back the very value the real code is meant to check against, or the only evidence is that it was called with the right arguments. No when just neighbours are faked \u2014 signer, mailer, clock, metrics, downstream HTTP \u2014 and the asserted values, including arguments passed to them, come from real code, or real code's own branch kept a fake uncalled.",
+    "train_f1": 0.8,
+    "holdout_f1": 0.67,
+    "fitted_t": 0.7,
+    "kept": false
+  },
+  {
+    "check": "happy-path-only-of-risky-boundary",
+    "variant": "+allowed-side-of-same-rule",
+    "instructions": "Procedure. 1. List every refusal or failure branch in `implementation`: authorization and tenant guards, duplicate or already-used rejections, version/concurrency conflicts, quota and limit caps, retry exhaustion, rollback on partial failure, over-amount money guards. 2. Name the riskiest one. 3. Search `test_code` and every `sibling_tests` name for that exact condition. Neither a sibling on a different branch \u2014 unknown id, expiry, bad input, empty result \u2014 nor one on the allowed side of the same rule \u2014 a different customer, a non-overlapping slot, a matching version \u2014 counts as covering it. Answer yes when nothing drives the riskiest branch. Answer no when this block itself drives that refusal (even alongside the allowed path), when a sibling drives it, or when `implementation` has no refusal branch.",
+    "train_f1": 0.92,
+    "holdout_f1": 1.0,
+    "fitted_t": 0.35,
+    "kept": false
+  },
+  {
+    "check": "swallowed-error-as-success",
+    "variant": "v3-names-the-failure-negatives",
+    "instructions": "Is this test's green independent of the specific failure it claims to cover? Decide in order: (1) `test_code` exercises no refusal, invalid input, failure or fallback path \u2192 no. (2) Its expects sit inside a test-side try/catch or `.catch()` and nothing \u2014 `expect.assertions`, `rejects.`, a throw at the end of the try \u2014 forces them to run \u2192 yes, however specific the matcher inside and however surely the rigged mock throws. (3) The assertion on the caught error or rejection accepts any error: bare `toThrow()`/`rejects.toThrow()`, `toThrow(Error)`, `toBeInstanceOf(Error)`, `toBeDefined()`, or a lone `not.toThrow()` \u2192 yes. (4) `implementation` funnels every exception on that path into the asserted value \u2014 a constant fallback or default, a cached value, null, [], `ok:false`, status 200, an error count, a logged line, a counter \u2014 and nothing in the assertion is derived from the specific failure \u2192 yes, even when that value is matched exactly. Answer no whenever the error is an input rather than something the test caught, a further assertion or sibling requires it to propagate, or the asserted result names the failure \u2014 its status, code, reason, the step that failed, the attempt count, the echoed input. Else no.",
+    "train_f1": 0.96,
+    "holdout_f1": 0.86,
+    "fitted_t": 0.7,
+    "kept": true
+  },
+  {
+    "check": "swallowed-error-as-success",
+    "variant": "v4-first-match-wins",
+    "instructions": "Is this test's green independent of the specific failure it claims to cover? Take the first step that matches; later steps cannot overturn it. (1) `test_code` exercises no refusal, invalid input, failure or fallback path \u2192 no. (2) Its expects sit inside a test-side try/catch or `.catch()` and nothing \u2014 `expect.assertions`, `rejects.`, a throw at the end of the try \u2014 forces them to run \u2192 yes, however specific the matcher inside and however surely the rigged mock throws. (3) The assertion on the caught error or rejection accepts any error: bare `toThrow()`/`rejects.toThrow()`, `toThrow(Error)`, `toBeInstanceOf(Error)`, `toBeDefined()`, or a lone `not.toThrow()` \u2192 yes. (4) `implementation` funnels every exception on that path into the asserted value \u2014 a constant fallback or default, a cached value, null, [], `ok:false`, status 200, an error count, a logged line, a counter \u2014 and nothing in the assertion is derived from the specific failure \u2192 yes, even when that value is matched exactly. Step 4 only: answer no when the error is an input rather than something the test caught, a further assertion or sibling requires it to propagate, or the asserted result names the failure \u2014 its status, code, reason, the step that failed, the attempt count, the echoed input. Else no.",
+    "train_f1": 0.96,
+    "holdout_f1": 0.75,
+    "fitted_t": 0.7,
+    "kept": false
+  },
+  {
+    "check": "tests-internals",
+    "variant": "baseline",
+    "instructions": "Does `test_code` test framework or component internals and implementation details \u2014 React state, private methods, CSS class names, source text, statement order \u2014 instead of user-visible or externally observable behavior?",
+    "train_f1": 0.56,
+    "holdout_f1": 1.0,
+    "fitted_t": 0.8,
+    "kept": false
+  },
+  {
+    "check": "tests-internals",
+    "variant": "contract-surface-vs-peeking",
+    "instructions": "Name the contract surface in `implementation`: return values, thrown errors, rendered text/roles/labels/aria/disabled/href, state read back out of storage, payloads handed to callbacks or collaborators. Answer no when `test_code` asserts on that surface \u00e2\u0080\u0094 a class string that is the function's own return value counts, as does a storage round-trip. Answer yes when the asserted value is reachable only by peeking: private members or React state via an any-cast, instance or ref; class names, tag names or child counts of rendered DOM; render or stubbed-child call counts; source text; internal step or action-type order; or the shape or size of a table or bookkeeping accessor whose consuming function in `implementation` is never called.",
+    "train_f1": 1.0,
+    "holdout_f1": 1.0,
+    "fitted_t": 0.6,
+    "kept": true
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["swallowed-error-as-success", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the exact error class and message are required and a missing throw fails the assertion, while the third line pins the accepted case"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["impossible-fixture"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "markVerified is the only thing that sets verified, and it turns payouts on at the same time, so a verified account with payouts still disabled is the state that produces the zero under test and nothing else can produce it"
+}

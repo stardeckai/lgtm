@@ -8,16 +8,19 @@
     "lgtm": "dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "skills"
   ],
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "prepack": "pnpm build",
+    "gen:skill": "tsx scripts/gen-skill.ts",
+    "prepack": "pnpm gen:skill && pnpm build",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "eval": "tsx evals/run.ts"
   },
   "dependencies": {
     "@babel/parser": "^7.25.0",

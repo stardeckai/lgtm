@@ -1,0 +1,6 @@
+{
+  "fire": ["swallowed-error-as-success"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "a crash anywhere in the handler produces the same null and the same logged error, so the test cannot tell a rejected signature from a broken function"
+}

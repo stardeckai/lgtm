@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["mocks-seam-under-test", "over-mocked"],
+  "class": "contract_integration",
+  "why": "the queue whose visibility rules are under test is the real class; only the downstream consumer is faked, and the ordering assertion reads its recorded bodies"
+}

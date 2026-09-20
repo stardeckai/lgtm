@@ -1,0 +1,6 @@
+{
+  "fire": ["mocks-seam-under-test"],
+  "not_fire": ["reimplements-logic"],
+  "class": "mocked_seam_unit",
+  "why": "the authorization function whose refusal the test names is itself mocked to reject, so the real role table is never consulted"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["mock-mirrors-implementation"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "mocked_seam_unit",
+  "why": "the partial module mock replaces shippingCents with a copy of its own body, so the per-unit shipping rule named in the test is only ever executed from the mock factory"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["would-pass-if-broken", "trivial-primitive"],
+  "class": "pure_logic",
+  "why": "an odd total is used so the stray cent has to land on the last payee, and rounding every share independently fails the second assertion"
+}

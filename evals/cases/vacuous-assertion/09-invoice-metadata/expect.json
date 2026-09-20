@@ -1,0 +1,6 @@
+{
+  "fire": ["vacuous-assertion", "assertion-weaker-than-name"],
+  "not_fire": ["reimplements-logic", "broad-snapshot"],
+  "class": "pure_logic",
+  "why": "any object with at least one key passes, so the currency formatting the name promises is never inspected"
+}

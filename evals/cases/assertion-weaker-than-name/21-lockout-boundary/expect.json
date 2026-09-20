@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["assertion-weaker-than-name", "would-pass-if-broken"],
+  "class": "contract_integration",
+  "why": "the fourth failure is asserted open, the fifth locks at an exact instant, and both edges of the 15 minute window are checked"
+}

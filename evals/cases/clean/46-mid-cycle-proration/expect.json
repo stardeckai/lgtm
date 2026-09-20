@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "trivial-primitive"],
+  "class": "contract_integration",
+  "why": "the expected amounts are literals covering the first day, the last day and a downgrade, so rounding the charge down or the credit up would fail"
+}

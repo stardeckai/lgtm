@@ -1,0 +1,6 @@
+{
+  "fire": ["setup-dominates"],
+  "not_fire": ["reimplements-logic", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "coupons, tax rates, a subscription row and thirty-one usage records are built although the asserted description depends only on two plan names and two numbers"
+}

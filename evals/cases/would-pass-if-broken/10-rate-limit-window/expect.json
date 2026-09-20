@@ -1,0 +1,11 @@
+{
+  "fire": [
+    "would-pass-if-broken"
+  ],
+  "not_fire": [
+    "reimplements-logic",
+    "mocks-seam-under-test"
+  ],
+  "class": "pure_logic",
+  "why": "only three calls are made against a limit of five, so a limiter that never resets its window returns true for all three anyway"
+}

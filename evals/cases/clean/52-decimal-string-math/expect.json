@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "trivial-primitive"],
+  "class": "contract_integration",
+  "why": "the classic 0.1 plus 0.2 case and a seventeen digit sum are pinned as exact strings, which a float-backed implementation could not produce"
+}

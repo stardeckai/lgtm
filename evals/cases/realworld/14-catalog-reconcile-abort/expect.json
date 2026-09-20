@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["swallowed-error-as-success", "happy-path-only-of-risky-boundary"],
+  "class": "contract_integration",
+  "why": "the real store and the real reconciler run together, the refusal is asserted as a thrown ReconcileError and the rollback is proven by the entry still being live afterwards"
+}

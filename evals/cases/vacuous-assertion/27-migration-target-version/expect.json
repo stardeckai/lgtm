@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["vacuous-assertion", "would-pass-if-broken"],
+  "class": "pure_logic",
+  "why": "the step is pinned to its own target version and dependency set rather than compared against whatever the newest step happens to be"
+}

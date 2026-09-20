@@ -1,0 +1,6 @@
+{
+  "fire": ["would-pass-if-broken"],
+  "not_fire": ["reimplements-logic", "over-mocked"],
+  "class": "pure_logic",
+  "why": "both objects are flat, so replacing the recursive merge with a shallow spread produces exactly the asserted result"
+}

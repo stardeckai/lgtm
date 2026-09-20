@@ -1,0 +1,6 @@
+{
+  "fire": ["vacuous-assertion"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "swapping every invoice label for a shipment one satisfies known, not-the-raw-key, no-underscore and non-empty, so the loop never pins which label belongs to which status"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["impossible-fixture", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the malformed stored values are the input the reader exists to survive, and the assertions pin the exact defaults it must return for each"
+}

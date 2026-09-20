@@ -1,0 +1,6 @@
+{
+  "fire": ["reimplements-logic"],
+  "not_fire": ["mocks-seam-under-test"],
+  "class": "pure_logic",
+  "why": "the expected row is built by repeating the quoting predicate and the doubled-quote replacement instead of stating the CSV text the format requires"
+}

@@ -1,11 +1,21 @@
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import readline from "node:readline/promises";
-import { CHECKS } from "./checks.js";
+import { fileURLToPath } from "node:url";
+import { skillMarkdown } from "./skill.js";
+
+export type SkillMode = "global" | "project" | "claude" | "none";
+export const SKILL_MODES: SkillMode[] = ["global", "project", "claude", "none"];
+
+/** Package root — `dist/..` when installed, the repo root under vitest. Holds `skills/`. */
+export const pkgRoot = fileURLToPath(new URL("..", import.meta.url));
 
 export const configPath = (home: string = os.homedir()) => path.join(home, ".config", "lgtm", "config.json");
 export const skillPath = (home: string = os.homedir()) => path.join(home, ".claude", "skills", "lgtm", "SKILL.md");
+export const projectSkillPath = (cwd: string = process.cwd()) =>
+  path.join(cwd, ".claude", "skills", "lgtm", "SKILL.md");
 
 /** Key from the environment, else the global config file. */
 export function resolveApiKey(home: string = os.homedir()): string | undefined {
@@ -15,51 +25,6 @@ export function resolveApiKey(home: string = os.homedir()): string | undefined {
   } catch {
     return undefined;
   }
-}
-
-function skillMarkdown(): string {
-  const checkList = [
-    "| | check | |",
-    "|---|---|---|",
-    ...CHECKS.map((c) => `| 😐${c.emoji} | \`${c.id}\` | ${c.blurb} |`),
-  ].join("\n");
-  return `---
-name: lgtm
-description: Run the lgtm test linter on the current branch or a path and act on its findings. Use when the user runs /lgtm, asks whether tests are any good, or asks which tests to delete or strengthen.
----
-
-# lgtm
-
-Run \`lgtm --diff <default branch> --format json\` (for example \`lgtm --diff origin/main --format json\`),
-or \`lgtm <path> --format json\` when the user named a path.
-
-\`lgtm\` is installed globally. If the command is not found, do not work around it — tell the user to run
-\`npm i -g @stardeckai/lgtm && lgtm init\` and stop there.
-
-For each finding: read the test, then decide **keep**, **delete** or **replace**.
-
-- Keep it only if you can complete "this test prevents us from shipping [specific incorrect behavior]".
-- Delete it when the behavior it claims to protect is already covered, or when nothing plausible would break it.
-- Replace it when the behavior matters but the test does not check it. A replacement counts only once you
-  have shown it fail on the plausible bug — mutate or revert the behavior, watch it go red for the right
-  reason, then restore.
-- Never mock the seam under test. If both sides of a boundary are faked to agree, the test proves nothing.
-- Prefer one wider test with real collaborators that retires several unit tests over patching each unit
-  test in place. A good audit improves the suite while reducing the test count.
-
-Report as a table: file:line, check id, verdict, one-line reason.
-
-## Reading the output
-
-- \`😐🫸\` (p >= 0.9) — nope.
-- \`😐🤌\` (threshold <= p < 0.9) — what exactly are we doing here.
-- \`😐🫴\` (0.5 <= p < threshold) — explain this; only shown with \`--verbose\`.
-- \`😐👍\` — the summary line when there is nothing to say.
-
-## Checks
-
-${checkList}
-`;
 }
 
 /** Prompt for a key unless one was given. */
@@ -79,7 +44,58 @@ export function saveKey(key: string, home = os.homedir()): string {
   return config;
 }
 
-export async function init(opts: { key?: string; home?: string } = {}): Promise<string[]> {
+export async function askSkillMode(): Promise<SkillMode> {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const yes = (await rl.question("Install the /lgtm skill for your coding agents? [Y/n] ")).trim().toLowerCase();
+    if (yes.startsWith("n")) return "none";
+    const where = (await rl.question("Where? (g)lobal for every project / (p)roject only [g] ")).trim().toLowerCase();
+    return where.startsWith("p") ? "project" : "global";
+  } finally {
+    rl.close();
+  }
+}
+
+function writeSkillFile(file: string): string {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, skillMarkdown());
+  return file;
+}
+
+export type Spawn = (
+  cmd: string,
+  args: string[],
+  opts: { stdio: "inherit"; cwd: string },
+) => { status: number | null; error?: Error };
+
+/**
+ * Hand the bundled skill to the `skills` CLI (which asks the user which agents to install to).
+ * Falls back to writing the Claude Code skill directly when that CLI can't run.
+ * Returns a path worth printing, or undefined when nothing else needs saying.
+ */
+export function installSkill(
+  mode: SkillMode,
+  opts: { home?: string; cwd?: string; spawn?: Spawn } = {},
+): string | undefined {
+  if (mode === "none") return undefined;
+  const home = opts.home ?? os.homedir();
+  const cwd = opts.cwd ?? process.cwd();
+  if (mode === "claude") return writeSkillFile(skillPath(home));
+
+  const args = ["-y", "skills", "add", path.join(pkgRoot, "skills")];
+  if (mode === "global") args.push("-g");
+  const res = (opts.spawn ?? spawnSync)("npx", args, { stdio: "inherit", cwd });
+  if (!res.error && res.status === 0) return undefined;
+
+  const file = writeSkillFile(mode === "global" ? skillPath(home) : projectSkillPath(cwd));
+  console.log(`😐🫴  skills CLI unavailable, installed for Claude Code only at ${file}`);
+  return undefined;
+}
+
+/** Step 1: save the key. Step 2: install the skill. Returns the files worth printing. */
+export async function init(
+  opts: { key?: string; home?: string; cwd?: string; skill?: SkillMode; yes?: boolean; spawn?: Spawn } = {},
+): Promise<string[]> {
   const home = opts.home ?? os.homedir();
   const written: string[] = [];
 
@@ -89,13 +105,11 @@ export async function init(opts: { key?: string; home?: string } = {}): Promise<
   } else if (!key) {
     key = await askKey();
   }
-
   if (key) written.push(saveKey(key, home));
 
-  const skill = skillPath(home);
-  fs.mkdirSync(path.dirname(skill), { recursive: true });
-  fs.writeFileSync(skill, skillMarkdown());
-  written.push(skill);
+  const mode = opts.skill ?? (opts.yes ? "global" : await askSkillMode());
+  const skill = installSkill(mode, { home, cwd: opts.cwd, spawn: opts.spawn });
+  if (skill) written.push(skill);
 
   return written;
 }

@@ -1,0 +1,6 @@
+{
+  "fire": ["setup-dominates"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the organization, subscription, member list and audit trail are never read by the one assertion, which needs only a flag and a user id"
+}

@@ -1,0 +1,6 @@
+{
+  "fire": ["changed-in-lockstep"],
+  "not_fire": ["reimplements-logic"],
+  "class": "pure_logic",
+  "why": "the page size constant went from 20 to 50 and the expected length and last index were rewritten to 50 and 49 to match it"
+}

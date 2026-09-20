@@ -1,0 +1,6 @@
+{
+  "fire": ["happy-path-only-of-risky-boundary"],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the siblings cover expiry and an unknown token, but no block resolves a token while a viewer from another organisation is asking, which is the tenant-isolation refusal in the same function"
+}

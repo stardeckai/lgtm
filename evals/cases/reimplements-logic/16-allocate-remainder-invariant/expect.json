@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["reimplements-logic", "vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "the expectations are the allocation invariants stated as fixed numbers — total 1000, spread of exactly one cent — and none of the largest-remainder logic is repeated"
+}

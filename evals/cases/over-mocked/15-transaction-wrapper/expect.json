@@ -1,0 +1,6 @@
+{
+  "fire": ["over-mocked", "mocks-seam-under-test"],
+  "class": "mocked_seam_unit",
+  "not_fire": ["reimplements-logic"],
+  "why": "the transaction, every query builder and the schema are fakes, so the seat move and audit row are never really written or read"
+}

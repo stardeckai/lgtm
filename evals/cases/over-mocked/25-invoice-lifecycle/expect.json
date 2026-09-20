@@ -1,0 +1,6 @@
+{
+  "fire": [],
+  "not_fire": ["over-mocked", "tests-internals"],
+  "class": "contract_integration",
+  "why": "only the payment provider is faked; the real invoice object accumulates payments and enforces its own refusal"
+}
