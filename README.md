@@ -2,11 +2,21 @@
 
 A Jev-powered linter for tests that pass but prove nothing.
 
-`lgtm` sends each test block in your repo to [TypeSafe](https://docs.typesafe.ai)'s `systemOne` with a
-fan-out of yes/no (Noul) questions — "would this still pass if the behavior were broken?", "is the mock
-faking the exact seam under test?" — and reports the ones that come back confident as `file:line`.
+`lgtm` sends each test block in your repo to [TypeSafe](https://docs.typesafe.ai)'s `systemOne` and asks a
+fan-out of yes/no (Noul) questions about it: would this still pass if the behavior were broken? Is the mock
+faking the exact seam under test? The ones that come back confident get reported as `file:line`.
 
 It is advisory. By default it prints findings and exits 0.
+
+Bring your own [TypeSafe](https://typesafe.ai) API key for Jev. Every run estimates its cost and
+runtime first and asks before spending anything.
+
+<table>
+<tr>
+<td width="50%"><img src="public/plan.png" alt="lgtm plan and confirm prompt"><br><sub>Every run plans first: files, estimated cost and runtime.</sub></td>
+<td width="50%"><img src="public/findings.png" alt="lgtm findings output"><br><sub>Findings as <code>file:line</code>, with the check and its confidence.</sub></td>
+</tr>
+</table>
 
 ## Install
 
@@ -109,9 +119,9 @@ wiring breaks, which is how most things actually break.
 
 It dislikes tests of one-line helpers (any real test of the feature covers them for free), tests that
 mock everything except the function name, and one-off assertions that would survive the feature being
-deleted. So the summary prints what your suite is made of — `🎯 contract-integration · 🧱 mocked-seam ·
-🔬 pure-logic` — and `--classes` lists every test with its class, which is the number to watch during an
-audit. Retiring three unit tests for one wider test that really fails is a win, not a coverage loss.
+deleted. So the summary prints what your suite is made of: `🎯 contract-integration · 🧱 mocked-seam ·
+🔬 pure-logic`. `--classes` lists every test with its class, which is the number to watch during an audit.
+Retiring three unit tests for one wider test that really fails is a win, not a coverage loss.
 
 ## Checks
 
@@ -216,15 +226,16 @@ The key lives in `~/.config/lgtm/config.json`. `TYPESAFE_API_KEY` in the environ
 
 ```sh
 lgtm key <new-key>           # swap the saved key; `lgtm key` alone prompts
+lgtm clear-cache             # drop this project's cached answers (node_modules/.cache/lgtm)
 lgtm skill                   # (re)install the /lgtm skill, e.g. to add another agent
 lgtm init                    # both steps again
 ```
 
 ## Thresholds
 
-Every check reports at 0.8 by default. That is a starting point, not a law: run once with
-`--threshold 0.5 --format json` on a suite you know well, look at where the real problems land, and
-set `--threshold` per repo. A check that is consistently wrong for your codebase belongs in `--skip`.
+Every check reports at 0.8 by default. Tune it per repo: run once with `--threshold 0.5 --format json`
+on a suite you know well, see where the real problems land, then pick your number. A check that is
+consistently wrong for your codebase belongs in `--skip`.
 
 ## Development
 
