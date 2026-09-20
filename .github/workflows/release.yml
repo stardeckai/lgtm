@@ -70,12 +70,26 @@ jobs:
       # then costs nothing, and a failed publish after it is retried by the run
       # this very push triggers. Publishing first is the one unrecoverable order:
       # npm versions are immutable, so the guard would skip the retry forever.
+      #
+      # Pushed with an installation token from the org's release GitHub App,
+      # which is a bypass actor on the "main" ruleset: GITHUB_TOKEN can never
+      # bypass "changes must be made through a pull request", and deploy keys
+      # are disabled by org policy. Minted right before the push so install
+      # scripts, tests and publish hooks never see it.
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1  # v3.2.0
+        if: steps.check.outputs.publish == 'true'
+        id: app
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
       - name: push the version commit and tag
         if: steps.check.outputs.publish == 'true'
+        env:
+          TOKEN: ${{ steps.app.outputs.token }}
         run: |
           version="${{ steps.check.outputs.version }}"
           git tag -a "v$version" -m "v$version" 2>/dev/null || true  # dispatch's npm version already made one
-          git push origin "HEAD:main" "v$version"
+          git push "https://x-access-token:$TOKEN@github.com/${{ github.repository }}.git" "HEAD:main" "v$version"
 
       # prepack runs gen:skill && build, so no separate build step.
       - name: publish
