@@ -1,20 +1,20 @@
 {
   "probabilities": {
-    "would-pass-if-broken": 0.45,
-    "vacuous-assertion": 0.59,
+    "would-pass-if-broken": 0.44,
+    "vacuous-assertion": 0.62,
     "assertion-weaker-than-name": 0.93,
     "reimplements-logic": 0.08,
     "mocks-seam-under-test": 0.9,
-    "mock-mirrors-implementation": 0.16,
-    "tests-calls-not-outcomes": 0.87,
+    "mock-mirrors-implementation": 0.17,
+    "tests-calls-not-outcomes": 0.86,
     "tests-internals": 0.12,
     "setup-dominates": 0.1,
     "broad-snapshot": 0.03,
-    "swallowed-error-as-success": 0.31,
+    "swallowed-error-as-success": 0.35,
     "impossible-fixture": 0.11,
-    "happy-path-only-of-risky-boundary": 0.12,
-    "trivial-primitive": 0.14,
-    "over-mocked": 0.29
+    "happy-path-only-of-risky-boundary": 0.11,
+    "trivial-primitive": 0.13,
+    "over-mocked": 0.25
   },
   "model": "jev-1.13.0",
   "class": "mocked_seam_unit"

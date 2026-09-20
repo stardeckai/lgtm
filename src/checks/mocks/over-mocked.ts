@@ -9,5 +9,5 @@ export default {
     true: "The collaborators that make the promised decisions are all fakes; only glue between them runs for real.",
     false: "A real collaborator or the entry point decides an asserted value, or the swapped module is a real test store.",
   },
-  threshold: 0.55,
+  threshold: 0.75,
 } satisfies Check;

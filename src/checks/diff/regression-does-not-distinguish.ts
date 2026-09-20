@@ -9,7 +9,7 @@ export default {
     true: "Every assertion in this test also holds against the pre-change code in `diff`.",
     false: "An assertion fails against the pre-change code, or `diff` only adds code that did not exist before.",
   },
-  threshold: 0.35,
+  threshold: 0.90,
   diffOnly: true,
   // Off by default (Sept 2026): the corpus has no real case for the diff checks, so the threshold is fitted on
   // synthetic ones only. On a 584-test customer branch this family was 102 of 187 flagged findings and 42 of 54

@@ -1,18 +1,18 @@
 {
   "probabilities": {
-    "would-pass-if-broken": 0.31,
+    "would-pass-if-broken": 0.34,
     "vacuous-assertion": 0.1,
-    "assertion-weaker-than-name": 0.28,
+    "assertion-weaker-than-name": 0.23,
     "reimplements-logic": 0.05,
     "mocks-seam-under-test": 0.19,
-    "mock-mirrors-implementation": 0.11,
+    "mock-mirrors-implementation": 0.09,
     "tests-calls-not-outcomes": 0.09,
-    "tests-internals": 0.06,
+    "tests-internals": 0.05,
     "setup-dominates": 0.09,
     "broad-snapshot": 0.03,
     "swallowed-error-as-success": 0.17,
     "impossible-fixture": 0.1,
-    "happy-path-only-of-risky-boundary": 0.82,
+    "happy-path-only-of-risky-boundary": 0.8,
     "trivial-primitive": 0.14,
     "over-mocked": 0.1
   },

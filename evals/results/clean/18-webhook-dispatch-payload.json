@@ -2,20 +2,20 @@
   "probabilities": {
     "would-pass-if-broken": 0.05,
     "vacuous-assertion": 0.09,
-    "assertion-weaker-than-name": 0.33,
-    "reimplements-logic": 0.25,
-    "mocks-seam-under-test": 0.58,
+    "assertion-weaker-than-name": 0.31,
+    "reimplements-logic": 0.22,
+    "mocks-seam-under-test": 0.57,
     "mock-mirrors-implementation": 0.09,
-    "tests-calls-not-outcomes": 0.2,
+    "tests-calls-not-outcomes": 0.18,
     "tests-internals": 0.07,
-    "setup-dominates": 0.19,
+    "setup-dominates": 0.21,
     "broad-snapshot": 0.04,
     "swallowed-error-as-success": 0.13,
     "impossible-fixture": 0.08,
-    "happy-path-only-of-risky-boundary": 0.19,
-    "trivial-primitive": 0.23,
-    "over-mocked": 0.29
+    "happy-path-only-of-risky-boundary": 0.18,
+    "trivial-primitive": 0.25,
+    "over-mocked": 0.28
   },
   "model": "jev-1.13.0",
-  "class": "mocked_seam_unit"
+  "class": "contract_integration"
 }
