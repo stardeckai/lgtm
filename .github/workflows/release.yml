@@ -32,6 +32,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # A deploy key with write access, listed as a bypass actor on the
+          # "main" ruleset: GITHUB_TOKEN can never bypass "changes must be made
+          # through a pull request", so the version-commit push needs this.
+          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
       - name: remember the pre-bump commit
         id: head
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
