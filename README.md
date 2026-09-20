@@ -17,31 +17,6 @@ would notice. Bring your own key.
 - the `lgtm` CLI: run it on a file, a directory or `--diff origin/main`, in your terminal or in CI
 - a `/lgtm` skill for your coding agents, so the agent that wrote the tests runs the audit and fixes what it finds
 
-## Why
-
-**Coding agents are prolific test writers and terrible test critics.** They mock whatever is inconvenient,
-assert that the mock was called, compute the expected value with the code under test, and hand you a suite
-where every line is covered and nothing is verified. A test that checks a trace's name. A test for the thing
-you decided not to build. Nobody reads those files. The PR says "added tests" and gets merged.
-
-**The bug that pages you lives in a seam.** One side writes, the other reads, and every unit test mocked at least
-one of them to agree. No linter catches that. It's a judgment call, and judgment used to cost a senior engineer's
-afternoon per PR.
-
-**Reads like a review, runs like a linter.** Every finding is one test, one smell, one probability, one sentence
-you can act on. `😐👏 mocks-seam-under-test` means you tested the mock. `😐👏 reimplements-logic` means the test
-and the implementation share the same bug. The summary tells you how much of your suite actually crosses a seam.
-
-**Opinionated by design.** Few wide tests with real collaborators beat a hundred mocked units. Delete with
-confidence: a good audit shrinks the suite. And when the suite is clean, it says so.
-
-<img src="public/success.png" alt="lgtm clean run: 36 tests. fine. allegedly.">
-
-**Now it costs a cent.** Jev bills $0.042 per million input tokens and answers in under a second. lgtm shows you
-the bill and the runtime before it spends, and caches every answer. Thresholds are fitted for precision: on the
-labelled corpus in [`evals/`](evals/RESULTS.md) they produce zero false positives in 544 cases. When it points at
-a test, the test is worth a look.
-
 ## Install
 
 ```sh
@@ -139,6 +114,31 @@ or `😐🫵  N tests prove nothing.` `--format github` and `--format json` stay
 | `--classes` | list every test with its class before the findings |
 | `--verbose` | also show 0.5-to-threshold findings |
 | `--list-checks` | print the checks |
+
+## Why
+
+**Coding agents are prolific test writers and terrible test critics.** They mock whatever is inconvenient,
+assert that the mock was called, compute the expected value with the code under test, and hand you a suite
+where every line is covered and nothing is verified. A test that checks a trace's name. A test for the thing
+you decided not to build. Nobody reads those files. The PR says "added tests" and gets merged.
+
+**The bug that pages you lives in a seam.** One side writes, the other reads, and every unit test mocked at least
+one of them to agree. No linter catches that. It's a judgment call, and judgment used to cost a senior engineer's
+afternoon per PR.
+
+**Reads like a review, runs like a linter.** Every finding is one test, one smell, one probability, one sentence
+you can act on. `😐👏 mocks-seam-under-test` means you tested the mock. `😐👏 reimplements-logic` means the test
+and the implementation share the same bug. The summary tells you how much of your suite actually crosses a seam.
+
+**Opinionated by design.** Few wide tests with real collaborators beat a hundred mocked units. Delete with
+confidence: a good audit shrinks the suite. And when the suite is clean, it says so.
+
+<img src="public/success.png" alt="lgtm clean run: 36 tests. fine. allegedly.">
+
+**Now it costs a cent.** Jev bills $0.042 per million input tokens and answers in under a second. lgtm shows you
+the bill and the runtime before it spends, and caches every answer. Thresholds are fitted for precision: on the
+labelled corpus in [`evals/`](evals/RESULTS.md) they produce zero false positives in 544 cases. When it points at
+a test, the test is worth a look.
 
 ## What lgtm likes
 
