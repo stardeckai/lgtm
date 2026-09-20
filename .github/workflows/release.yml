@@ -1,6 +1,11 @@
 name: release
 
+# Two ways in, one guard: publish only when package.json's version is not on the
+# registry yet. A dispatch bump pushes a version commit to main, which fires the
+# push run, which then sees the version already published and skips.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       bump:
@@ -12,6 +17,7 @@ on:
 permissions:
   contents: write
   id-token: write  # npm trusted publishing
+  pull-requests: write  # "shipped in vX" comment
 
 concurrency: release
 
@@ -20,6 +26,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: remember the pre-bump commit
+        id: head
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -30,11 +39,48 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test
+
       - name: bump version
+        if: github.event_name == 'workflow_dispatch'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           npm version ${{ inputs.bump }} -m "chore: release v%s"
+
+      - name: is this version already on npm?
+        id: check
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if npm view "@stardeckai/lgtm@$version" version >/dev/null 2>&1; then
+            publish=false
+          else
+            publish=true
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          echo "v$version — publish=$publish" >> "$GITHUB_STEP_SUMMARY"
+
       # prepack runs gen:skill && build, so no separate build step.
-      - run: npm publish
-      - run: git push --follow-tags
+      - name: publish
+        if: steps.check.outputs.publish == 'true'
+        run: npm publish
+
+      - name: push the version commit and tag
+        if: steps.check.outputs.publish == 'true'
+        run: |
+          git tag "v${{ steps.check.outputs.version }}" || true  # dispatch's npm version already made it
+          git push --follow-tags
+
+      - name: comment on the released PR
+        if: steps.check.outputs.publish == 'true'
+        continue-on-error: true  # a missing comment must not fail a shipped release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ steps.head.outputs.sha }}
+          VERSION: ${{ steps.check.outputs.version }}
+          PKG: ${{ github.repository }}
+        run: |
+          body="📦 Shipped in [\`v$VERSION\`](https://www.npmjs.com/package/@stardeckai/lgtm/v/$VERSION) — \`npm i @stardeckai/lgtm@$VERSION\`"
+          for pr in $(gh api "repos/$PKG/commits/$SHA/pulls" --jq '.[].number'); do
+            gh pr comment "$pr" --body "$body"
+          done

@@ -1,9 +1,7 @@
 name: ci
 
 on:
-  pull_request:
-  push:
-    branches: [main]
+  pull_request:  # push-to-main is covered by release.yml, which tests before it publishes
 
 concurrency:
   group: ci-${{ github.ref }}
