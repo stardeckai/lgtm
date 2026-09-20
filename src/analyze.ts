@@ -71,6 +71,8 @@ export type Finding = {
 export type AnalyzeOptions = {
   threshold?: number;
   only?: string[];
+  /** also send the checks marked `optIn` (the eval runner does; the CLI only when --only names them) */
+  optIn?: boolean;
   skip?: string[];
   concurrency?: number;
   /** called after each block finishes (answered, cached or skipped) with the running totals */
@@ -524,6 +526,7 @@ export function checksFor(state: State, opts: AnalyzeOptions, touched = true) {
   return CHECKS.filter(
     (c) =>
       (!c.diffOnly || (state.diff !== undefined && touched)) &&
+      (!c.optIn || opts.optIn || (opts.only?.includes(c.id) ?? false)) &&
       (!opts.only || opts.only.includes(c.id)) &&
       !(opts.skip ?? []).includes(c.id),
   );

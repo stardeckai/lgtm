@@ -55,8 +55,8 @@ describe("checksFor with a diff", () => {
 
   it("sends the diff-only checks to a changed block and every other check to an untouched one", () => {
     expect(diffOnly.length).toBeGreaterThan(0);
-    const ofTouched = checksFor(state, {}, true).map((c) => c.id);
-    const ofUntouched = checksFor(state, {}, false).map((c) => c.id);
+    const ofTouched = checksFor(state, { optIn: true }, true).map((c) => c.id);
+    const ofUntouched = checksFor(state, { optIn: true }, false).map((c) => c.id);
     expect(diffOnly.every((id) => ofTouched.includes(id))).toBe(true);
     expect(ofUntouched.some((id) => diffOnly.includes(id))).toBe(false);
     expect(ofUntouched).toEqual(ofTouched.filter((id) => !diffOnly.includes(id)));

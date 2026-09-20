@@ -112,18 +112,29 @@ describe("analyze", () => {
     expect(tooLow.findings).toEqual([]);
   });
 
+  it("leaves opt-in checks out unless --only names them or the runner asks for them", async () => {
+    const optIn = CHECKS.filter((c) => c.optIn).map((c) => c.id);
+    expect(optIn).toContain("changed-in-lockstep");
+    const byDefault = fakeClient(0);
+    await analyze([job({ diff: "- old\n+ new" })], {}, byDefault.client);
+    for (const id of optIn) expect(Object.keys(byDefault.seen[0]!)).not.toContain(id);
+    const named = fakeClient(0);
+    await analyze([job({ diff: "- old\n+ new" })], { only: ["changed-in-lockstep"] }, named.client);
+    expect(Object.keys(named.seen[0]!).filter((k) => k !== "test_class")).toEqual(["changed-in-lockstep"]);
+  });
+
   it("sends diff-only checks only when the state has a diff", async () => {
     const diffOnly = CHECKS.filter((c) => c.diffOnly).map((c) => c.id);
     expect(diffOnly.length).toBeGreaterThan(0);
 
     const without = fakeClient(0);
-    await analyze([job()], {}, without.client);
+    await analyze([job()], { optIn: true }, without.client);
     expect(Object.keys(without.seen[0]!).filter((k) => k !== "test_class")).toEqual(
       CHECKS.filter((c) => !c.diffOnly).map((c) => c.id),
     );
 
     const withDiff = fakeClient(0);
-    await analyze([job({ diff: "- old\n+ new" })], {}, withDiff.client);
+    await analyze([job({ diff: "- old\n+ new" })], { optIn: true }, withDiff.client);
     expect(Object.keys(withDiff.seen[0]!).filter((k) => k !== "test_class")).toEqual(CHECKS.map((c) => c.id));
   });
 

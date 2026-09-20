@@ -16,6 +16,9 @@ export type Check = {
   invert?: true;
   /** only sent when `diff` is part of the state */
   diffOnly?: true;
+  /** off unless named in --only: the corpus has no real case for it yet, so its threshold is a guess. The eval
+   *  runner still scores it (AnalyzeOptions.optIn). Say why in a comment next to it. */
+  optIn?: true;
 };
 
 export const DEFAULT_THRESHOLD = 0.8;
