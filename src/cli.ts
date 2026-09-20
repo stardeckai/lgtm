@@ -10,6 +10,7 @@ import { CATEGORY_OF, CHECKS, GESTURE, usd } from "./checks/index.js";
 import { askKey, askSkillMode, init, installSkill, resolveApiKey, saveKey, SKILL_MODES, type SkillMode } from "./init.js";
 import { c, formatClasses, formatReport, real, tests, type Format } from "./report.js";
 import { ignoreMatcher } from "./ignore.js";
+import { recordRun, usageReport, worktreeRoot } from "./usage.js";
 import readline from "node:readline/promises";
 
 const IGNORED_DIRS = new Set(["node_modules", "dist", "build", ".git"]);
@@ -18,6 +19,7 @@ const USAGE = `lgtm <files|dirs...>   (e.g. lgtm .)
 
   init                 save your TypeSafe API key, then install the /lgtm and /actually-test skills
   key [value]          swap the saved API key (prompts when no value is given)
+  usage                total cost so far: all time, last day, last week, this worktree
   clear-cache          delete cached answers for this project (node_modules/.cache/lgtm)
   skill                install the /lgtm and /actually-test skills again (to add more agents)
   --key <value>        (init) use this key instead of prompting
@@ -152,6 +154,11 @@ async function main(): Promise<number> {
   if (positionals[0] === "skill") {
     for (const file of installSkill(skill ?? (values.yes ? "global" : await askSkillMode())))
       console.log(`wrote ${file}`);
+    return 0;
+  }
+
+  if (positionals[0] === "usage") {
+    console.log(usageReport(Date.now(), worktreeRoot()));
     return 0;
   }
 
@@ -305,6 +312,8 @@ async function main(): Promise<number> {
       durationMs,
     }),
   );
+
+  if (result.inputTokens > 0) recordRun({ at: new Date().toISOString(), tokens: result.inputTokens, worktree: worktreeRoot() });
 
   if (values.fail && result.findings.some(real)) return 1;
   if (values["fail-on-error"] && result.skipped > 0) return 1;
