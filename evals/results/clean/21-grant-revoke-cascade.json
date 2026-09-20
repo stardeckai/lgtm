@@ -1,14 +1,14 @@
 {
   "probabilities": {
-    "would-pass-if-broken": 0.21,
+    "would-pass-if-broken": 0.17,
     "vacuous-assertion": 0.04,
-    "assertion-weaker-than-name": 0.18,
-    "reimplements-logic": 0.06,
+    "assertion-weaker-than-name": 0.19,
+    "reimplements-logic": 0.31,
     "mocks-seam-under-test": 0.09,
     "mock-mirrors-implementation": 0.06,
     "tests-calls-not-outcomes": 0.02,
     "tests-internals": 0.1,
-    "setup-dominates": 0.29,
+    "setup-dominates": 0.3,
     "broad-snapshot": 0.04,
     "swallowed-error-as-success": 0.25,
     "impossible-fixture": 0.05,

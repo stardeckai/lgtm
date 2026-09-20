@@ -1,6 +1,10 @@
 {
-  "fire": ["setup-dominates"],
-  "not_fire": ["vacuous-assertion", "trivial-primitive"],
+  "fire": [
+    "setup-dominates"
+  ],
+  "not_fire": [
+    "vacuous-assertion"
+  ],
   "class": "pure_logic",
   "why": "the catalogue, promotions, loyalty, shipment and payment fixtures feed nothing the assertion reads, which is the country code and the order id"
 }

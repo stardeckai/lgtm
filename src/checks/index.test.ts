@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CHECKS } from "./index.js";
+import { CATEGORY_OF, CHECKS, EXPLANATIONS } from "./index.js";
 
 const DIR = fileURLToPath(new URL(".", import.meta.url));
 // One literal per category: Vite can only analyse a dynamic import with a single variable segment.
@@ -51,5 +51,17 @@ describe("CHECKS", () => {
       expect(mod.default.id, `${cat}/${base}.ts`).toBe(base);
     }
     expect(files.map((f) => f.base).sort()).toEqual([...ORDER].sort());
+  });
+
+  it("explains every check once, and nothing that is not a check", () => {
+    expect(Object.keys(EXPLANATIONS).sort()).toEqual(CHECKS.map((c) => c.id).sort());
+    for (const text of Object.values(EXPLANATIONS)) expect(text.length).toBeGreaterThan(80);
+  });
+
+  it("maps every check to the category directory its file lives in", () => {
+    expect(Object.keys(CATEGORY_OF).sort()).toEqual(CHECKS.map((c) => c.id).sort());
+    for (const [id, category] of Object.entries(CATEGORY_OF)) {
+      expect(fs.existsSync(path.join(DIR, category, `${id}.ts`)), `${id} in ${category}/`).toBe(true);
+    }
   });
 });

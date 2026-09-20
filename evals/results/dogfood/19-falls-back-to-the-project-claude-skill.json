@@ -1,0 +1,7 @@
+{
+  "probabilities": {
+    "reimplements-logic": 0.81
+  },
+  "model": "jev-1.13.0",
+  "class": "contract_integration"
+}

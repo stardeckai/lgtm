@@ -1,0 +1,9 @@
+{
+  "test": "src/analyze.test.ts::answers a repeated state from the cache instead of calling the API again",
+  "fire": [],
+  "not_fire": [
+    "would-pass-if-broken"
+  ],
+  "class": "mocked_seam_unit",
+  "why": "the assertions pin exact values the named behaviour produces; a plausible break changes them"
+}

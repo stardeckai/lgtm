@@ -6,9 +6,10 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import { AuthenticationError, TypeSafeClient } from "@typesafe-ai/sdk";
 import { analyze, buildStates, checksFor, isCached, type AnalyzeOptions, type Job } from "./analyze.js";
-import { usd, CHECKS } from "./checks/index.js";
+import { CATEGORY_OF, CHECKS, GESTURE, usd } from "./checks/index.js";
 import { askKey, askSkillMode, init, installSkill, resolveApiKey, saveKey, SKILL_MODES, type SkillMode } from "./init.js";
-import { c, formatClasses, formatReport, real, type Format } from "./report.js";
+import { c, formatClasses, formatReport, real, tests, type Format } from "./report.js";
+import { ignoreMatcher } from "./ignore.js";
 import readline from "node:readline/promises";
 
 const TEST_FILE = /\.(test|spec)\.(ts|tsx|js|jsx|mts|cts)$/;
@@ -30,14 +31,15 @@ const USAGE = `lgtm [files|dirs...]
   --format <fmt>       text | github | json (default text)
   --concurrency <n>    parallel requests (default 4)
   --no-impl            don't send implementation source
-  --lean               smaller states: 8k of implementation, no test file, no repo guidelines
+  --lean               smaller states (8k of implementation, no test file or guidelines); ~2.5x cheaper, many more false positives
   --no-cache           ignore the answer cache
   --fail               exit 1 if there are findings
   --fail-on-error      exit 1 if any test block was skipped by an API error
+  --ignore <pattern>   skip matching paths (repeatable; also read from .lgtmignore, one gitignore-style pattern per line)
   --dry-run            list the blocks and state sizes that would be sent, call nothing
   --json               (dry-run) print the full states as JSON instead
   --classes            list every test with its class (🎯 integration, 🧱 mocked seam, 🔬 pure logic)
-  --verbose            also show 0.5-to-threshold findings (😐🫴 "explain this")
+  --verbose            also show 0.5-to-threshold findings (marked "suspicious")
   --list-checks        print the checks and exit
 `;
 
@@ -51,21 +53,21 @@ function walkDir(dir: string, out: string[]): void {
   }
 }
 
-function discover(targets: string[], diffBase?: string): string[] {
+function discover(targets: string[], diffBase?: string, ignore: (file: string) => boolean = () => false): string[] {
   if (diffBase) {
     const root = execFileSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8" }).trim();
     const changed = execFileSync("git", ["diff", "--name-only", diffBase], { encoding: "utf8" })
       .split("\n")
       .filter((l) => TEST_FILE.test(l))
       .map((l) => path.relative(process.cwd(), path.join(root, l)));
-    return changed.filter((f) => fs.existsSync(f));
+    return changed.filter((f) => fs.existsSync(f) && !ignore(f));
   }
   const files: string[] = [];
   for (const target of targets.length > 0 ? targets : ["."]) {
     if (fs.statSync(target).isDirectory()) walkDir(target, files);
     else files.push(target);
   }
-  return files.map((f) => path.relative(process.cwd(), path.resolve(f)));
+  return files.map((f) => path.relative(process.cwd(), path.resolve(f))).filter((f) => !ignore(f));
 }
 
 type PlanFlags = { lean?: boolean; "no-impl"?: boolean; diff?: string };
@@ -90,20 +92,10 @@ function printPlan(jobs: Job[], files: string[], values: PlanFlags, opts: Analyz
   if (byFile.length > 8) listed.push(`  … and ${byFile.length - 8} more`);
   const runtime = seconds < 60 ? `${seconds.toFixed(0)}s` : `${(seconds / 60).toFixed(1)} min`;
   const cachedNote = cached > 0 ? c("dim", ` · ${cached} already cached, ${fresh.length} to send`) : "";
-  log(`😐 will run on ${c("bold", `${jobs.length} tests`)} in ${c("bold", `${byFile.length} file(s)`)}, ${checksFor(jobs[0]!.state, opts).length} checks each${cachedNote}`);
+  log(`will run on ${c("bold", tests(jobs.length))} in ${c("bold", `${byFile.length} ${byFile.length === 1 ? "file" : "files"}`)}, ${checksFor(jobs[0]!.state, opts).length} checks each${cachedNote}`);
   log(c("cyan", listed.join("\n")));
   log(`\nestimated cost:    ${c("yellow", `~${tokens} input tokens`)} ≈ ${c(["green", "bold"], usd(tokens))}`);
   log(`estimated runtime: ${c("yellow", `~${runtime}`)} ${c("dim", `at concurrency ${opts.concurrency ?? 4}`)}`);
-  if (!values.lean && fresh.length > 0) {
-    const leanJobs = buildStates(files, { impl: !values["no-impl"], diffBase: values.diff, lean: true }).filter((j) => !isCached(j, opts));
-    const leanTokens = tokensOf(leanJobs);
-    const leanSeconds = estimate(leanJobs, leanTokens);
-    const leanRuntime = leanSeconds < 60 ? `${leanSeconds.toFixed(0)}s` : `${(leanSeconds / 60).toFixed(1)} min`;
-    log(
-      `\n😐🫴 ${c("bold", "--lean")} would send less context: ${c(["green", "bold"], usd(leanTokens))} and ${c("yellow", `~${leanRuntime}`)} ` +
-        c("dim", `(${Math.round((1 - leanTokens / tokens) * 100)}% fewer tokens; weaker mocks-seam and would-pass-if-broken answers)`),
-    );
-  }
   log(c("dim", "(--json prints the states that would be sent)"));
 }
 
@@ -126,6 +118,7 @@ async function main(): Promise<number> {
       fail: { type: "boolean" },
       "fail-on-error": { type: "boolean" },
       "dry-run": { type: "boolean" },
+      ignore: { type: "string", multiple: true },
       json: { type: "boolean" },
       "list-checks": { type: "boolean" },
       verbose: { type: "boolean" },
@@ -161,24 +154,24 @@ async function main(): Promise<number> {
     const dir = cacheDir();
     const count = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(".json")).length : 0;
     fs.rmSync(dir, { recursive: true, force: true });
-    console.log(`😐🗑️  cleared ${count} cached answer(s) from ${path.relative(process.cwd(), dir) || dir}`);
+    console.log(`cleared ${count} cached answer(s) from ${path.relative(process.cwd(), dir) || dir}`);
     return 0;
   }
 
   if (positionals[0] === "key") {
     const key = positionals[1] ?? values.key ?? (await askKey());
     if (!key) {
-      console.error("😐✋  No key given. Run: lgtm key <value>");
+      console.error("No key given. Run: lgtm key <value>");
       return 2;
     }
     console.log(`wrote ${saveKey(key)}`);
-    console.log("😐👍  Key swapped.");
+    console.log("Key swapped.");
     return 0;
   }
 
   if (values["list-checks"]) {
     for (const check of CHECKS) {
-      console.log(`😐${check.emoji} ${check.id} — ${check.blurb}${check.diffOnly ? "  [--diff only]" : ""}`);
+      console.log(`${GESTURE[CATEGORY_OF[check.id] ?? "scope"]} ${check.id} — ${check.blurb}${check.diffOnly ? "  [--diff only]" : ""}`);
     }
     return 0;
   }
@@ -201,7 +194,7 @@ async function main(): Promise<number> {
     return 2;
   }
 
-  const files = discover(positionals, values.diff);
+  const files = discover(positionals, values.diff, ignoreMatcher(values.ignore ?? []));
   const jobs = buildStates(files, { impl: !values["no-impl"], diffBase: values.diff, lean: values.lean });
   if (jobs.length === 0) {
     console.error(`no test blocks found in ${files.length} file(s)`);
@@ -245,7 +238,7 @@ async function main(): Promise<number> {
 
   const apiKey = resolveApiKey();
   if (!apiKey) {
-    console.error("😐✋  No API key. Run: lgtm init");
+    console.error("No API key. Run: lgtm init");
     return 2;
   }
 
@@ -260,7 +253,7 @@ async function main(): Promise<number> {
       ? (done: number, total: number, tokens: number) => {
           const secs = ((Date.now() - startedAt) / 1000).toFixed(0);
           const bar = "█".repeat(Math.round((done / total) * 20)).padEnd(20, "░");
-          process.stderr.write(`\r😐 ${bar} ${done}/${total} tests · ${tokens} tokens · ${secs}s`);
+          process.stderr.write(`\r${bar} ${done}/${total} tests · ${tokens} tokens · ${secs}s`);
           if (done === total) process.stderr.write("\r" + " ".repeat(60) + "\r");
         }
       : undefined;
@@ -268,7 +261,7 @@ async function main(): Promise<number> {
     durationMs = Date.now() - startedAt;
   } catch (err) {
     if (err instanceof AuthenticationError) {
-      console.error("😐✋  TypeSafe rejected the API key. Run: lgtm init");
+      console.error("TypeSafe rejected the API key. Run: lgtm init");
       return 2;
     }
     throw err;

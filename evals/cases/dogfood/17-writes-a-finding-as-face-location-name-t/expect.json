@@ -1,0 +1,10 @@
+{
+  "test": "src/report.test.ts::writes a finding as location and name, then face, check id, probability and blurb",
+  "fire": [],
+  "not_fire": [
+    "assertion-weaker-than-name",
+    "tests-calls-not-outcomes"
+  ],
+  "class": "pure_logic",
+  "why": "the first two lines are asserted verbatim, which is exactly what the name promises; no spies; the assertion is on the rendered text"
+}

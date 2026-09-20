@@ -1,0 +1,9 @@
+{
+  "test": "src/extract.test.ts::joins a template-literal name with a placeholder marker",
+  "fire": [],
+  "not_fire": [
+    "setup-dominates"
+  ],
+  "class": "pure_logic",
+  "why": "the fixture is the input the assertion reads; nothing constructed is inert"
+}

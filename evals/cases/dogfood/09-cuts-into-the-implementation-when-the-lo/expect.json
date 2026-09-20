@@ -1,0 +1,9 @@
+{
+  "test": "src/analyze.test.ts::cuts into the implementation when the lower-priority fields are not enough",
+  "fire": [],
+  "not_fire": [
+    "would-pass-if-broken"
+  ],
+  "class": "pure_logic",
+  "why": "the assertions pin exact values the named behaviour produces; a plausible break changes them"
+}

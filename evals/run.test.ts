@@ -2,21 +2,20 @@ import { describe, expect, it } from "vitest";
 import { fitThreshold } from "./run.js";
 
 describe("fitThreshold", () => {
-  it("gives up recall to stay above precision 0.95", () => {
-    // 0.50 catches both positives but also both negatives (P=0.50). Only thresholds above the
-    // negatives are 95% precise, and there the best recall is 0.50 — take that, not the cheap recall.
-    expect(fitThreshold([0.9, 0.5], [0.6, 0.55])).toBe(0.9);
+  it("sits one step above the lowest threshold with zero false positives, sacrificing recall", () => {
+    // 0.50 would catch both positives but admits both negatives. The first clean point is 0.65 (above the
+    // 0.60 negative); with the 0.05 margin the answer is 0.70, and the 0.5 positive is knowingly given up.
+    expect(fitThreshold([0.9, 0.5], [0.6, 0.55])).toBe(0.7);
   });
 
-  it("falls back to max F1 when no threshold reaches precision 0.95", () => {
-    // The top negative (0.90) beats every positive, so no grid point is 95% precise. F1 peaks at 0.70,
-    // where 3 of 4 positives are caught against 1 false positive; chasing recall instead would say 0.30.
-    expect(fitThreshold([0.8, 0.75, 0.7, 0.3], [0.9, 0.3, 0.3, 0.3])).toBe(0.7);
+  it("falls back to the most precise point when a negative outscores every positive", () => {
+    // No grid point is clean. Precision peaks at 0.75 (3 of 4 positives vs the 0.90 negative) from 0.35
+    // through 0.70; the highest such t is 0.70 (ties go up), plus margin = 0.75.
+    expect(fitThreshold([0.8, 0.75, 0.7, 0.3], [0.9, 0.3, 0.3, 0.3])).toBe(0.75);
   });
 
-  it("breaks recall ties toward the higher threshold", () => {
-    // 0.30…0.60 all catch both positives with no false positive; the highest wins.
-    expect(fitThreshold([0.9, 0.6], [0.2])).toBe(0.6);
+  it("never exceeds the top of the grid", () => {
+    expect(fitThreshold([0.97], [0.94])).toBe(0.95);
   });
 
   it("has nothing to fit without positives", () => {

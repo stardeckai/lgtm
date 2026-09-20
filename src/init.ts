@@ -88,7 +88,7 @@ export function installSkill(
   if (!res.error && res.status === 0) return undefined;
 
   const file = writeSkillFile(mode === "global" ? skillPath(home) : projectSkillPath(cwd));
-  console.log(`😐🫴  skills CLI unavailable, installed for Claude Code only at ${file}`);
+  console.log(`skills CLI unavailable, installed for Claude Code only at ${file}`);
   return undefined;
 }
 

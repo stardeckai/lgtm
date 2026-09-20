@@ -8,7 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { TypeSafeClient } from "@typesafe-ai/sdk";
-import { analyze, type Job } from "../src/analyze.js";
+import { analyze, buildStates, type Job } from "../src/analyze.js";
 import { CHECKS, TEST_CLASSES, type TestClass } from "../src/checks/index.js";
 import { DEFAULT_THRESHOLD } from "../src/checks/types.js";
 import { extractTests } from "../src/extract.js";
@@ -23,9 +23,10 @@ const ITERATIONS = path.join(ROOT, "evals", "iterations.json");
 const HOLDOUT_EVERY = 5;
 /** Threshold grid for --fit-thresholds: 0.30, 0.35, … 0.95. */
 const GRID = Array.from({ length: 14 }, (_, i) => Math.round((0.3 + i * 0.05) * 100) / 100);
-const MIN_PRECISION = 0.95;
+/** one grid step above the lowest clean threshold */
+const MARGIN = 0.05;
 
-type Expect = { fire: string[]; not_fire: string[]; class: TestClass; why: string };
+type Expect = { fire: string[]; not_fire: string[]; class: TestClass; why: string; /** dogfood: "src/x.test.ts::test name" */ test?: string };
 type Answered = { probabilities: Record<string, number>; class?: string; model?: string };
 type Case = { id: string; check: string; dir: string; expect: Expect; job: Job };
 type Split = "train" | "holdout";
@@ -46,6 +47,18 @@ function findCases(): string[] {
 
 function loadCase(dir: string): Case {
   const id = path.relative(CASES, dir);
+  const expect = JSON.parse(fs.readFileSync(path.join(dir, "expect.json"), "utf8")) as Expect;
+
+  // Dogfood cases point at one of this repo's own tests ("src/x.test.ts:42") and get the exact state the CLI
+  // would send, so the corpus carries live hard negatives from real code instead of only synthetic ones.
+  if (expect.test) {
+    // "src/x.test.ts::exact test name" — by name, so inserting tests above it does not break the pointer.
+    const [file, name] = expect.test.split("::");
+    const job = buildStates([path.join(ROOT, file!)], { impl: true }).find((j) => j.block.name === name);
+    if (!job) throw new Error(`${id}: no test block named ${JSON.stringify(name)} in ${file}`);
+    return { id, check: id.split(path.sep)[0]!, dir, expect, job };
+  }
+
   const testPath = path.join(dir, "case.test.ts");
   const rel = path.relative(ROOT, testPath);
   const { tests, fileContext } = extractTests(fs.readFileSync(testPath, "utf8"), rel);
@@ -66,7 +79,7 @@ function loadCase(dir: string): Case {
     id,
     check: id.split(path.sep)[0]!,
     dir,
-    expect: JSON.parse(fs.readFileSync(path.join(dir, "expect.json"), "utf8")) as Expect,
+    expect,
     job: {
       block,
       state: {
@@ -161,16 +174,17 @@ async function runLive(cases: Case[], only?: string[]): Promise<{ answers: Map<s
 
   // On a warm cache analyze reports no model; keep the one the corpus was answered with.
   const model = result.model ?? (fs.existsSync(RUN_META) ? (JSON.parse(fs.readFileSync(RUN_META, "utf8")).model as string | undefined) : undefined);
-  const byFile = new Map(cases.map((c) => [c.job.block.file, c]));
+  // Key by file AND line: dogfood cases share a file, so file alone would collapse them onto one case.
+  const byBlock = new Map(cases.map((c) => [`${c.job.block.file}:${c.job.block.line}`, c]));
   const fresh = new Map<string, Answered>();
-  const get = (file: string) => {
-    const c = byFile.get(file)!;
+  const get = (file: string, line: number) => {
+    const c = byBlock.get(`${file}:${line}`)!;
     let a = fresh.get(c.id);
     if (!a) fresh.set(c.id, (a = { probabilities: {}, ...(model ? { model } : {}) }));
     return a;
   };
-  for (const f of result.findings) get(f.file).probabilities[f.checkId] = f.probability;
-  for (const k of result.classes) get(k.file).class = k.testClass;
+  for (const f of result.findings) get(f.file, f.line).probabilities[f.checkId] = f.probability;
+  for (const k of result.classes) get(k.file, k.line).class = k.testClass;
 
   // A --only run must never drop the probabilities it did not ask about: merge into what is on disk.
   // Several --only runs may be in flight at once (one per check being tuned), so the merge re-reads the
@@ -215,19 +229,27 @@ function scoreAt(rows: { label: boolean; p: number | undefined }[], t: number) {
 type Score = ReturnType<typeof scoreAt>;
 
 /** Highest-t winner on `key`; the grid is ascending so a tie naturally keeps the later (higher) threshold. */
-const bestBy = (scores: Score[], key: "recall" | "f1") =>
+const bestBy = (scores: Score[], key: "recall" | "f1" | "precision") =>
   scores.reduce((a, b) => ((b[key] ?? -1) >= (a[key] ?? -1) ? b : a));
 
 /**
- * The one threshold rule: maximize recall subject to precision >= 0.95, else maximize F1. Ties go to the higher t.
+ * The one threshold rule lives in fitThreshold: zero train false positives, plus one grid step of margin.
  * Returns undefined when there is nothing to fit on (no positives).
+ */
+/**
+ * Precision first. The threshold is the lowest grid point with zero false positives on train, plus one grid
+ * step of margin so a negative sitting just under the line does not flip on a rerun; recall is whatever that
+ * leaves. When no grid point is clean (a negative outscores every positive), take the highest-precision point
+ * with the most recall, again plus the margin.
  */
 export function fitThreshold(pos: (number | undefined)[], neg: (number | undefined)[]): number | undefined {
   if (pos.length === 0) return undefined;
   const rows = [...pos.map((p) => ({ label: true, p })), ...neg.map((p) => ({ label: false, p }))];
   const scores = GRID.map((t) => scoreAt(rows, t));
-  const precise = scores.filter((s) => s.tp > 0 && (s.precision ?? 0) >= MIN_PRECISION);
-  return bestBy(precise.length > 0 ? precise : scores, precise.length > 0 ? "recall" : "f1").t;
+  const clean = scores.filter((s) => s.tp > 0 && s.fp === 0);
+  // clean thresholds: the lowest one has the most recall (grid is ascending, so take the first)
+  const pick = clean.length > 0 ? clean[0]! : bestBy(scores.filter((s) => s.tp > 0), "precision");
+  return Math.min(GRID[GRID.length - 1]!, Math.round((pick.t + MARGIN) * 100) / 100);
 }
 
 const pct = (n: number | undefined) => (n === undefined ? "—" : n.toFixed(2));
@@ -279,16 +301,19 @@ function writeThreshold(id: string, t: number): boolean {
 
 function fitThresholds(rows: Scored[], write: boolean): void {
   const lines = [
-    "| check | current | fitted | train P/R @fitted | holdout P/R @fitted |",
+    "| check | current | fitted (all cases) | train P/R @fitted | holdout P/R @fitted |",
     "|---|---|---|---|---|",
   ];
   for (const check of CHECKS) {
     const mine = rows.filter((r) => r.checkId === check.id);
     if (mine.length === 0) continue;
+    // Thresholds are fitted on EVERY labelled case, holdout included: a one-parameter fit cannot overfit,
+    // and a negative left out of the fit is a real-world false positive waiting to happen. The holdout split
+    // still guards the prompt rewrites, which are the part that can overfit.
     const train = mine.filter((r) => r.split === "train");
     const fitted = fitThreshold(
-      train.filter((r) => r.label).map((r) => r.p),
-      train.filter((r) => !r.label).map((r) => r.p),
+      mine.filter((r) => r.label).map((r) => r.p),
+      mine.filter((r) => !r.label).map((r) => r.p),
     );
     const t = fitted ?? check.threshold;
     const trainAt = scoreAt(train, t);

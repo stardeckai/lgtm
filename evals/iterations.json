@@ -165,7 +165,7 @@
     "variant": "+allowed-side-of-same-rule",
     "instructions": "Procedure. 1. List every refusal or failure branch in `implementation`: authorization and tenant guards, duplicate or already-used rejections, version/concurrency conflicts, quota and limit caps, retry exhaustion, rollback on partial failure, over-amount money guards. 2. Name the riskiest one. 3. Search `test_code` and every `sibling_tests` name for that exact condition. Neither a sibling on a different branch \u2014 unknown id, expiry, bad input, empty result \u2014 nor one on the allowed side of the same rule \u2014 a different customer, a non-overlapping slot, a matching version \u2014 counts as covering it. Answer yes when nothing drives the riskiest branch. Answer no when this block itself drives that refusal (even alongside the allowed path), when a sibling drives it, or when `implementation` has no refusal branch.",
     "train_f1": 0.92,
-    "holdout_f1": 1.0,
+    "holdout_f1": 1,
     "fitted_t": 0.35,
     "kept": false
   },
@@ -192,7 +192,7 @@
     "variant": "baseline",
     "instructions": "Does `test_code` test framework or component internals and implementation details \u2014 React state, private methods, CSS class names, source text, statement order \u2014 instead of user-visible or externally observable behavior?",
     "train_f1": 0.56,
-    "holdout_f1": 1.0,
+    "holdout_f1": 1,
     "fitted_t": 0.8,
     "kept": false
   },
@@ -200,9 +200,126 @@
     "check": "tests-internals",
     "variant": "contract-surface-vs-peeking",
     "instructions": "Name the contract surface in `implementation`: return values, thrown errors, rendered text/roles/labels/aria/disabled/href, state read back out of storage, payloads handed to callbacks or collaborators. Answer no when `test_code` asserts on that surface \u00e2\u0080\u0094 a class string that is the function's own return value counts, as does a storage round-trip. Answer yes when the asserted value is reachable only by peeking: private members or React state via an any-cast, instance or ref; class names, tag names or child counts of rendered DOM; render or stubbed-child call counts; source text; internal step or action-type order; or the shape or size of a table or bookkeeping accessor whose consuming function in `implementation` is never called.",
-    "train_f1": 1.0,
-    "holdout_f1": 1.0,
+    "train_f1": 1,
+    "holdout_f1": 1,
     "fitted_t": 0.6,
+    "kept": true
+  },
+  {
+    "check": "would-pass-if-broken",
+    "variant": "baseline",
+    "instructions": "Would `test_code` still pass if the behavior its name (`test_name`, under `describe_path`) describes were broken in an obvious way in `implementation`?",
+    "train_f1": 0.77,
+    "holdout_f1": 0.62,
+    "fitted_t": 0.6,
+    "kept": false
+  },
+  {
+    "check": "would-pass-if-broken",
+    "variant": "branch-only procedure",
+    "instructions": "Read `test_name` (under `describe_path`) as a promise about one branch or guard in `implementation`. Procedure: name that branch; trace this fixture through `implementation` and ask whether it reaches the branch's live side, or whether an earlier return, a default, a fallback, or a second path that matches produces the same asserted values; then delete the branch and re-run the fixture. Yes if every assertion still holds.",
+    "train_f1": 0.65,
+    "holdout_f1": 0.62,
+    "fitted_t": 0.55,
+    "kept": false
+  },
+  {
+    "check": "would-pass-if-broken",
+    "variant": "break-and-rerun procedure",
+    "instructions": "Would `test_code` still pass if the behavior `test_name` (under `describe_path`) names were broken in an obvious way? Procedure: name the branch, guard, or computation the name promises; check whether this fixture actually exercises it, or whether an earlier return, a default, a fallback, a stub's canned value, or a coincidence in the fixture already yields the asserted values; then break that behavior and re-run the fixture. Yes if every assertion still holds.",
+    "train_f1": 0.86,
+    "holdout_f1": 0.76,
+    "fitted_t": 0.5,
+    "kept": false
+  },
+  {
+    "check": "reimplements-logic",
+    "variant": "baseline",
+    "instructions": "Does `test_code` compute its expected value by re-doing the algorithm under test (so test and `implementation` would share the same mistake), instead of using a fixed, requirement-derived example?",
+    "train_f1": 0.75,
+    "holdout_f1": 1,
+    "fitted_t": 0.9,
+    "kept": false
+  },
+  {
+    "check": "would-pass-if-broken",
+    "variant": "break-and-rerun + exact-output-is-no",
+    "instructions": "Would `test_code` still pass if the behavior `test_name` (under `describe_path`) names were broken in an obvious way? Procedure: name the branch, guard, or computation the name promises; check whether this fixture actually exercises it, or whether an earlier return, a default, a fallback, a stub's canned value, or a coincidence in the fixture already yields the asserted values; then break that behavior and re-run the fixture. Yes if every assertion still holds. No when the assertions pin the exact output the named behavior itself produces.",
+    "train_f1": 0.81,
+    "holdout_f1": 0.86,
+    "fitted_t": 0.5,
+    "kept": true
+  },
+  {
+    "check": "trivial-primitive",
+    "variant": "baseline",
+    "instructions": "Is the code under test in `test_code` and `implementation` a small pure primitive \u2014 a formatter, getter, trivial mapper, constant lookup or thin wrapper \u2014 whose bugs would be obvious in any wider test of the feature that uses it?",
+    "train_f1": 0.89,
+    "holdout_f1": 0.89,
+    "fitted_t": 0.8,
+    "kept": true
+  },
+  {
+    "check": "reimplements-logic",
+    "variant": "stored-artifact-first (expected-side framing)",
+    "instructions": "First: was the EXPECTED side of the assertion produced by the implementation running during this test, or is it a stored artifact \u2014 read from disk, a committed/golden file, a fixture, a snapshot? Stored artifact, or the inverse operation (decoding what was encoded, verifying what was signed), or a literal: answer no, that is a drift/parity guard. Otherwise answer yes when the test builds the expectation by re-running the same formula, loop, or production helper the `implementation` uses on the same input, so a wrong algorithm is wrong identically on both sides.",
+    "train_f1": 0.57,
+    "holdout_f1": 0.67,
+    "fitted_t": 0.95,
+    "kept": false
+  },
+  {
+    "check": "would-pass-if-broken",
+    "variant": "break-and-rerun + exact-output criteria",
+    "instructions": "Would `test_code` still pass if the behavior `test_name` (under `describe_path`) names were broken in an obvious way? Procedure: name the branch, guard, or computation the name promises; check whether this fixture actually exercises it, or whether an earlier return, a default, a fallback, a stub's canned value, or a coincidence in the fixture already yields the asserted values; then break that behavior and re-run the fixture. Yes if every assertion still holds.",
+    "train_f1": 0.88,
+    "holdout_f1": 0.78,
+    "fitted_t": 0.45,
+    "kept": false
+  },
+  {
+    "check": "trivial-primitive",
+    "variant": "body-shape decision procedure",
+    "instructions": "Find in `implementation` the body of the function this test calls, and judge that body, not how short the test is. Yes only if it is one return expression or forwards to a single call \u2014 a lookup, getter, template string, one-line map/filter/sort, or thin wrapper \u2014 where a single `??`, `||` or ternary default still counts as trivial. No if it loops, branches more than once, uses a regex, parses or formats input, resolves paths, files or module specifiers, dedupes, caps or truncates, does date or rounding arithmetic, or checks permissions.",
+    "train_f1": 0.9,
+    "holdout_f1": 0.89,
+    "fitted_t": 0.75,
+    "kept": false
+  },
+  {
+    "check": "trivial-primitive",
+    "variant": "+constant table, +inputs-built-by-real-code",
+    "instructions": "Judge the body, in `implementation`, of the function the test calls \u2014 not how short the test is. Yes if it is one expression, a thin wrapper, or a switch or table returning constants; a single `??`, `||` or ternary default stays trivial. No if it loops, uses a regex, parses or formats input, resolves paths, files or module specifiers, dedupes, caps or truncates, does date or rounding arithmetic, or checks permissions. Also no when the test builds its inputs through other real production code \u2014 a factory, validator or constructor \u2014 since more than the primitive then runs.",
+    "train_f1": 0.89,
+    "holdout_f1": 0.89,
+    "fitted_t": 0.8,
+    "kept": false
+  },
+  {
+    "check": "trivial-primitive",
+    "variant": "+enum-constant carve-out, +validates",
+    "instructions": "Find in `implementation` the body of the function this test calls, and judge that body, not how short the test is. Yes only if it is one return expression, forwards to a single call, or maps an enum to constants \u2014 a lookup, getter, template string, one-line map/filter/sort, constant switch or table, or thin wrapper \u2014 where a single `??`, `||` or ternary default still counts as trivial. No if it loops, uses a regex, parses or formats input, resolves paths, files or module specifiers, dedupes, caps or truncates, does date or rounding arithmetic, validates, or checks permissions.",
+    "train_f1": 0.8,
+    "holdout_f1": 0.57,
+    "fitted_t": 0.95,
+    "kept": false
+  },
+  {
+    "check": "trivial-primitive",
+    "variant": "v1 + constant-switch sentence",
+    "instructions": "Find in `implementation` the body of the function this test calls, and judge that body, not how short the test is. Yes only if it is one return expression or forwards to a single call \u2014 a lookup, getter, template string, one-line map/filter/sort, or thin wrapper \u2014 where a single `??`, `||` or ternary default still counts as trivial. A switch or record that only returns constants is still trivial. No if it loops, branches over data it inspects, uses a regex, parses or formats input, resolves paths, files or module specifiers, dedupes, caps or truncates, does date or rounding arithmetic, or checks permissions.",
+    "train_f1": 0.86,
+    "holdout_f1": 0.89,
+    "fitted_t": 0.7,
+    "kept": false
+  },
+  {
+    "check": "reimplements-logic",
+    "variant": "drift-guard exemption + input-or-expectation recomputation",
+    "instructions": "Does `test_code` reproduce the algorithm under test \u2014 the same formula, loop, or production helper `implementation` uses \u2014 to construct what it asserts (the expected value, or an input engineered to satisfy it), so test and implementation would share the same mistake instead of a fixed, requirement-derived example? Answer no when the comparison is a drift or parity guard rather than a recomputation: one side is a stored artifact (a committed/golden file read from disk, a checked-in fixture, a snapshot) that generator output must match, or it round-trips an inverse operation (decode what was encoded, verify what was signed).",
+    "train_f1": 0.97,
+    "holdout_f1": 1.0,
+    "fitted_t": 0.8,
     "kept": true
   }
 ]

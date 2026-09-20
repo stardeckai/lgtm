@@ -1,0 +1,7 @@
+{
+  "test": "src/analyze.test.ts::takes only the test sections of a CLAUDE.md at the git root",
+  "fire": [],
+  "not_fire": ["vacuous-assertion"],
+  "class": "pure_logic",
+  "why": "five distinct sentinel sentences are asserted present or absent, which pins exactly which markdown sections were selected, including a nested heading kept inside the test section"
+}

@@ -22,12 +22,32 @@ const finding = (over: Partial<Finding> = {}): Finding => ({
 });
 
 describe("formatReport", () => {
+  it("pluralizes the verdict: 1 test proves nothing, 2 tests prove nothing", () => {
+    const one = formatReport([finding()], "text", { ...summary, tests: 1 });
+    expect(one).toContain("😐🫵  1 test proves nothing.");
+    const two = formatReport([finding(), finding({ line: 9 })], "text", summary);
+    expect(two).toContain("😐🫵  2 tests prove nothing.");
+    const clean = formatReport([], "text", { ...summary, tests: 1, skipped: 1 });
+    expect(clean).toContain("😐👍  1 test. fine. allegedly.");
+    expect(clean).toContain("1 test skipped (API errors).");
+  });
+
+  it("json explains each check once under `checks`, not per finding", () => {
+    const out = JSON.parse(
+      formatReport([finding(), finding({ line: 9 }), finding({ checkId: "over-mocked" })], "json", summary),
+    ) as { findings: unknown[]; checks: Record<string, { explanation: string; emoji: string; threshold: number }> };
+    expect(Object.keys(out.checks).sort()).toEqual(["mocks-seam-under-test", "over-mocked"]);
+    expect(out.checks["mocks-seam-under-test"]!.explanation).toMatch(/scripted mock/);
+    expect(out.checks["over-mocked"]!.emoji).toBe("🧱");
+    expect(JSON.stringify(out.findings)).not.toContain("explanation");
+  });
+
   it("emits github annotations in the exact annotation syntax", () => {
     const out = formatReport([finding({ checkId: "id", probability: 0.91 })], "github", summary);
     expect(out).toBe("::warning file=a.test.ts,line=3::[id] name (0.91)");
   });
 
-  it("writes a finding as face, location, name, then check id and blurb", () => {
+  it("writes a finding as location and name, then face, check id, probability and blurb", () => {
     const out = formatReport(
       [finding({ file: "test/payment.test.ts", line: 42, name: "rejects expired cards", probability: 0.93 })],
       "text",
@@ -35,24 +55,24 @@ describe("formatReport", () => {
     );
     expect(out.split("\n").slice(0, 2)).toEqual([
       'test/payment.test.ts:42  "rejects expired cards"',
-      "  😐👏 mocks-seam-under-test 0.93 — Congratulations. You tested the mock.",
+      "  😐👏 mocks-seam-under-test 0.93 — The collaborator that decides this behaviour is a mock, so the test only proves the mock works.",
     ]);
   });
 
-  it("uses the check's own face, and the magnifier for a sub-threshold finding", () => {
+  it("prints the blurb, and marks a sub-threshold finding as suspicious", () => {
     const lines = (over: Partial<Finding>) => formatReport([finding(over)], "text", summary).split("\n");
 
-    expect(lines({ checkId: "swallowed-error-as-success" })[1]!.startsWith("  😐🔥")).toBe(true);
-    expect(lines({ checkId: "broad-snapshot" })[1]!.startsWith("  😐📸")).toBe(true);
+    expect(lines({ checkId: "swallowed-error-as-success" })[1]!.startsWith("  😐🤏")).toBe(true);
+    expect(lines({ checkId: "changed-in-lockstep" })[1]!.startsWith("  😐🫸")).toBe(true);
 
     const quiet = lines({ probability: 0.62, threshold: 0.8 });
-    expect(quiet[1]!.startsWith("  😐🔍")).toBe(true);
-    expect(quiet[1]).toContain("— Suspicious. Congratulations. You tested the mock.");
+    expect(quiet[1]!.startsWith("  😐 mocks-seam-under-test 0.62")).toBe(true);
+    expect(quiet[1]).toContain("— Suspicious. The collaborator that decides this behaviour is a mock");
   });
 
   it("closes with the pointing finger when there are findings and the thumb when there are none", () => {
     const accusing = formatReport([finding(), finding({ line: 9 })], "text", summary);
-    expect(accusing.split("\n").slice(-7, -4)).toEqual(["2 tests prove nothing.", "", "😐🫵"]);
+    expect(accusing.split("\n").slice(-5, -4)).toEqual(["😐🫵  2 tests prove nothing."]);
     expect(accusing.split("\n").at(-1)).toBe("6.0s (1.5s per test)");
 
     const suspicionOnly = formatReport([finding({ probability: 0.6, threshold: 0.8 })], "text", summary);
@@ -62,7 +82,7 @@ describe("formatReport", () => {
 
     const clean = formatReport([], "text", { ...summary, skipped: 2 });
     expect(clean.split("\n")[0]).toBe("😐👍  4 tests. fine. allegedly.");
-    expect(clean).toContain("😐❓  2 tests skipped (API errors).");
+    expect(clean).toContain("2 tests skipped (API errors).");
   });
 
   it("counts the class distribution the tests fell into", () => {
@@ -75,9 +95,9 @@ describe("formatReport", () => {
       klass("pure_logic", 6),
     ];
     const out = formatReport([], "text", { ...summary, classes });
-    expect(out).toContain("😐🎯  1 contract-integration · 2 mocked-seam · 3 pure-logic");
+    expect(out).toContain("1 contract-integration · 2 mocked-seam · 3 pure-logic");
     expect(formatClasses(classes.slice(0, 2))).toBe(
-      '😐🎯 a.test.ts:1  "name"\n😐🧱 a.test.ts:2  "name"',
+      'contract-integration a.test.ts:1  "name"\nmocked-seam          a.test.ts:2  "name"',
     );
   });
 

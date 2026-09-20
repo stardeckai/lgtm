@@ -13,7 +13,7 @@ import {
   skillPath,
   type Spawn,
 } from "./init.js";
-import { skillMarkdown } from "./skill.js";
+import { checksTable, skillMarkdown } from "./skill.js";
 
 const dirs: string[] = [];
 const tmp = (): string => {
@@ -92,4 +92,10 @@ describe("init", () => {
 it("ships skills/lgtm/SKILL.md in sync with skillMarkdown()", () => {
   const shipped = fs.readFileSync(fileURLToPath(new URL("../skills/lgtm/SKILL.md", import.meta.url)), "utf8");
   expect(shipped, "skills/lgtm/SKILL.md is stale — run `pnpm gen:skill`").toBe(skillMarkdown());
+});
+
+it("keeps the README checks table in sync with the checks", () => {
+  const readme = fs.readFileSync(path.join(pkgRoot, "README.md"), "utf8");
+  const block = readme.slice(readme.indexOf("<!-- checks:start -->") + "<!-- checks:start -->".length, readme.indexOf("<!-- checks:end -->")).trim();
+  expect(block, "README checks table is stale — run `pnpm gen:skill`").toBe(checksTable());
 });

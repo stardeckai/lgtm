@@ -1,0 +1,7 @@
+{
+  "test": "src/init.test.ts::falls back to the project Claude skill when the skills CLI exits non-zero",
+  "fire": [],
+  "not_fire": ["reimplements-logic"],
+  "class": "mocked_seam_unit",
+  "why": "the test asserts WHERE the fallback wrote (project path, not home); comparing the file to skillMarkdown() is a parity check against the generator, not an expected value recomputed with production logic"
+}

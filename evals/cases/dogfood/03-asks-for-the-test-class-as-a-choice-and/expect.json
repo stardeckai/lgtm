@@ -1,0 +1,9 @@
+{
+  "test": "src/analyze.test.ts::asks for the test class as a choice and returns the answer",
+  "fire": [],
+  "not_fire": [
+    "would-pass-if-broken"
+  ],
+  "class": "contract_integration",
+  "why": "the assertions pin exact values the named behaviour produces; a plausible break changes them"
+}

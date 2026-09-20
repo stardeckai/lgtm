@@ -1,8 +1,7 @@
 {
   "fire": [],
   "not_fire": [
-    "impossible-fixture",
-    "trivial-primitive"
+    "impossible-fixture"
   ],
   "class": "contract_integration",
   "why": "the fixture helper builds every account through the real openAccount, so the overdrawn balance it tests is one the bank actually permits"

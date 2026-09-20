@@ -1,0 +1,9 @@
+{
+  "test": "src/init.test.ts::ships skills/lgtm/SKILL.md in sync with skillMarkdown()",
+  "fire": [],
+  "not_fire": [
+    "reimplements-logic"
+  ],
+  "class": "pure_logic",
+  "why": "the shipped file must equal the generator output: the text is the contract (drift guard), not a recomputed expectation"
+}

@@ -1,0 +1,9 @@
+{
+  "test": "src/analyze.test.ts::resolves a .js specifier to its .ts source and lists the other tests in the file",
+  "fire": [],
+  "not_fire": [
+    "trivial-primitive"
+  ],
+  "class": "pure_logic",
+  "why": "the code under test is path resolution / dedupe / budget logic with real edge cases, not a one-liner"
+}

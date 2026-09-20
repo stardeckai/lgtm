@@ -1,0 +1,9 @@
+{
+  "test": "src/report.test.ts::emits github annotations in the exact annotation syntax",
+  "fire": [],
+  "not_fire": [
+    "setup-dominates"
+  ],
+  "class": "pure_logic",
+  "why": "the fixture is the input the assertion reads; nothing constructed is inert"
+}

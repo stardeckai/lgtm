@@ -1,0 +1,9 @@
+{
+  "test": "src/init.test.ts::hands the bundled skill dir to the skills CLI, without -g for a project install",
+  "fire": [],
+  "not_fire": [
+    "tests-internals"
+  ],
+  "class": "contract_integration",
+  "why": "the argv handed to the external CLI is the public contract of the install step"
+}

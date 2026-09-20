@@ -25,6 +25,35 @@ export const USD_PER_INPUT_TOKEN = 0.042 / 1_000_000;
 export const usd = (inputTokens: number) => `$${(inputTokens * USD_PER_INPUT_TOKEN).toFixed(4)}`;
 
 /** Order is user-visible in --list-checks, the README and the Claude skill — src/checks/index.test.ts locks it. */
+/** The four categories are the reaction vocabulary: one face per family, used only on finding lines. */
+export const CATEGORIES = ["assertions", "mocks", "scope", "diff"] as const;
+export type Category = (typeof CATEGORIES)[number];
+export const GESTURE: Record<Category, string> = {
+  assertions: "😐🤏", // proves this much
+  mocks: "😐👏", // congratulations, you tested the mock
+  scope: "😐🤌", // what exactly are we doing here
+  diff: "😐🫸", // do not merge this
+};
+export const CATEGORY_OF: Record<string, Category> = {
+  "would-pass-if-broken": "assertions",
+  "vacuous-assertion": "assertions",
+  "assertion-weaker-than-name": "assertions",
+  "tests-calls-not-outcomes": "assertions",
+  "broad-snapshot": "assertions",
+  "swallowed-error-as-success": "assertions",
+  "reimplements-logic": "mocks",
+  "mocks-seam-under-test": "mocks",
+  "mock-mirrors-implementation": "mocks",
+  "over-mocked": "mocks",
+  "tests-internals": "scope",
+  "setup-dominates": "scope",
+  "impossible-fixture": "scope",
+  "happy-path-only-of-risky-boundary": "scope",
+  "trivial-primitive": "scope",
+  "regression-does-not-distinguish": "diff",
+  "changed-in-lockstep": "diff",
+};
+
 export const CHECKS: Check[] = [
   wouldPassIfBroken,
   vacuousAssertion,
@@ -44,3 +73,4 @@ export const CHECKS: Check[] = [
   regressionDoesNotDistinguish,
   changedInLockstep,
 ];
+export { EXPLANATIONS } from "./explanations.js";

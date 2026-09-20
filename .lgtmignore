@@ -1,0 +1,2 @@
+# lgtm's own eval fixtures are deliberately bad tests; never lint them
+evals/
