@@ -2,27 +2,34 @@
 
 A Jev-powered linter for tests that pass but prove nothing.
 
-`lgtm` sends every test block in your repo to [TypeSafe](https://docs.typesafe.ai)'s Jev model with fifteen
-pointed yes/no questions and reports the ones that come back confident, as `file:line`, the smell, and why.
+<img src="public/findings.png" alt="lgtm findings: file:line, the check, its probability and a one-line reason">
 
-Bring your own [TypeSafe](https://typesafe.ai) API key. Advisory by default: it prints findings and exits 0.
+Your agent wrote 40 tests. They're all green. What do they prove? lgtm reads every test block with its
+implementation and tells you which ones would still pass if the code were broken: the mocked seam, the vacuous
+assertion, the expected value computed with the code under test. One line per finding: `file:line`, the check,
+a probability, and why.
+
+It runs on [TypeSafe](https://typesafe.ai)'s Jev model, so a whole suite costs cents and a PR costs nothing you
+would notice. Bring your own key.
+
+## What you get
+
+- the `lgtm` CLI: run it on a file, a directory or `--diff origin/main`, in your terminal or in CI
+- a `/lgtm` skill for your coding agents, so the agent that wrote the tests runs the audit and fixes what it finds
 
 ## Why
 
-**Your agent wrote 40 tests. They're all green. What do they prove?** Coding agents are prolific test writers
-and terrible test critics. They mock whatever is inconvenient, assert that the mock was called, compute the
-expected value with the code under test, and hand you a suite where every line is covered and nothing is
-verified. A test that checks a trace's name. A test for the thing you decided not to build. Nobody reads those
-files. The PR says "added tests" and gets merged.
+**Coding agents are prolific test writers and terrible test critics.** They mock whatever is inconvenient,
+assert that the mock was called, compute the expected value with the code under test, and hand you a suite
+where every line is covered and nothing is verified. A test that checks a trace's name. A test for the thing
+you decided not to build. Nobody reads those files. The PR says "added tests" and gets merged.
 
 **The bug that pages you lives in a seam.** One side writes, the other reads, and every unit test mocked at least
-one of them to agree. No linter catches that: it's a judgment call, and judgment used to cost a senior engineer's
+one of them to agree. No linter catches that. It's a judgment call, and judgment used to cost a senior engineer's
 afternoon per PR.
 
-<img src="public/findings.png" alt="lgtm findings: file:line, the check, its probability and a one-line reason">
-
 **Reads like a review, runs like a linter.** Every finding is one test, one smell, one probability, one sentence
-you can act on. `😐👏 mocks-seam-under-test` means you tested the mock. `😐🤝 reimplements-logic` means the test
+you can act on. `😐👏 mocks-seam-under-test` means you tested the mock. `😐👏 reimplements-logic` means the test
 and the implementation share the same bug. The summary tells you how much of your suite actually crosses a seam.
 
 **Opinionated by design.** Few wide tests with real collaborators beat a hundred mocked units. Delete with
@@ -30,12 +37,10 @@ confidence: a good audit shrinks the suite. And when the suite is clean, it says
 
 <img src="public/success.png" alt="lgtm clean run: 36 tests. fine. allegedly.">
 
-<img src="public/plan.png" alt="lgtm plan: files, estimated cost and runtime, then a confirmation prompt">
-
 **Now it costs a cent.** Jev bills $0.042 per million input tokens and answers in under a second. lgtm shows you
-the bill and the runtime before it spends, caches every answer, and offers `--lean` when you want it cheaper.
-On the labelled corpus in [`evals/`](evals/RESULTS.md) the default thresholds produce three false positives in
-525 cases.
+the bill and the runtime before it spends, and caches every answer. Thresholds are fitted for precision: on the
+labelled corpus in [`evals/`](evals/RESULTS.md) they produce zero false positives in 544 cases. When it points at
+a test, the test is worth a look.
 
 ## Install
 
@@ -62,7 +67,7 @@ lgtm init                    # paste your API key, then install the /lgtm skill
    wins over it. Get a key at <https://typesafe.ai>.
 2. Offers to install the `/lgtm` skill, which teaches your coding agents to run `lgtm` and act on the
    findings. It hands the bundled skill to the [`skills`](https://www.npmjs.com/package/skills) CLI, which
-   asks which agents you want it in — globally or in this project only.
+   asks which agents you want it in, globally or in this project only.
 
 Skip the prompts with `--skill <where>`:
 
@@ -89,6 +94,8 @@ lgtm --dry-run src         # only the plan: files, estimated cost and runtime; n
 Every run starts with that plan and asks `Run? [Y/n]`. Outside a terminal (CI, an agent) it stops after the plan
 unless you pass `--yes`.
 
+<img src="public/plan.png" alt="lgtm plan: files, estimated cost and runtime, then a confirmation prompt">
+
 ```sh
 lgtm --yes --format json   # non-interactive
 ```
@@ -96,23 +103,23 @@ lgtm --yes --format json   # non-interactive
 For a one-off run without installing: `npx @stardeckai/lgtm --dry-run src`.
 
 ```
-😐👏 test/payment.test.ts:42  "rejects expired cards"
-     mocks-seam-under-test 0.93 — Congratulations. You tested the mock.
+test/payment.test.ts:42  "rejects expired cards"
+  😐👏 mocks-seam-under-test 0.93 — The collaborator that decides this behaviour is a mock, so the test only proves the mock works.
 
-😐🔥 test/refund.test.ts:17  "refunds a captured charge"
-     swallowed-error-as-success 0.88 — Green. Production on fire.
+test/refund.test.ts:17  "refunds a captured charge"
+  😐🤏 swallowed-error-as-success 0.88 — The test stays green whether the error is caught, logged, or never thrown; it never pins the specific failure.
 
-2 tests prove nothing.
+😐🫵  2 tests prove nothing.
+4 contract-integration · 19 mocked-seam · 8 pure-logic
 
-😐🫵
-😐🎯  4 contract-integration · 19 mocked-seam · 8 pure-logic
-14210 input tokens used
+98120 input tokens used ≈ $0.0041 ($0.0001 per test)
+9.8s (0.3s per test)
 ```
 
 Four faces, one per family: `😐🤏` the assertion proves this much, `😐👏` you tested the mock, `😐🤌` what
-exactly are we doing here, `😐🫸` do not merge this. Colour is severity (red ≥ 0.9, yellow at or over the
-check's threshold, dim for `--verbose` suspects). The verdict is one line: `😐👍  N tests. fine. allegedly.` or
-`😐🫵  N tests prove nothing.` `--format github` and `--format json` stay plain.
+exactly are we doing here, `😐🫸` do not merge this. Colour is severity (red at 0.9 and above, yellow at or over
+the check's threshold, dim for `--verbose` suspects). The verdict is one line, `😐👍  N tests. fine. allegedly.`
+or `😐🫵  N tests prove nothing.` `--format github` and `--format json` stay plain.
 
 ### Flags
 
@@ -140,43 +147,42 @@ wiring breaks, which is how most things actually break.
 
 It dislikes tests of one-line helpers (any real test of the feature covers them for free), tests that
 mock everything except the function name, and one-off assertions that would survive the feature being
-deleted. So the summary prints what your suite is made of: `🎯 contract-integration · 🧱 mocked-seam ·
-🔬 pure-logic`. `--classes` lists every test with its class, which is the number to watch during an audit.
+deleted. So the summary prints what your suite is made of: `N contract-integration · N mocked-seam ·
+N pure-logic`. `--classes` lists every test with its class, which is the number to watch during an audit.
 Retiring three unit tests for one wider test that really fails is a win, not a coverage loss.
 
 ## Checks
 
-Each finding line opens with one of four faces, one per family, then the check id, its probability and a
-one-line reason. `--format json` adds a `checks` map with a longer explanation and the fix, once per check.
+`--format json` adds a `checks` map with a longer explanation and the fix, once per check.
 
 <!-- checks:start -->
 | | check | |
 |---|---|---|
-| 😐🤏 | `would-pass-if-broken` | Break the behaviour the name describes and this test still passes; the fixture never reaches it. |
-| 😐🤏 | `vacuous-assertion` | The assertion accepts almost any output, so it cannot fail for a real bug. |
-| 😐🤏 | `assertion-weaker-than-name` | The name promises a behaviour the assertions never check. |
-| 😐👏 | `reimplements-logic` | The expected value is computed with the same logic as production, so both can be wrong together. |
-| 😐👏 | `mocks-seam-under-test` | The collaborator that decides this behaviour is a mock, so the test only proves the mock works. |
-| 😐👏 | `mock-mirrors-implementation` | The mock re-encodes the production logic; any implementation that agrees with the copy passes. |
-| 😐🤏 | `tests-calls-not-outcomes` | It asserts that a function was called, not what happened as a result. |
-| 😐🤌 | `tests-internals` | It asserts private state, class names or call order instead of observable behaviour; a refactor breaks it, a bug does not. |
-| 😐🤌 | `setup-dominates` | Most of the setup never reaches the assertion. It is scenery. |
-| 😐🤏 | `broad-snapshot` | The snapshot pins everything and explains nothing, so it will be re-recorded on the next change. |
-| 😐🤏 | `swallowed-error-as-success` | The test stays green whether the error is caught, logged, or never thrown; it never pins the specific failure. |
-| 😐🤌 | `impossible-fixture` | The fixture builds a state production validation could never produce. |
-| 😐🤌 | `happy-path-only-of-risky-boundary` | The refusal path this code exists for, the one that pages you, has no test here or among its siblings. |
-| 😐🤌 | `trivial-primitive` | A one-line helper tested in isolation; any real test of the feature that uses it would catch the same break. |
-| 😐👏 | `over-mocked` | So many collaborators are faked that only glue is left to fail. |
-| 😐🫸 | `regression-does-not-distinguish` | This regression test also passes on the buggy code, so it does not lock the fix. *(needs `--diff`)* |
-| 😐🫸 | `changed-in-lockstep` | Implementation and expected values changed together, so the test may only mirror the new behaviour. *(needs `--diff`)* |
+| 😐&#8288;🤏 | `would-pass-if-broken` | Break the behaviour the name describes and this test still passes; the fixture never reaches it. |
+| 😐&#8288;🤏 | `vacuous-assertion` | The assertion accepts almost any output, so it cannot fail for a real bug. |
+| 😐&#8288;🤏 | `assertion-weaker-than-name` | The name promises a behaviour the assertions never check. |
+| 😐&#8288;👏 | `reimplements-logic` | The expected value is computed with the same logic as production, so both can be wrong together. |
+| 😐&#8288;👏 | `mocks-seam-under-test` | The collaborator that decides this behaviour is a mock, so the test only proves the mock works. |
+| 😐&#8288;👏 | `mock-mirrors-implementation` | The mock re-encodes the production logic; any implementation that agrees with the copy passes. |
+| 😐&#8288;🤏 | `tests-calls-not-outcomes` | It asserts that a function was called, not what happened as a result. |
+| 😐&#8288;🤌 | `tests-internals` | It asserts private state, class names or call order instead of observable behaviour; a refactor breaks it, a bug does not. |
+| 😐&#8288;🤌 | `setup-dominates` | Most of the setup never reaches the assertion. It is scenery. |
+| 😐&#8288;🤏 | `broad-snapshot` | The snapshot pins everything and explains nothing, so it will be re-recorded on the next change. |
+| 😐&#8288;🤏 | `swallowed-error-as-success` | The test stays green whether the error is caught, logged, or never thrown; it never pins the specific failure. |
+| 😐&#8288;🤌 | `impossible-fixture` | The fixture builds a state production validation could never produce. |
+| 😐&#8288;🤌 | `happy-path-only-of-risky-boundary` | The refusal path this code exists for, the one that pages you, has no test here or among its siblings. |
+| 😐&#8288;🤌 | `trivial-primitive` | A one-line helper tested in isolation; any real test of the feature that uses it would catch the same break. |
+| 😐&#8288;👏 | `over-mocked` | So many collaborators are faked that only glue is left to fail. |
+| 😐&#8288;🫸 | `regression-does-not-distinguish` | This regression test also passes on the buggy code, so it does not lock the fix. *(needs `--diff`)* |
+| 😐&#8288;🫸 | `changed-in-lockstep` | Implementation and expected values changed together, so the test may only mirror the new behaviour. *(needs `--diff`)* |
 <!-- checks:end -->
 
 <!-- evals:start -->
 ## Evals
 
-`evals/cases` holds 544 labelled test cases — synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests — with the ground truth kept in `expect.json` so it never reaches the model.
+`evals/cases` holds 544 labelled test cases, synthetic and anonymized real-world, with positives, hard negatives and genuinely good tests. The ground truth is kept in `expect.json` so it never reaches the model.
 
-Scores are at each check's own threshold. 118 of the cases are holdout — never used to fit a threshold or a prompt.
+Scores are at each check's own threshold. 118 of the cases are holdout, never used to fit a threshold or a prompt.
 
 | check | cases | threshold | precision (holdout) | recall (holdout) | precision (all) | recall (all) |
 |---|---|---|---|---|---|---|
@@ -198,7 +204,7 @@ Scores are at each check's own threshold. 118 of the cases are holdout — never
 | `regression-does-not-distinguish` | 26 | 0.35 | 1.00 | 0.33 | 1.00 | 0.67 |
 | `changed-in-lockstep` | 26 | 0.70 | 1.00 | 1.00 | 1.00 | 1.00 |
 
-Test class accuracy — all: 465/544 (0.85) · holdout: 104/118 (0.88).
+Test class accuracy: 465/544 (0.85) on all cases, 104/118 (0.88) on holdout.
 
 A full cold run of the corpus costs 2124397 input tokens ≈ $0.0892; re-runs hit the cache and only pay for changed cases.
 
@@ -222,8 +228,8 @@ The cache step is optional: `--diff` already limits a PR run to the tests it tou
 full state (test, imports, implementation, guidelines) plus the check wording and lgtm version, so a hit means
 nothing relevant changed. Do not commit the cache directory; it churns on every refactor and never shrinks.
 
-Fetch enough history for the base ref (`fetch-depth: 0`) and add `--fail` once the findings are clean
-enough that you want them blocking.
+lgtm is advisory by default: it prints findings and exits 0. Fetch enough history for the base ref
+(`fetch-depth: 0`) and add `--fail` once the findings are clean enough that you want them blocking.
 
 ## Cost
 
@@ -231,14 +237,14 @@ TypeSafe bills $0.042 per million input tokens and nothing for output, so lgtm i
 One request per test block. Each state is trimmed to at most 100,000 chars (~25,000 tokens, under TypeSafe's 32k
 state limit): the test code, the whole test file with the block fenced, the file's imports and sibling test names,
 up to 60,000 chars of the imported implementation (one hop deep) and the test sections of any CLAUDE.md/AGENTS.md
-above it. `--lean` cuts that back to the old 8,000-char implementation and no test file or guidelines.
+above it. `--lean` cuts that back to an 8,000-char implementation and no test file or guidelines.
 
 | run | blocks | input tokens | cost |
 |---|---|---|---|
 | a PR touching 20 tests (`--diff`) | 20 | ~100k | ~$0.004 |
 | a mid-sized suite | 500 | ~2.5M | ~$0.11 |
 | a large monorepo suite | 5,000 | ~25M | ~$1.05 |
-| the eval corpus (`pnpm eval`, cold) | 525 | see the Evals section | |
+| the eval corpus (`pnpm eval`, cold) | 544 | see the Evals section | |
 
 Answers are cached by state hash under `node_modules/.cache/lgtm`, so a re-run after editing one test only pays for
 that test. The implementation source is the main cost lever: `--no-impl` cuts the bulk of each request at the price
@@ -258,9 +264,11 @@ lgtm init                    # both steps again
 
 ## Thresholds
 
-Every check reports at 0.8 by default. Tune it per repo: run once with `--threshold 0.5 --format json`
-on a suite you know well, see where the real problems land, then pick your number. A check that is
-consistently wrong for your codebase belongs in `--skip`.
+Each check has its own threshold, fitted on the eval corpus to the lowest probability that still gives zero
+false positives (the `threshold` column above). That trades recall for precision on purpose: a finding should
+be worth your time. To see what sits just under the line, run `--verbose`, or `--threshold 0.5 --format json`
+on a suite you know well and pick your own number. A check that is consistently wrong for your codebase belongs
+in `--skip`.
 
 ## Development
 
