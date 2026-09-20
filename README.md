@@ -202,7 +202,7 @@ The corpus is 521 public + 262 private labelled test cases, synthetic and anonym
 
 The 262 private cases come from real Stardeck customer apps and from Stardeck's own codebase, harvested by scoring 15,000+ real test blocks and sampling around each check's threshold. That harvest is what set the thresholds: synthetic negatives were too easy, and several checks that scored 1.00 on synthetic cases were 0–30% precise on real code until they were rewritten against it. The private cases are scored in these numbers but not published, because anonymization removes names, not shape. The 521 public cases in `evals/cases` reproduce with `pnpm eval` alone.
 
-Scores are at each check's own threshold. 165 of the cases are holdout, never used to fit a threshold or a prompt.
+Scores are at each check's own threshold. 165 of the cases are holdout: thresholds are fitted on every case, prompts are never tuned against these.
 
 | check | cases | threshold | precision (holdout) | recall (holdout) | precision (all) | recall (all) |
 |---|---|---|---|---|---|---|
@@ -227,7 +227,7 @@ Scores are at each check's own threshold. 165 of the cases are holdout, never us
 
 Test class accuracy: 668/783 (0.85) on all cases, 140/165 (0.85) on holdout.
 
-A full cold run of the corpus is about 3,907,681 input tokens ≈ $0.1641 (estimated from the states; the last run spent $0.0301 after cache hits).
+A full cold run of the corpus is about 3,909,061 input tokens ≈ $0.1642 (estimated from the states; the last run spent $0.0301 after cache hits).
 
 Every miss and false positive is listed in [`evals/RESULTS.md`](evals/RESULTS.md). The public cases reproduce with `pnpm eval`.
 <!-- evals:end -->

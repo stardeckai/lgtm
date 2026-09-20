@@ -323,7 +323,26 @@ export function blockTouched(block: { line: number; endLine: number }, ranges: R
   return ranges.some(([from, to]) => block.line <= to && block.endLine >= from);
 }
 
-/** Does this test file import any of `changed`, one hop, through the same resolver the states use? */
+/**
+ * The implementation files a test file reaches: what it imports at runtime, and whatever those forward through
+ * `export … from`, so an import of a barrel `index.ts` reaches the module behind it. Barrels are tiny; their own
+ * imports are not followed (see AGENTS.md for the measurements). Same list for the state and for `--diff`.
+ */
+export function implFiles(file: string, imports: string[]): string[] {
+  const seen = new Set<string>([path.resolve(file)]);
+  const out: string[] = [];
+  const queue = imports.map((spec) => ({ from: file, spec }));
+  for (let next = queue.shift(); next; next = queue.shift()) {
+    const resolved = resolveImport(next.from, next.spec);
+    if (!resolved || seen.has(resolved) || !SOURCE_EXTS.includes(path.extname(resolved))) continue;
+    seen.add(resolved);
+    out.push(resolved);
+    for (const spec of extractTests(fs.readFileSync(resolved, "utf8"), resolved).reexports) queue.push({ from: resolved, spec });
+  }
+  return out;
+}
+
+/** Does this test file reach any of `changed`, through the same files the state would carry? */
 function importsAny(file: string, changed: Set<string>): boolean {
   let source: string;
   try {
@@ -331,10 +350,7 @@ function importsAny(file: string, changed: Set<string>): boolean {
   } catch {
     return false;
   }
-  return extractTests(source, file).imports.some((spec) => {
-    const resolved = resolveImport(file, spec);
-    return resolved !== null && changed.has(resolved);
-  });
+  return implFiles(file, extractTests(source, file).imports).some((p) => changed.has(p));
 }
 
 export type DiffSelection = {
@@ -449,20 +465,7 @@ export function buildStates(
     const { tests, fileContext, imports } = extractTests(source, file);
     if (tests.length === 0) continue;
 
-    const seen = new Set<string>([path.resolve(file)]);
-    // The files the test imports, and whatever those forward through `export … from`, so an import of a
-    // barrel `index.ts` reaches the module behind it. Barrels are tiny; their own imports are not followed.
-    const direct: string[] = [];
-    if (opts.impl || opts.diffBase) {
-      const queue = imports.map((spec) => ({ from: file, spec }));
-      for (let next = queue.shift(); next; next = queue.shift()) {
-        const resolved = resolveImport(next.from, next.spec);
-        if (!resolved || seen.has(resolved) || !SOURCE_EXTS.includes(path.extname(resolved))) continue;
-        seen.add(resolved);
-        direct.push(resolved);
-        for (const spec of extractTests(fs.readFileSync(resolved, "utf8"), resolved).reexports) queue.push({ from: resolved, spec });
-      }
-    }
+    const direct = opts.impl || opts.diffBase ? implFiles(file, imports) : [];
     // No transitive hop through imports: it was 28% of every request on this repo and the evals never saw it;
     // dogfood scores did not move without it, while the whole test file is load-bearing (see AGENTS.md).
     const implementation = opts.impl && direct.length > 0

@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { APIError, AuthenticationError, type Questions } from "@typesafe-ai/sdk";
-import { analyze, buildStates, fitBudget, type Client, type Job, type State } from "./analyze.js";
+import { analyze, buildStates, fitBudget, implFiles, type Client, type Job, type State } from "./analyze.js";
 import { CHECKS, type TestClass } from "./checks/index.js";
 
 const tmpDirs: string[] = [];
@@ -223,6 +223,8 @@ describe("buildStates context", () => {
     const impl = buildStates([path.join(dir, "a.test.ts")], { impl: true })[0]!.state.implementation!;
     const files = impl.split("\n").filter((l) => l.startsWith("// ---- ")).map((l) => path.basename(l));
     expect(files).toEqual(["setup.ts", "a.ts", "b.ts", "index.ts", "c.ts"]);
+    // the same list decides --diff selection, so a change behind the barrel reaches this test
+    expect(implFiles(path.join(dir, "a.test.ts"), ["./lib/index.js"])).toEqual([path.join(dir, "lib", "index.ts"), path.join(dir, "lib", "c.ts")]);
     expect(impl).toContain("export const a = shared;");
     expect(impl).not.toContain("export const shared = 1;");
   });

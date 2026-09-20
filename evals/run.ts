@@ -192,8 +192,10 @@ async function runLive(cases: Case[], only?: string[]): Promise<{ answers: Map<s
   const apiKey = resolveApiKey();
   if (!apiKey) throw new Error("no API key — run `lgtm init` or set TYPESAFE_API_KEY");
   const client = new TypeSafeClient({ apiKey, timeout: 60_000 });
+  // Two cases may name the same test block (dogfood); send that state once.
+  const jobs = [...new Map(cases.map((c) => [`${c.job.block.file}:${c.job.block.line}`, c.job])).values()];
   const result = await analyze(
-    cases.map((c) => c.job),
+    jobs,
     { threshold: 0, verbose: false, cacheDir: path.join(ROOT, "evals", ".cache"), concurrency: 8, ...(only ? { only } : {}) },
     client,
   );
@@ -492,7 +494,7 @@ function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inpu
           `The ${nPrivate} private cases come from real Stardeck customer apps and from Stardeck's own codebase, harvested by scoring 15,000+ real test blocks and sampling around each check's threshold. That harvest is what set the thresholds: synthetic negatives were too easy, and several checks that scored 1.00 on synthetic cases were 0–30% precise on real code until they were rewritten against it. The private cases are scored in these numbers but not published, because anonymization removes names, not shape. The ${cases.length - nPrivate} public cases in \`evals/cases\` reproduce with \`pnpm eval\` alone.`,
           "",
         ]),
-    `Scores are at each check's own threshold. ${holdoutCases.length} of the cases are holdout, never used to fit a threshold or a prompt.`,
+    `Scores are at each check's own threshold. ${holdoutCases.length} of the cases are holdout: thresholds are fitted on every case, prompts are never tuned against these.`,
     "",
     "| check | cases | threshold | precision (holdout) | recall (holdout) | precision (all) | recall (all) |",
     "|---|---|---|---|---|---|---|",
