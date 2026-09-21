@@ -12,5 +12,7 @@ export default {
   threshold: 0.75,
   diffOnly: true,
   // Back on (Sept 2026) after 41 real cases and a rewording that simulates both sides of the diff: real held-out
-  // AUC 0.94, fitted 0.75 with held-out precision 1.00 at recall 0.50. changed-in-lockstep stays off.
+  // AUC 0.94, fitted 0.75 with held-out precision 1.00 at recall 0.57 (train 1.00/0.50). No held-out positive
+  // reaches the 0.90 high line yet, so by default it contributes worth-a-look lines, not verdict findings.
+  // changed-in-lockstep stays off.
 } satisfies Check;

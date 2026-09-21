@@ -11,8 +11,8 @@ export default {
   },
   threshold: 0.90,
   diffOnly: true,
-  // Off by default (Sept 2026): the corpus has no real case for the diff checks, so the threshold is fitted on
-  // synthetic ones only. On a 584-test customer branch this family was 102 of 187 flagged findings and 42 of 54
-  // high-confidence ones, with a median score at the threshold. Back on after a PR-based harvest (see TODO.md).
+  // Off by default (Sept 2026): 9 real negatives and 1 real positive, not enough to fit against. On a 584-test
+  // customer branch the two diff checks were 102 of 187 flagged findings and 42 of 54 high-confidence ones. Back
+  // on after a harvest of real positives (see TODO.md).
   optIn: true,
 } satisfies Check;

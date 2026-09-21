@@ -439,6 +439,7 @@ function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inpu
   const acc = (c: { seen: number; hits: number }) => (c.seen === 0 ? "no classified cases" : `${c.hits}/${c.seen} (${(c.hits / c.seen).toFixed(2)})`);
 
   const own = new Map(CHECKS.map((c) => [c.id, c.threshold]));
+  const ids = publicIds(cases);
   const misses = rows.filter((r) => r.label && (r.p ?? -1) < (own.get(r.checkId) ?? DEFAULT_THRESHOLD));
   const falsePositives = rows.filter((r) => !r.label && (r.p ?? -1) >= (own.get(r.checkId) ?? DEFAULT_THRESHOLD));
 
@@ -497,11 +498,13 @@ function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inpu
     "",
     "## Misses (labelled fire, p below the check's own threshold)",
     "",
-    ...(misses.length === 0 ? ["None."] : misses.map((m) => `- \`${m.caseId}\` · \`${m.checkId}\` · p=${m.p === undefined ? "not asked" : m.p.toFixed(2)} · ${m.why}`)),
+    "Private cases are numbered as in `evals/atlas.html` and carry no label reason here; the reasons live with the cases in the private corpus.",
+    "",
+    ...(misses.length === 0 ? ["None."] : misses.map((m) => `- \`${ids.get(m.caseId)}\` · \`${m.checkId}\` · p=${m.p === undefined ? "not asked" : m.p.toFixed(2)}${m.real ? "" : ` · ${m.why}`}`)),
     "",
     "## False positives (labelled not_fire, p at or above the check's own threshold)",
     "",
-    ...(falsePositives.length === 0 ? ["None."] : falsePositives.map((m) => `- \`${m.caseId}\` · \`${m.checkId}\` · p=${m.p!.toFixed(2)} · ${m.why}`)),
+    ...(falsePositives.length === 0 ? ["None."] : falsePositives.map((m) => `- \`${ids.get(m.caseId)}\` · \`${m.checkId}\` · p=${m.p!.toFixed(2)}${m.real ? "" : ` · ${m.why}`}`)),
     "",
     ...iterationsSection(),
     "## Cost",
@@ -534,6 +537,17 @@ function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inpu
 }
 
 /**
+ * What a public file may call a case: the public slug, or `private/NNN` for a private case. The numbering is by
+ * corpus order and shared by RESULTS.md and the atlas, so a reader can join the two but never reach the slug.
+ */
+export function publicIds(cases: Case[]): Map<string, string> {
+  const ids = new Map<string, string>();
+  let n = 0;
+  for (const c of cases) ids.set(c.id, c.root.private ? `private/${String(++n).padStart(3, "0")}` : c.id);
+  return ids;
+}
+
+/**
  * evals/atlas.html: every scored (check, case) pair as a dot at its probability, per check, with the threshold and
  * high-confidence lines. Built from evals/atlas.template.html. The page carries check, label, origin, split and
  * probability only: private cases are numbered, never named, and no label reason is embedded.
@@ -544,18 +558,17 @@ export function writeAtlas(cases: Case[], answers: Map<string, Answered>, hasPri
   const checks = CHECKS.map((c) => ({ id: c.id, t: c.threshold, high: highLine(c.threshold, c.high), blurb: c.blurb, optIn: c.optIn === true, pinned: c.pinned === true }));
   const rows: { id: string; check: string; label: number; p: number | null; real: boolean; holdout: boolean }[] = [];
   const classes: { id: string; expected: string; predicted: string | null; real: boolean; holdout: boolean }[] = [];
-  let n = 0;
+  const ids = publicIds(cases);
   for (const c of cases) {
     const a = answers.get(c.id);
     if (!a) continue;
-    const id = c.root.private ? `private/${String(++n).padStart(3, "0")}` : c.id;
-    const base = { id, real: isReal(c), holdout: splitOf(c) === "holdout" };
+    const base = { id: ids.get(c.id)!, real: isReal(c), holdout: splitOf(c) === "holdout" };
     classes.push({ ...base, expected: c.expect.class, predicted: a.class ?? null });
     for (const check of c.expect.fire) rows.push({ ...base, check, label: 1, p: a.probabilities[check] ?? null });
     for (const check of c.expect.not_fire) rows.push({ ...base, check, label: 0, p: a.probabilities[check] ?? null });
   }
   const data = JSON.stringify({ checks, rows, classes }).replace(/<\//g, "<\\/");
-  fs.writeFileSync(file, template.replace("/*DATA*/", data));
+  fs.writeFileSync(file, template.replace("/*DATA*/", () => data));
 }
 
 /**
