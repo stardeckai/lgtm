@@ -71,7 +71,7 @@ Running `lgtm` before setup exits with `😐✋  No API key. Run: lgtm init`.
 lgtm .                     # every *.test.* / *.spec.* file under a directory (a path is required)
 lgtm src/user.test.ts      # one file, or a directory
 lgtm --diff origin/main    # only tests changed vs a base, with the diff as evidence
-lgtm --diff                # just what you're working on: changed and new tests, plus tests of changed code, vs the default branch
+lgtm --diff                # changed and new test cases vs the default branch
 lgtm --dry-run src         # only the plan: files, API mode, estimated cost and runtime; no key needed
 ```
 
@@ -118,7 +118,7 @@ until it proves the code is actually tested.
 
 | flag | |
 |---|---|
-| `--diff [base]` | only the tests your change touches, with the diff in the state. Without a base it uses the repo's default branch (`origin/HEAD`, else `origin/main`, else `main`, else `master`), and always compares against `git merge-base <base> HEAD`, so a branch that is behind does not report the base's own commits. Counts uncommitted and untracked files, keeps only the test blocks that overlap a changed line, and adds any test whose imports include a changed source file (all of its blocks). The two diff checks only run on blocks the diff touched |
+| `--diff [base]` | only changed test cases, with the diff in the state. Without a base it uses the repo's default branch (`origin/HEAD`, else `origin/main`, else `main`, else `master`), and always compares against `git merge-base <base> HEAD`, so a branch that is behind does not report the base's own commits. Counts uncommitted and untracked files, and keeps only test blocks that overlap a changed line. The two diff checks only run on blocks the diff touched |
 | `--diff-all-blocks` | with `--diff`, audit every block of a changed file instead of only the changed ones |
 | `--threshold <0..1>` | override every check's threshold |
 | `--only <ids,…>` / `--skip <ids,…>` | pick checks |
