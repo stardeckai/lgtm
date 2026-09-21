@@ -541,7 +541,7 @@ function buildReport(cases: Case[], answers: Map<string, Answered>, meta: { inpu
 export function writeAtlas(cases: Case[], answers: Map<string, Answered>, hasPrivate: boolean, file = path.join(ROOT, "evals", "atlas.html")): void {
   if (!hasPrivate) return;
   const template = fs.readFileSync(path.join(ROOT, "evals", "atlas.template.html"), "utf8");
-  const checks = CHECKS.map((c) => ({ id: c.id, t: c.threshold, high: highLine(c.threshold, c.high), blurb: c.blurb }));
+  const checks = CHECKS.map((c) => ({ id: c.id, t: c.threshold, high: highLine(c.threshold, c.high), blurb: c.blurb, optIn: c.optIn === true, pinned: c.pinned === true }));
   const rows: { id: string; check: string; label: number; p: number | null; real: boolean; holdout: boolean }[] = [];
   const classes: { id: string; expected: string; predicted: string | null; real: boolean; holdout: boolean }[] = [];
   let n = 0;
