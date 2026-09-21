@@ -162,7 +162,8 @@ export async function init(
     : opts.provider === "openrouter" ? process.env.OPENROUTER_API_KEY
     : process.env.TYPESAFE_API_KEY || process.env.AI_GATEWAY_API_KEY || process.env.OPENROUTER_API_KEY;
   if (!config && envKey) {
-    console.log("An API key is already set in the environment — keeping it, not writing a config file.");
+    if (opts.provider) written.push(setDefaultProvider(opts.provider, home));
+    console.log("An API key is already set in the environment — using it.");
   } else if (!config) {
     config = await askKey(opts.provider);
   }

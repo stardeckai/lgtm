@@ -53,6 +53,28 @@ describe("target", () => {
     });
   });
 
+  it.each([
+    ["vercel", "AI_GATEWAY_API_KEY", "Vercel AI Gateway"],
+    ["openrouter", "OPENROUTER_API_KEY", "OpenRouter"],
+  ] as const)("saves the explicit %s default when its key is in the environment", (provider, envName, label) => {
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), "lgtm-cli-env-default-"));
+    tempDirs.push(home);
+    const env = { ...process.env, HOME: home, TYPESAFE_API_KEY: "", AI_GATEWAY_API_KEY: "", OPENROUTER_API_KEY: "" };
+    const seed = spawnSync(process.execPath, ["--import", tsx, cli, "key", "typesafe-key", "--provider", "typesafe"],
+      { cwd: repo, env, encoding: "utf8" });
+    expect(seed.status).toBe(0);
+    const selectedEnv = { ...env, [envName]: "provider-env-key" };
+    const setup = spawnSync(process.execPath, ["--import", tsx, cli, "init", "--provider", provider, "--skill", "none"],
+      { cwd: repo, env: selectedEnv, encoding: "utf8" });
+    expect(setup.status).toBe(0);
+    expect(JSON.parse(fs.readFileSync(path.join(home, ".config", "lgtm", "config.json"), "utf8"))).toEqual({
+      provider, keys: { typesafe: "typesafe-key" },
+    });
+    const plan = spawnSync(process.execPath, ["--import", tsx, cli, "--dry-run", "src/ignore.test.ts"],
+      { cwd: repo, env: selectedEnv, encoding: "utf8" });
+    expect(plan.stdout).toContain(`API mode: ${label}`);
+  });
+
   it("refuses a run when the selected provider has no key", () => {
     const home = fs.mkdtempSync(path.join(os.tmpdir(), "lgtm-cli-no-key-"));
     tempDirs.push(home);
