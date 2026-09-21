@@ -191,7 +191,7 @@ Retiring three unit tests for one wider test that really fails is a win, not a c
 | 😐&#8288;🤌 | `happy-path-only-of-risky-boundary` | The refusal path this code exists for (the reject, the limit, the wrong tenant) has no test here or among its siblings; add one. |
 | 😐&#8288;🤌 | `trivial-primitive` | A one-line helper tested on its own; any real test of the feature that uses it would catch the same break. Delete it, or test the feature. |
 | 😐&#8288;👏 | `over-mocked` | Every asserted value came out of a fake; the only real code left is glue between stubs. Fake fewer collaborators, or test the integration. |
-| 😐&#8288;🫸 | `regression-does-not-distinguish` | This regression test also passes on the pre-fix code, so it does not lock the fix; assert the value the bug got wrong. *(needs `--diff`)* *(off by default; name it in `--only`)* |
+| 😐&#8288;🫸 | `regression-does-not-distinguish` | This regression test also passes on the pre-fix code, so it does not lock the fix; assert the value the bug got wrong. *(needs `--diff`)* |
 | 😐&#8288;🫸 | `changed-in-lockstep` | The expected values changed in the same diff as the code that produces them, so the test may only mirror the new behaviour; derive them from the requirement. *(needs `--diff`)* *(off by default; name it in `--only`)* |
 <!-- checks:end -->
 
