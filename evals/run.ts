@@ -196,7 +196,7 @@ async function runLive(cases: Case[], only?: string[]): Promise<{ answers: Map<s
     client,
   );
 
-  // On a warm cache analyze reports no model; keep the one the corpus was answered with.
+  // Prefer response/cache provenance; older stored corpus metadata is a fallback.
   const model = result.model ?? (fs.existsSync(RUN_META) ? (JSON.parse(fs.readFileSync(RUN_META, "utf8")).model as string | undefined) : undefined);
   // Key by file AND line: dogfood cases share a file, so file alone would collapse them onto one case. Two
   // cases may still name the same test; each gets the answer, or one would keep stale answers forever.
