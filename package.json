@@ -1,6 +1,6 @@
 {
   "name": "@stardeckai/lgtm",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "A Jev-powered linter for tests that pass but prove nothing.",
   "license": "MIT",
   "repository": {
