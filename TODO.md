@@ -21,3 +21,6 @@ Deferred work, with the evidence that put it here. Newest at the top. Remove an 
 - **The diff checks are off by default** (`optIn` on `regression-does-not-distinguish` and
   `changed-in-lockstep`) until the PR-based harvest above gives them real cases. On a 584-test customer branch
   they were 102 of 187 flagged findings and 42 of 54 high-confidence ones, with a median score at the threshold.
+- **`impossible-fixture` is off by default** (`optIn`) until a wording round against its real cases: 3 real
+  positives (0.44, 0.45 and one at 0.23) rank under two real negatives (0.61, 0.70). The shape itself is rare:
+  2 positives in 3,256 scored blocks and 45 files read across four open-source repos.

@@ -187,7 +187,7 @@ Retiring three unit tests for one wider test that really fails is a win, not a c
 | 😐&#8288;🤌 | `setup-dominates` | Most of the setup never reaches the assertion; cut it to what the assertion depends on, or assert more of it. |
 | 😐&#8288;🤏 | `broad-snapshot` | The assertion is a snapshot of the whole output, so any change re-records it and nobody reads what changed; pin the fields that matter. |
 | 😐&#8288;🤏 | `swallowed-error-as-success` | The test passes whether the error is thrown, caught or never raised; assert the specific failure by class, code or message. |
-| 😐&#8288;🤌 | `impossible-fixture` | The fixture is a state production validation could never produce, so the branch it exercises cannot happen; build it through the real constructor or validator. |
+| 😐&#8288;🤌 | `impossible-fixture` | The fixture is a state production validation could never produce, so the branch it exercises cannot happen; build it through the real constructor or validator. *(off by default; name it in `--only`)* |
 | 😐&#8288;🤌 | `happy-path-only-of-risky-boundary` | The refusal path this code exists for (the reject, the limit, the wrong tenant) has no test here or among its siblings; add one. |
 | 😐&#8288;🤌 | `trivial-primitive` | A one-line helper tested on its own; any real test of the feature that uses it would catch the same break. Delete it, or test the feature. |
 | 😐&#8288;👏 | `over-mocked` | Every asserted value came out of a fake; the only real code left is glue between stubs. Fake fewer collaborators, or test the integration. |
