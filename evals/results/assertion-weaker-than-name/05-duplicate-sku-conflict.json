@@ -4,7 +4,7 @@
     "vacuous-assertion": 0.27,
     "assertion-weaker-than-name": 0.92,
     "reimplements-logic": 0.09,
-    "mocks-seam-under-test": 0.25,
+    "mocks-seam-under-test": 0.24,
     "mock-mirrors-implementation": 0.06,
     "tests-calls-not-outcomes": 0.14,
     "tests-internals": 0.1,

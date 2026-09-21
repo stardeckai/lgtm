@@ -4,7 +4,7 @@
     "vacuous-assertion": 0.06,
     "assertion-weaker-than-name": 0.23,
     "reimplements-logic": 0.2,
-    "mocks-seam-under-test": 0.19,
+    "mocks-seam-under-test": 0.18,
     "mock-mirrors-implementation": 0.08,
     "tests-calls-not-outcomes": 0.09,
     "tests-internals": 0.05,
@@ -14,7 +14,7 @@
     "impossible-fixture": 0.12,
     "happy-path-only-of-risky-boundary": 0.06,
     "trivial-primitive": 0.17,
-    "over-mocked": 0.12,
+    "over-mocked": 0.11,
     "regression-does-not-distinguish": 0.05,
     "changed-in-lockstep": 0.13
   },

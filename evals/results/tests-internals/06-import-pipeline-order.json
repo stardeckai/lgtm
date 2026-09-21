@@ -4,17 +4,17 @@
     "vacuous-assertion": 0.59,
     "assertion-weaker-than-name": 0.91,
     "reimplements-logic": 0.08,
-    "mocks-seam-under-test": 0.69,
+    "mocks-seam-under-test": 0.67,
     "mock-mirrors-implementation": 0.15,
     "tests-calls-not-outcomes": 0.63,
     "tests-internals": 0.45,
     "setup-dominates": 0.13,
     "broad-snapshot": 0.03,
-    "swallowed-error-as-success": 0.26,
+    "swallowed-error-as-success": 0.27,
     "impossible-fixture": 0.12,
     "happy-path-only-of-risky-boundary": 0.12,
     "trivial-primitive": 0.29,
-    "over-mocked": 0.32
+    "over-mocked": 0.38
   },
   "model": "jev-1.13.0",
   "class": "contract_integration"

@@ -10,11 +10,11 @@
     "tests-internals": 0.06,
     "setup-dominates": 0.15,
     "broad-snapshot": 0.03,
-    "swallowed-error-as-success": 0.12,
+    "swallowed-error-as-success": 0.13,
     "impossible-fixture": 0.09,
     "happy-path-only-of-risky-boundary": 0.15,
     "trivial-primitive": 0.54,
-    "over-mocked": 0.12,
+    "over-mocked": 0.13,
     "regression-does-not-distinguish": 0.11,
     "changed-in-lockstep": 0.91
   },

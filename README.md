@@ -202,8 +202,8 @@ Numbers on the held-out test set, which nothing was fitted or tuned on. lgtm pri
 
 | held-out | high-confidence findings | all flagged findings |
 |---|---|---|
-| precision | **0.94** (48 findings, 3 wrong) | 0.89 (96 findings, 11 wrong) |
-| recall | **0.33** | 0.63 |
+| precision | **0.94** (49 findings, 3 wrong) | 0.89 (96 findings, 11 wrong) |
+| recall | **0.34** | 0.63 |
 
 Per-check numbers on the same held-out set, every miss and false positive, the corpus composition and the class confusion matrix are in [`evals/RESULTS.md`](evals/RESULTS.md); every scored case is a dot in [`evals/atlas.html`](evals/atlas.html), per check, with both lines drawn. The public cases reproduce with `pnpm eval`.
 <!-- evals:end -->

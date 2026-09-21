@@ -1022,5 +1022,35 @@
     "fitted_t": 0.75,
     "kept": true,
     "note": "real train AUC 0.57\u21920.89, real holdout 0.57\u21920.94, corpus 0.85\u21920.96; real negatives mean 0.61\u21920.36, none \u22650.7; fit 0.90\u21920.75, holdout P/R 1.00/0.50"
+  },
+  {
+    "check": "over-mocked",
+    "variant": "+ all-fakes-and-only-a-call-assertion / mocked-module-supplied-text arms (round 4)",
+    "instructions": "\u2026Two shapes count as yes even with little asserted: every collaborator on the path is a fake and the only evidence is that one of them was, or was not, called; and the asserted text or object is what a mocked first-party module handed back\u2026",
+    "train_f1": 0.52,
+    "holdout_f1": 0.67,
+    "fitted_t": 0.8,
+    "kept": false,
+    "note": "real train AUC 0.84\u21920.88 but real holdout 0.89\u21920.84, corpus 0.95\u21920.94; reverted"
+  },
+  {
+    "check": "swallowed-error-as-success",
+    "variant": "inverted: does the test pin the specific failure? score = 1 \u2212 answer (round 4)",
+    "instructions": "Does this test pin the specific failure it names, so that it goes red when that failure does not happen or a different one does? \u2026",
+    "train_f1": 0.1,
+    "holdout_f1": 0.33,
+    "fitted_t": 0.9,
+    "kept": false,
+    "note": "positives up (real mean 0.70\u21920.77) but real negatives up more (0.39\u21920.56, \u22650.7: 2\u21926); real holdout AUC 0.67\u21920.64; train real AUC already 1.00, the gap is held-out negatives at 0.78\u20130.81 that cannot be tuned on; reverted"
+  },
+  {
+    "check": "mocks-seam-under-test",
+    "variant": "real-code-produced-the-value rule first, then the mock arms (round 4, 7th)",
+    "instructions": "\u2026First find, in implementation, where each asserted value is produced. If real code produced it from whatever the fakes handed over \u2014 a path parameter\u2026, a header\u2026, a verb mapped\u2026, a target list forwarded\u2026 \u2014 then the real code decided and the answer is yes\u2026",
+    "train_f1": 0.18,
+    "holdout_f1": 0.0,
+    "fitted_t": 0.8,
+    "kept": false,
+    "note": "positives collapse (real mean 0.78\u21920.44, synthetic 0.85\u21920.42), real train AUC 0.73\u21920.65, corpus 0.96\u21920.91; the four named negative shapes (forwarded target, verb mapping, path id, header) stay at the top of the ranking even when named first: a model limit, not a wording one. Reverted to v5 at the 0.84/0.90 pin."
   }
 ]

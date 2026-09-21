@@ -10,7 +10,7 @@
     "tests-internals": 0.1,
     "setup-dominates": 0.21,
     "broad-snapshot": 0.04,
-    "swallowed-error-as-success": 0.26,
+    "swallowed-error-as-success": 0.24,
     "impossible-fixture": 0.2,
     "happy-path-only-of-risky-boundary": 0.26,
     "trivial-primitive": 0.18,

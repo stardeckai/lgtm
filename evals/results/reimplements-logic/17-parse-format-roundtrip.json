@@ -4,7 +4,7 @@
     "vacuous-assertion": 0.08,
     "assertion-weaker-than-name": 0.23,
     "reimplements-logic": 0.26,
-    "mocks-seam-under-test": 0.17,
+    "mocks-seam-under-test": 0.14,
     "mock-mirrors-implementation": 0.05,
     "tests-calls-not-outcomes": 0.12,
     "tests-internals": 0.05,
@@ -14,7 +14,7 @@
     "impossible-fixture": 0.08,
     "happy-path-only-of-risky-boundary": 0.13,
     "trivial-primitive": 0.19,
-    "over-mocked": 0.08
+    "over-mocked": 0.09
   },
   "model": "jev-1.13.0",
   "class": "contract_integration"

@@ -10,11 +10,11 @@
     "tests-internals": 0.29,
     "setup-dominates": 0.1,
     "broad-snapshot": 0.03,
-    "swallowed-error-as-success": 0.15,
+    "swallowed-error-as-success": 0.14,
     "impossible-fixture": 0.1,
     "happy-path-only-of-risky-boundary": 0.07,
     "trivial-primitive": 0.09,
-    "over-mocked": 0.11
+    "over-mocked": 0.1
   },
   "model": "jev-1.13.0",
   "class": "contract_integration"
