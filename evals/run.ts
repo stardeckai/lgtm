@@ -130,26 +130,19 @@ const slugHash = (slug: string) => createHash("sha256").update(slug).digest("hex
 let HOLDOUT: Set<string> = new Set();
 
 /**
- * The test set. One draw per case, stratified by its primary label (first `fire` id, or "clean") and by whether it
- * was read from production code, sorted by slug hash: every 2nd real case and every 10th synthetic one is held out,
- * so the set is mostly real and a case is never train for one check and holdout for another. Thresholds are fitted
- * on train only; the test set is reported, never fitted or tuned against.
+ * The test set: about every 2nd real case and every 10th synthetic one, chosen by slug hash so the set is mostly
+ * real and a case is never train for one check and holdout for another. Thresholds are fitted on train only; the
+ * test set is reported, never fitted or tuned against.
  */
 export function computeSplit(cases: Case[]): Set<string> {
-  const groups = new Map<string, Case[]>();
-  for (const c of cases) {
-    const key = `${isReal(c) ? "real" : "synthetic"}:${c.expect.fire[0] ?? "clean"}`;
-    const g = groups.get(key);
-    if (g) g.push(c);
-    else groups.set(key, [c]);
-  }
+  // Membership depends only on the case's own slug hash, never on its neighbours: the first two hex digits are
+  // a number in 0–255, and a case is held out when it falls under the rate's share of that range. Adding or
+  // removing cases therefore never moves an existing case across the split, which a rank-based draw would do.
   const holdout = new Set<string>();
-  for (const members of [...groups.keys()].sort().map((k) => groups.get(k)!)) {
-    members.sort((a, b) => slugHash(path.basename(a.id)).localeCompare(slugHash(path.basename(b.id))));
-    const every = isReal(members[0]!) ? HOLDOUT_EVERY.real : HOLDOUT_EVERY.synthetic;
-    members.forEach((c, i) => {
-      if (i % every === 0) holdout.add(c.id);
-    });
+  for (const c of cases) {
+    const bucket = parseInt(slugHash(path.basename(c.id)).slice(0, 2), 16);
+    const every = isReal(c) ? HOLDOUT_EVERY.real : HOLDOUT_EVERY.synthetic;
+    if (bucket < 256 / every) holdout.add(c.id);
   }
   return holdout;
 }

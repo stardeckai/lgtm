@@ -1,10 +1,10 @@
 # lgtm eval results
 
-918 labelled cases (521 public + 397 private, synthetic + anonymized real-world) · 1672 scored (check, case) pairs · model `jev-1.13.0`
+949 labelled cases (521 public + 428 private, synthetic + anonymized real-world) · 1709 scored (check, case) pairs · model `jev-1.13.0`
 
-Split: 646 train · 272 holdout (214 real).
+Split: 689 train · 260 holdout (220 real).
 
-Corpus: 521 public + 397 private labelled cases (418 real), 272 held out (214 real). Each check's threshold is fitted on the train cases to the lowest point that fires on no real negative and keeps precision at or above 0.95, plus one step of margin; recall is what that leaves. Ground truth lives only in `expect.json`, never in the files the model sees. The 397 real cases were harvested by scoring every test block in real codebases, sampling around each threshold, and reading each block against its implementation; they are anonymized and kept private because anonymization removes names, not shape.
+Corpus: 521 public + 428 private labelled cases (449 real), 260 held out (220 real). Each check's threshold is fitted on the train cases to the lowest point that fires on no real negative and keeps precision at or above 0.95, plus one step of margin; recall is what that leaves. Ground truth lives only in `expect.json`, never in the files the model sees. The 428 real cases were harvested by scoring every test block in real codebases, sampling around each threshold, and reading each block against its implementation; they are anonymized and kept private because anonymization removes names, not shape.
 
 ## Held out, per check
 
@@ -12,59 +12,59 @@ High-confidence findings sit at or above the check's high-confidence line; all f
 
 | check | threshold | high-confidence precision/recall | all flagged precision/recall | held-out +/− |
 |---|---|---|---|---|
-| `would-pass-if-broken` | 0.50 | 1.00/0.15 | 0.92/0.44 | 27/11 |
-| `vacuous-assertion` | 0.58 | 1.00/0.29 | 1.00/0.82 | 17/30 |
-| `assertion-weaker-than-name` | 0.68 | 0.89/0.74 | 0.90/0.83 | 23/7 |
-| `reimplements-logic` | 0.60 | 1.00/0.55 | 1.00/0.82 | 11/33 |
-| `mocks-seam-under-test` | 0.84 | 1.00/0.14 | 0.67/0.86 | 7/27 |
-| `mock-mirrors-implementation` | 0.60 | 1.00/0.50 | 1.00/0.75 | 4/11 |
-| `tests-calls-not-outcomes` | 0.55 | 1.00/0.67 | 0.57/0.67 | 6/16 |
-| `tests-internals` | 0.35 | 1.00/0.67 | 0.89/0.89 | 9/12 |
-| `setup-dominates` | 0.70 | 1.00/0.67 | 0.67/0.67 | 3/18 |
-| `broad-snapshot` | 0.35 | 1.00/0.67 | 1.00/1.00 | 3/14 |
-| `swallowed-error-as-success` | 0.90 | —/0.00 | —/0.00 | 7/20 |
-| `impossible-fixture` | 0.50 | 1.00/0.33 | 1.00/0.33 | 3/17 |
-| `happy-path-only-of-risky-boundary` | 0.65 | —/0.00 | 0.75/0.60 | 5/15 |
-| `trivial-primitive` | 0.68 | 0.92/0.80 | 0.93/0.87 | 15/15 |
-| `over-mocked` | 0.75 | 1.00/0.17 | 0.60/0.50 | 6/21 |
-| `regression-does-not-distinguish` | 0.90 | —/0.00 | —/0.00 | 2/2 |
-| `changed-in-lockstep` | 0.90 | 1.00/0.33 | 0.67/0.67 | 3/5 |
-| **all** | | 0.96/0.42 | 0.86/0.68 | 151/274 |
+| `would-pass-if-broken` | 0.50 | 1.00/0.12 | 0.90/0.35 | 26/16 |
+| `vacuous-assertion` | 0.58 | 1.00/0.37 | 1.00/0.89 | 19/24 |
+| `assertion-weaker-than-name` | 0.68 | 0.93/0.87 | 0.93/0.87 | 15/8 |
+| `reimplements-logic` | 0.60 | 1.00/0.67 | 1.00/0.83 | 6/22 |
+| `mocks-seam-under-test` | 0.84 | —/0.00 | 0.83/0.63 | 8/20 |
+| `mock-mirrors-implementation` | 0.60 | 1.00/1.00 | 1.00/1.00 | 1/7 |
+| `tests-calls-not-outcomes` | 0.75 | —/0.00 | 1.00/0.50 | 4/19 |
+| `tests-internals` | 0.55 | 1.00/0.50 | 1.00/0.50 | 6/14 |
+| `setup-dominates` | 0.70 | 1.00/0.67 | 0.75/1.00 | 3/18 |
+| `broad-snapshot` | 0.35 | —/— | —/— | 0/7 |
+| `swallowed-error-as-success` | 0.75 | —/0.00 | 0.33/0.20 | 5/19 |
+| `impossible-fixture` | 0.50 | 1.00/0.50 | 1.00/0.50 | 2/18 |
+| `happy-path-only-of-risky-boundary` | 0.65 | 1.00/0.40 | 0.80/0.80 | 5/16 |
+| `trivial-primitive` | 0.68 | 0.80/0.62 | 0.85/0.85 | 13/15 |
+| `over-mocked` | 0.80 | —/0.00 | 0.67/0.29 | 7/30 |
+| `regression-does-not-distinguish` | 0.90 | —/0.00 | —/0.00 | 14/5 |
+| `changed-in-lockstep` | 0.90 | 1.00/1.00 | 0.50/1.00 | 1/8 |
+| **all** | | 0.94/0.33 | 0.88/0.58 | 135/266 |
 
 ## Per check
 
 | check | pos | neg | own t | train P/R/F1 @own | holdout P/R/F1 @own | P/R/F1 @0.50 | best F1 (train) |
 |---|---|---|---|---|---|---|---|
-| `would-pass-if-broken` | 76 | 45 | 0.50 | 1.00/0.55/0.71 | 0.92/0.44/0.60 | 0.97/0.51/0.67 | 0.92 @ 0.14 |
-| `vacuous-assertion` | 51 | 146 | 0.58 | 0.96/0.79/0.87 | 1.00/0.82/0.90 | 0.94/0.90/0.92 | 0.97 @ 0.37 |
-| `assertion-weaker-than-name` | 71 | 27 | 0.68 | 0.98/0.92/0.95 | 0.90/0.83/0.86 | 0.87/0.96/0.91 | 0.97 @ 0.62 |
-| `reimplements-logic` | 32 | 183 | 0.60 | 0.95/0.95/0.95 | 1.00/0.82/0.90 | 0.91/0.91/0.91 | 0.95 @ 0.78 |
-| `mocks-seam-under-test` | 28 | 105 | 0.84 | 1.00/0.57/0.73 | 0.67/0.86/0.75 | 0.50/1.00/0.67 | 0.90 @ 0.71 |
-| `mock-mirrors-implementation` | 18 | 28 | 0.60 | 1.00/0.86/0.92 | 1.00/0.75/0.86 | 0.90/1.00/0.95 | 0.93 @ 0.53 |
-| `tests-calls-not-outcomes` | 23 | 55 | 0.55 | 1.00/0.94/0.97 | 0.57/0.67/0.62 | 0.88/0.91/0.89 | 1.00 @ 0.50 |
-| `tests-internals` | 29 | 45 | 0.35 | 1.00/0.90/0.95 | 0.89/0.89/0.89 | 1.00/0.66/0.79 | 1.00 @ 0.26 |
-| `setup-dominates` | 17 | 53 | 0.70 | 1.00/0.79/0.88 | 0.67/0.67/0.67 | 0.70/0.94/0.80 | 1.00 @ 0.63 |
-| `broad-snapshot` | 16 | 35 | 0.35 | 1.00/0.92/0.96 | 1.00/1.00/1.00 | 1.00/0.81/0.90 | 1.00 @ 0.19 |
-| `swallowed-error-as-success` | 24 | 59 | 0.90 | 1.00/0.06/0.11 | —/0.00/— | 0.76/0.92/0.83 | 0.86 @ 0.57 |
-| `impossible-fixture` | 16 | 60 | 0.50 | 1.00/0.92/0.96 | 1.00/0.33/0.50 | 1.00/0.81/0.90 | 0.96 @ 0.57 |
-| `happy-path-only-of-risky-boundary` | 23 | 73 | 0.65 | 1.00/0.67/0.80 | 0.75/0.60/0.67 | 0.74/0.87/0.80 | 0.91 @ 0.55 |
-| `trivial-primitive` | 41 | 97 | 0.68 | 0.91/0.81/0.86 | 0.93/0.87/0.90 | 0.76/1.00/0.86 | 0.94 @ 0.61 |
-| `over-mocked` | 24 | 80 | 0.75 | 1.00/0.33/0.50 | 0.60/0.50/0.55 | 0.75/0.88/0.81 | 0.88 @ 0.53 |
-| `regression-does-not-distinguish` | 17 | 30 | 0.90 | —/0.00/— | —/0.00/— | 0.68/0.76/0.72 | 0.82 @ 0.23 |
-| `changed-in-lockstep` | 17 | 28 | 0.90 | 1.00/0.64/0.78 | 0.67/0.67/0.67 | 0.71/1.00/0.83 | 0.93 @ 0.75 |
+| `would-pass-if-broken` | 76 | 45 | 0.50 | 1.00/0.60/0.75 | 0.90/0.35/0.50 | 0.97/0.51/0.67 | 0.93 @ 0.14 |
+| `vacuous-assertion` | 51 | 146 | 0.58 | 0.96/0.75/0.84 | 1.00/0.89/0.94 | 0.94/0.90/0.92 | 0.94 @ 0.37 |
+| `assertion-weaker-than-name` | 71 | 27 | 0.68 | 0.96/0.89/0.93 | 0.93/0.87/0.90 | 0.87/0.96/0.91 | 0.95 @ 0.60 |
+| `reimplements-logic` | 32 | 183 | 0.60 | 0.96/0.92/0.94 | 1.00/0.83/0.91 | 0.91/0.91/0.91 | 0.95 @ 0.47 |
+| `mocks-seam-under-test` | 28 | 105 | 0.84 | 0.87/0.65/0.74 | 0.83/0.63/0.71 | 0.50/1.00/0.67 | 0.84 @ 0.71 |
+| `mock-mirrors-implementation` | 18 | 28 | 0.60 | 1.00/0.82/0.90 | 1.00/1.00/1.00 | 0.90/1.00/0.95 | 0.97 @ 0.52 |
+| `tests-calls-not-outcomes` | 23 | 55 | 0.75 | 1.00/0.84/0.91 | 1.00/0.50/0.67 | 0.88/0.91/0.89 | 0.97 @ 0.50 |
+| `tests-internals` | 29 | 45 | 0.55 | 1.00/0.70/0.82 | 1.00/0.50/0.67 | 1.00/0.66/0.79 | 0.98 @ 0.32 |
+| `setup-dominates` | 17 | 53 | 0.70 | 1.00/0.71/0.83 | 0.75/1.00/0.86 | 0.70/0.94/0.80 | 0.96 @ 0.63 |
+| `broad-snapshot` | 16 | 35 | 0.35 | 1.00/0.94/0.97 | —/—/— | 1.00/0.81/0.90 | 1.00 @ 0.19 |
+| `swallowed-error-as-success` | 24 | 59 | 0.75 | 1.00/0.53/0.69 | 0.33/0.20/0.25 | 0.76/0.92/0.83 | 0.90 @ 0.57 |
+| `impossible-fixture` | 16 | 60 | 0.50 | 1.00/0.86/0.92 | 1.00/0.50/0.67 | 1.00/0.81/0.90 | 0.92 @ 0.57 |
+| `happy-path-only-of-risky-boundary` | 23 | 73 | 0.65 | 1.00/0.61/0.76 | 0.80/0.80/0.80 | 0.74/0.87/0.80 | 0.88 @ 0.52 |
+| `trivial-primitive` | 41 | 97 | 0.68 | 0.96/0.82/0.88 | 0.85/0.85/0.85 | 0.76/1.00/0.86 | 0.96 @ 0.61 |
+| `over-mocked` | 24 | 80 | 0.80 | 1.00/0.24/0.38 | 0.67/0.29/0.40 | 0.75/0.88/0.81 | 0.83 @ 0.50 |
+| `regression-does-not-distinguish` | 44 | 34 | 0.90 | —/0.00/— | —/0.00/— | 0.84/0.82/0.83 | 0.89 @ 0.23 |
+| `changed-in-lockstep` | 17 | 34 | 0.90 | 1.00/0.63/0.77 | 0.50/1.00/0.67 | 0.71/1.00/0.83 | 0.94 @ 0.75 |
 
-Holdout is the test set: every 2nd real case and every 10th synthetic one (272, 214 real). Thresholds are fitted on train only and prompts are never tuned against holdout, so its numbers are the ones to trust; with a handful of held-out positives per check they are still coarse.
+Holdout is the test set: every 2nd real case and every 10th synthetic one (260, 220 real). Thresholds are fitted on train only and prompts are never tuned against holdout, so its numbers are the ones to trust; with a handful of held-out positives per check they are still coarse.
 
 Checks with no labelled case are omitted.
 
 ## Test class
 
-Accuracy — all: 766/918 (0.83) · holdout: 225/272 (0.83).
+Accuracy — all: 792/949 (0.83) · holdout: 213/260 (0.82).
 
 | actual \ predicted | pure_logic | mocked_seam_unit | contract_integration |
 |---|---|---|---|
-| **pure_logic** | 514 | 64 | 38 |
-| **mocked_seam_unit** | 1 | 147 | 7 |
+| **pure_logic** | 536 | 68 | 39 |
+| **mocked_seam_unit** | 1 | 151 | 7 |
 | **contract_integration** | 24 | 18 | 105 |
 
 ## Misses (labelled fire, p below the check's own threshold)
@@ -91,8 +91,11 @@ Accuracy — all: 766/918 (0.83) · holdout: 225/272 (0.83).
 - `mocks-seam-under-test/11-upload-checksum-among-mocks` · `mocks-seam-under-test` · p=0.83 · the clock, metrics and logger fakes are fair, but the store's checksum is also faked, so the local-versus-remote digest comparison the test names can never disagree
 - `mocks-seam-under-test/14-idempotency-key-store` · `mocks-seam-under-test` · p=0.75 · the deduplication depends on the store remembering the first write, and the store is a mock scripted to return the stored response whether or not anything was written
 - `mocks-seam-under-test/16-migration-journal` · `mocks-seam-under-test` · p=0.81 · what makes a migration run once is that recording it changes what the journal reports, and both the read and the write of that journal are fakes that never influence each other
+- `over-mocked/01-invite-route-handler` · `over-mocked` · p=0.75 · auth, validation, persistence and mail are all replaced, so only the handler's four lines of glue are real
 - `over-mocked/02-refund-orchestrator` · `over-mocked` · p=0.63 · every collaborator is a stub tuned so the policy limit and the outstanding balance coincide, leaving no real decision to fail
+- `over-mocked/03-nightly-rollup-job` · `over-mocked` · p=0.77 · the lock, the warehouse, metrics and slack are all faked and the asserted row count comes straight back out of a stub
 - `over-mocked/04-document-export` · `would-pass-if-broken` · p=0.34 · all four collaborators are stubs and the asserted url is the stub's own return, so a wrong storage key passes
+- `over-mocked/05-dashboard-page` · `over-mocked` · p=0.78 · every hook is stubbed and the formatter returns a fixed string, so neither the open-order filter nor the total is exercised
 - `over-mocked/06-graphql-resolver` · `over-mocked` · p=0.67 · the loader, the permission check and the database are all stubbed to agree, and the assertion echoes the loader's own object
 - `over-mocked/07-self-mocked-helpers` · `over-mocked` · p=0.42 · the version bump and manifest building are stubbed out, so choosing a patch bump for 40 files would still report 2.4.0
 - `over-mocked/07-self-mocked-helpers` · `would-pass-if-broken` · p=0.21 · the version bump and manifest building are stubbed out, so choosing a patch bump for 40 files would still report 2.4.0
@@ -123,7 +126,6 @@ Accuracy — all: 766/918 (0.83) · holdout: 225/272 (0.83).
 - `regression-does-not-distinguish/41-tip-split-remainder` · `regression-does-not-distinguish` · p=0.87 · the diff makes the leftover cents get handed out instead of vanishing, but every total in the test divides evenly, so the pre-change function returned exactly these arrays
 - `setup-dominates/04-session-ttl-seconds` · `setup-dominates` · p=0.64 · five module mocks, a tenant, a device and an actor sit in file context for a pure arithmetic assertion that touches none of them
 - `setup-dominates/12-permission-denied-reason` · `setup-dominates` · p=0.65 · role definitions, a resource tree, memberships and generated audit entries are never consulted by an assertion that passes two role literals and a boolean
-- `swallowed-error-as-success/01-duplicate-signup-try-catch` · `swallowed-error-as-success` · p=0.88 · if the duplicate check disappeared the second register would return an account, the catch would never run and the test would still be green
 - `swallowed-error-as-success/01-duplicate-signup-try-catch` · `would-pass-if-broken` · p=0.06 · if the duplicate check disappeared the second register would return an account, the catch would never run and the test would still be green
 - `swallowed-error-as-success/02-config-parse-fallback` · `swallowed-error-as-success` · p=0.65 · a parseConfig that ignored its input entirely and always returned the defaults would pass this test unchanged
 - `swallowed-error-as-success/03-webhook-signature-logged` · `swallowed-error-as-success` · p=0.64 · a crash anywhere in the handler produces the same null and the same logged error, so the test cannot tell a rejected signature from a broken function
@@ -131,20 +133,23 @@ Accuracy — all: 766/918 (0.83) · holdout: 225/272 (0.83).
 - `swallowed-error-as-success/05-payment-error-message-contains` · `vacuous-assertion` · p=0.39 · any error message satisfies the catch and an authorization that wrongly succeeded would skip the catch entirely, leaving nothing asserted
 - `swallowed-error-as-success/06-result-ok-false-only` · `swallowed-error-as-success` · p=0.72 · an unknown account, a thrown exception and an overdraft all produce the identical ok false, and no balance is read back to show nothing moved
 - `swallowed-error-as-success/07-search-fallback-to-cache` · `swallowed-error-as-success` · p=0.73 · a search that never called the backend and always returned the cached array would pass this test unchanged
-- `swallowed-error-as-success/08-async-rejection-unawaited` · `swallowed-error-as-success` · p=0.86 · a dispatcher that accepted the empty payload would skip the catch and still satisfy a count assertion that every integer meets
 - `swallowed-error-as-success/08-async-rejection-unawaited` · `vacuous-assertion` · p=0.32 · a dispatcher that accepted the empty payload would skip the catch and still satisfy a count assertion that every integer meets
 - `swallowed-error-as-success/09-retry-gives-up` · `swallowed-error-as-success` · p=0.63 · the fallback comes back whether the helper retried three times or gave up immediately, and the attempt count the name promises is never checked
 - `swallowed-error-as-success/10-import-error-count` · `swallowed-error-as-success` · p=0.30 · any exception raised while parsing the second row produces one error and one parsed row, so the counts do not distinguish the date rule from an unrelated crash
-- `swallowed-error-as-success/11-promise-catch-in-test` · `swallowed-error-as-success` · p=0.83 · the catch in the test flattens every rejection to null, so a lookup crash reads the same as the refusal and only a returned tenant would fail
 - `swallowed-error-as-success/12-route-returns-200-on-failure` · `swallowed-error-as-success` · p=0.62 · the catch also answers 200 with an empty rows array, so a thrown error inside the handler is indistinguishable from the range check the test is named for
-- `swallowed-error-as-success/13-rejects-any-error` · `swallowed-error-as-success` · p=0.82 · toThrow with no argument accepts any rejection, so a type error thrown before the holder comparison would pass as if the lease had been defended
-- `swallowed-error-as-success/14-metric-incremented-on-failure` · `swallowed-error-as-success` · p=0.79 · the same null and the same failure counter come back for a provider outage or any internal crash, so the E.164 rule the name claims is not what is being proved
 - `swallowed-error-as-success/15-empty-list-for-unknown-tenant` · `swallowed-error-as-success` · p=0.59 · the catch logs and returns the same empty array, so a filter that crashed would look exactly like the tenant scoping this test is named for
+- `tests-calls-not-outcomes/06-webhook-retry-schedule` · `tests-calls-not-outcomes` · p=0.72 · the backoff delay that the name is about is passed to the mock and never asserted, only that one call happened
 - `tests-calls-not-outcomes/13-migration-ordering` · `tests-calls-not-outcomes` · p=0.50 · only the first backfill is compared to the drop, so stopping after one of the three batches keeps the test green
 - `tests-calls-not-outcomes/13-migration-ordering` · `would-pass-if-broken` · p=0.11 · only the first backfill is compared to the drop, so stopping after one of the three batches keeps the test green
+- `tests-internals/02-private-cache-key` · `tests-internals` · p=0.41 · a private method is called through an any-cast and the string it builds is asserted, not that two tenants get different rows
 - `tests-internals/04-handler-source-text` · `would-pass-if-broken` · p=0.23 · it greps the function's source text, so an org-wide lookup that leaked members across tenants would still pass
+- `tests-internals/06-import-pipeline-order` · `tests-internals` · p=0.45 · it pins the internal order of three private pipeline steps and never looks at the deduplicated contacts returned
+- `tests-internals/06-import-pipeline-order` · `tests-calls-not-outcomes` · p=0.63 · it pins the internal order of three private pipeline steps and never looks at the deduplicated contacts returned
 - `tests-internals/07-child-props-spy` · `tests-internals` · p=0.32 · it counts renders of a stubbed child component instead of asserting the tax and total amounts shown to the shopper
+- `tests-internals/10-reducer-dispatch-spy` · `tests-internals` · p=0.36 · it asserts the sequence of internal action types while the reducer that enforces the four-seat limit never runs
 - `tests-internals/10-reducer-dispatch-spy` · `assertion-weaker-than-name` · p=0.60 · it asserts the sequence of internal action types while the reducer that enforces the four-seat limit never runs
+- `tests-internals/11-draft-hook-ref` · `tests-internals` · p=0.45 · the assertion is on a bookkeeping ref rather than the status the UI renders or the draft handed to save
+- `tests-internals/12-dedupe-window-size` · `tests-internals` · p=0.43 · it asserts the size of the internal bookkeeping map instead of whether a repeated event id is accepted again
 - `tests-internals/12-dedupe-window-size` · `assertion-weaker-than-name` · p=0.67 · it asserts the size of the internal bookkeeping map instead of whether a repeated event id is accepted again
 - `tests-internals/13-permission-table-shape` · `would-pass-if-broken` · p=0.14 · it asserts the shape of a lookup table, so adding billing to the admin row would leave the test green
 - `trivial-primitive/09-session-lookup-wrapper` · `trivial-primitive` · p=0.65 · find is a one-line wrapper over Map.get with a null fallback, and every activeUserId test exercises it already
@@ -185,16 +190,11 @@ Accuracy — all: 766/918 (0.83) · holdout: 225/272 (0.83).
 - `private/realworld/assertions-a/19-case-insensitive-search` · `would-pass-if-broken` · p=0.24 · comparing two result counts pins nothing about which entries came back, and dropping the lowercasing on both sides makes both queries return zero rows, which is still an equal length
 - `private/realworld/assertions-a/23-venue-timezone-format` · `would-pass-if-broken` · p=0.37 · the timezone the name is about is never observed — drop it and render in UTC and the output still contains the year, which is all the assertion looks at
 - `private/realworld/assertions-b-sd/07-ordinary-env-key-allowed` · `vacuous-assertion` · p=0.56 · nothing about the write is checked — an implementation that inserted the wrong key, stored the secret in plaintext, or dropped the deployment targets still resolves to something defined and still calls insert once
-- `private/realworld/assertions-b-sd/14-verification-lookup-null` · `swallowed-error-as-success` · p=0.84 · null is also what a successful lookup with no row returns, so a catch that swallowed the wrong thing, a typo'd project filter, or any unrelated throw inside the function produces the same green
 - `private/realworld/assertions-b-sd/17-invalid-package-json-rejects` · `swallowed-error-as-success` · p=0.68 · a bare rejects.toThrow() accepts any failure, so a TypeError raised before the parse — or any unrelated throw after the required install — produces the same rejection and the same untouched guide, unlike the sibling that pins /ENOENT/
 - `private/realworld/assertions-b-sd/18-scrub-error-false` · `swallowed-error-as-success` · p=0.71 · false is the same value a non-zero exit produces, so nothing in the assertion distinguishes the transport rejection from any other failure, or from a scrub that never ran the command at all
 - `private/realworld/assertions-b/01-refund-skip-no-invocation` · `would-pass-if-broken` · p=0.39 · the handover coordinator is never invoked in this block, so the two not.toHaveBeenCalled assertions hold for freshly created spies no matter what the skip path actually does with the drawer or the refund record (tests-calls-not-outcomes left unscored: not opening the drawer is arguably the outcome, and the siblings use the same idiom legitimately)
 - `private/realworld/assertions-b/10-occupancy-report-canonical` · `reimplements-logic` · p=0.46 · the expected hour rows are rebuilt in the test by calling the same capacity, interval and bucketing functions the report calls, so a wrong capacity or a shifted hour boundary is computed identically on both sides and the comparison still passes
-- `private/realworld/assertions-b/13-checkout-quote-bare-throw` · `swallowed-error-as-success` · p=0.87 · the bare rejects.toThrow() is satisfied by the request-validation error thrown before the catalog is ever called, so a quote path that stopped propagating the timeout, or that rejected this request for an unrelated reason, still passes
-- `private/realworld/assertions-b/14-failure-log-pii-scan` · `swallowed-error-as-success` · p=0.81 · the display path swallows the failure into an empty fallback and logs nothing, so the captured array is empty, the loop body never executes and the block passes exactly as it would if the failure were logged with the customer's email in it
-- `private/realworld/assertions-b/15-event-uniqueness-bare-throw` · `swallowed-error-as-success` · p=0.79 · a bare rejects.toThrow() cannot tell the unique-constraint violation it claims to prove from a not-null or foreign-key failure on the same insert, so the block stays green if the uniqueness index is dropped and some other column check happens to reject the row
 - `private/realworld/assertions-b/16-archive-fetch-empty-fallback` · `swallowed-error-as-success` · p=0.59 · every failure inside the archive walk is caught and turned into the same empty array, so a domain lookup that returned nothing, a cassette miss, or a crash in the parser all satisfy this assertion just as a network error does
-- `private/realworld/assertions-b/17-policy-bounds-bare-throw` · `swallowed-error-as-success` · p=0.85 · the bare rejection matcher does not distinguish the randomLength bound from a missing database binding or a prefix rule, so widening the minimum to zero while some other validation still rejects this input keeps the block green
 - `private/realworld/assertions-c/02-reasoning-parts-multiturn` · `would-pass-if-broken` · p=0.48 · the only unconditional assertions are messages.length > 0 and an assistant message existing; every check on reasoning metadata sits inside `if (reasoningParts.length > 0)` and `if ('providerMetadata' in part)` and is toBeDefined, so a provider that emitted no reasoning parts or dropped the details entirely stays green
 - `private/realworld/assertions-c/06-schema-export-defined` · `would-pass-if-broken` · p=0.27 · `expect(VehicleSchema).toBeDefined()` holds for any non-undefined export, so a schema with every field removed or the wrong shape entirely passes; the import itself already guarantees what the assertion checks
 - `private/realworld/assertions-c/07-parallel-tool-calls-stream` · `would-pass-if-broken` · p=0.44 · the name promises parallel tool calls but verifyParallelToolCalls only requires >= 1 tool-call part and verifyResponseContent accepts any text containing 'time' or 'weather', so a provider that surfaced only the first of two tool_calls (or an assistant that called one tool per turn) passes every assertion
@@ -202,6 +202,33 @@ Accuracy — all: 766/918 (0.83) · holdout: 225/272 (0.83).
 - `private/realworld/assertions-d/03-authority-error-category-enum` · `would-pass-if-broken` · p=0.38 · the name promises a stable enum but the constructor is a plain field assignment that accepts any string, which the block itself asserts with not.toThrow(); adding a fourth category or removing the type entirely leaves every assertion green, and no failure path is exercised at all
 - `private/realworld/assertions-d/11-package-response-sort-order` · `vacuous-assertion` · p=0.48 · the only assertion beyond the 200 is toHaveProperty("sortOrder") in a loop over the response, which passes when the route emits sortOrder: undefined for every package, swaps every value, or returns an empty list; no value is pinned against the seeded sort_order
 - `private/realworld/diff-d/09-settle-conflict-no-resubmit-key` · `changed-in-lockstep` · p=0.81 · the old assertion stated the requirement negatively, no retry or resubmit key on any resolution, plus four toContain lines; the rewrite replaces all of it with the exact three-key list the reworked function now returns, so the next change to the result shape is met by editing the list rather than by a requirement the test states on its own. The fixture payloads also swapped from the deleted branches to the surviving one
+- `private/realworld/diff-e/01-indirect-expansion-still-flagged` · `regression-does-not-distinguish` · p=0.83 · the fix only rewrote the zsh =(...) lookbehind so that JS arrow functions inside node -e strings stop matching; this block feeds `echo ${!prefix}`, which the untouched indirectExpansion regex already matched before the change, so the assertion is true on both sides and never reaches the edited regex
+- `private/realworld/diff-e/02-dangerous-expansion-asks-user` · `regression-does-not-distinguish` · p=0.81 · the only implementation change is the zsh =(...) regex gaining a token-boundary lookbehind; `echo "${var@P}"` trips the untouched dangerousParameterExpansion regex on both sides, so getCommandDecision answered ask_user before the fix exactly as it does after, and the bug (arrow functions in node -e flagged as process substitution) is never exercised
+- `private/realworld/diff-e/03-process-substitution-leading-space` · `regression-does-not-distinguish` · p=0.76 · the fix added a negative lookbehind so that array assignments like files=(a b c) stop matching; ` =(ls)` has a space before the `=` and matched the old bare /=\([^)]+\)/ just as it matches the new regex, so this block is true on the pre-fix code and only the sibling array-assignment cases see the change
+- `private/realworld/diff-e/04-supported-effort-passes-through` · `regression-does-not-distinguish` · p=0.63 · the fix falls back to the model default when the selected effort is missing from the supportsReasoningEffort array; this block selects 'high' with supports [low, high], so the pre-fix code returned { thinkingLevel: 'high' } directly and the added branch is never taken, so the assertion holds on both sides
+- `private/realworld/diff-e/06-none-effort-unchanged` · `regression-does-not-distinguish` · p=0.86 · this block existed before the change and only gained a comment; 'none' is not a thinking level on either side, so both the old isNovaThinkingLevel(selectedEffort) guard and the new effortToUse guard return undefined, and the assertion never sees the added array fallback; nothing about the expected value moved with the code
+- `private/realworld/diff-e/07-relay-default-max-tokens` · `regression-does-not-distinguish` · p=0.78 · the fix made defaultTemperature a required parameter (dropping the implicit `= 0`) so providers with a non-zero default stop being silently overridden; this pre-existing block now passes defaultTemperature: 0, the very value the removed default supplied, and asserts only maxTokens, so it passes identically before and after; the edit adds a required argument, it does not move an expected value
+- `private/realworld/diff-e/08-query-error-without-cause` · `regression-does-not-distinguish` · p=0.75 · the fix appends the cause's toString() to the error message (and adds a request timeout) so a transport failure is visible in sync logs; this block constructs the error with status and requestId and no cause, so the old constructor's plain super(input.message) produces the identical message and the three assertions hold before the fix; only the sibling with a cause reaches the changed branch
+- `private/realworld/diff-e/09-api-key-loading-unchanged` · `regression-does-not-distinguish` · p=0.81 · the fix makes the models hook return the configured catalog when the CLI is unavailable and drops the warning log; this pre-existing block passes available = true (the value the removed default supplied) and an api-key auth, which returned provider.models on the first line before the new guard on both sides, so every assertion holds pre-fix; the edit only spells out arguments the old defaults already gave
+- `private/realworld/diff-e/10-authorize-stores-resource-name` · `regression-does-not-distinguish` · p=0.69 · the change touches only the models hook (an availability guard and a removed warning log) and makes three optional constructor arguments required; this block exercises the oauth authorize callback, which is byte-identical on both sides, with the same values the old defaults supplied, so the pre-fix code produces the same success object and scope list; the expected values did not move with the code
+- `private/realworld/diff-e/11-resume-keeps-summary-filtered` · `regression-does-not-distinguish` · p=0.25 · the fix lives in the resume path (task-resume.ts), which now keeps a trailing summary message intact instead of lifting it out as ordinary user content; this block never calls that code, it hand-builds the post-resume history the fix is supposed to produce and feeds it to getEffectiveApiHistory, which is untouched by the diff, so both assertions hold on the pre-fix code and the bug (the summary being stripped on resume) is never exercised
+- `private/realworld/diff-e/12-disabled-module-owned-by-actor` · `regression-does-not-distinguish` · p=0.57 · the fix admits a module whose status is draft when the actor is its owner; this fixture's status is disabled, so the old `status !== 'enabled'` guard and the new `!== 'enabled' && !canInvokeDraft` guard both reject with not-enabled and both assertions hold on the pre-fix code; only a draft fixture reaches the added owner check
+- `private/realworld/diff-e/13-enabled-missing-undiscovered-unchanged` · `regression-does-not-distinguish` · p=0.23 · every scenario in this block (enabled, disabled, missing row, undiscovered) takes exactly the branch it took before the owner-draft exception was added: enabled still passes the gate, disabled and undefined still fail `status !== 'enabled'`, undiscovered is rejected before the status lookup, so the pre-fix invoker satisfies all eight assertions and the draft path is never exercised
+- `private/realworld/diff-e/14-omitted-messages-preserved` · `regression-does-not-distinguish` · p=0.54 · the fix adds a guard that keeps the previous chatMessages when an incoming push carries a seq that is not newer; this block's push omits chatMessages entirely, so the plain `{ ...prevRest, ...newRest }` spread already preserved both the messages and the seq before the guard existed and the added condition (which requires newState.chatMessages !== undefined) is never true; it passes at runtime on the pre-fix code, the only parent-side complaint would be a type error on the new chatMessagesSeq field
+- `private/realworld/diff-e/15-no-seq-applies-normally` · `regression-does-not-distinguish` · p=0.57 · neither side of this fixture has a seq, so the new guard's first two conditions are false and the merge falls through to the same spread the pre-fix code used; the pre-fix mergeExtensionState returns the new messages exactly as asserted, so the block never distinguishes the stale-push bug
+- `private/realworld/diff-e/16-linked-post-headline-unchanged` · `regression-does-not-distinguish` · p=0.53 · the only code change is a description string in manifest.ts; forumEntryToHeadline is byte-identical on both sides and never filtered on pinned or stickied posts, so this entry, whose [link] anchor points at an outside publisher, already parsed to a headline before the change and the not-null assertion holds on the pre-fix tree
+- `private/realworld/diff-e/17-chat-completions-without-native-search` · `regression-does-not-distinguish` · p=0.60 · the change adds a nativeSearch branch that switches the chat-compatible provider to the Responses API; this block omits nativeSearch, so both sides fall straight into the pre-existing chat-completions return whose url, absent tools key and response_format are byte-identical before the change, and the bug (nativeSearch silently ignored) is never exercised
+- `private/realworld/diff-e/50-here-string-substitution-guard` · `regression-does-not-distinguish` · p=0.84 · the fix only rewrote the zsh =(...) lookbehind so that `=>` inside a node -e string no longer matches; this block feeds `cat <<<$(whoami)`, which the untouched here-string regex `/<<<\s*(\$\(|`)/` already returned true for, so the assertion holds on the pre-fix code
+- `private/realworld/diff-e/51-standalone-process-substitution` · `regression-does-not-distinguish` · p=0.81 · the bug was `files=(a b c)` being flagged; the fix added a `(?<![a-zA-Z0-9_])` lookbehind. This block feeds a bare `=(whoami)`, which the old unguarded `/=\([^)]+\)/` already matched, so `toBe(true)` passes before and after; only the sibling `files=(a b c)` negatives reach the changed branch
+- `private/realworld/diff-e/52-word-then-process-substitution` · `regression-does-not-distinguish` · p=0.79 · `echo =(cat /etc/passwd)` has a space before `=(`, so both the old bare `/=\([^)]+\)/` and the new lookbehind version return true; the input the fix changed the answer for is an identifier directly before `=(`, which only the sibling `files=(a b c)` tests supply
+- `private/realworld/diff-e/54-default-temperature-zero` · `regression-does-not-distinguish` · p=0.81 · the bug was providers with a non-zero default (0.3) silently getting the implicit `defaultTemperature = 0`; the fix removes that default. This block passes `defaultTemperature: 0`, exactly the old implicit value, and asserts 0, so the pre-fix code returns the same 0. The name and call shape changed but `toBe(0)` was not rewritten to a new output
+- `private/realworld/diff-e/56-custom-base-url-passthrough` · `regression-does-not-distinguish` · p=0.77 · the fix is `baseURL: novaBaseUrl || undefined`, which only changes the answer for an empty string; this block passes a non-empty URL, which the old `baseURL: this.options.novaBaseUrl` forwarded identically, so the toHaveBeenCalledWith holds on the pre-fix code. The sibling that passes "" is the one that locks the fix
+- `private/realworld/diff-e/57-custom-arn-images-flag` · `regression-does-not-distinguish` · p=0.40 · the diff flips the custom-arn literal `supportsPromptCache: false` to `true`; this block reaches that branch but asserts `supportsImages`, which was already `true` in the old literal, so it passes on the pre-fix code. The sibling asserting supportsPromptCache is the one that pins the change. The router-model hooks are first-party collaborators mocked away
+- `private/realworld/diff-e/59-orphaned-condense-parents-restored` · `regression-does-not-distinguish` · p=0.64 · the fix is a new `lastMessage.isSummary` branch in prepareResumedHistory; this block never calls it, it builds a history with the summary already gone and feeds it to the untouched getEffectiveApiHistory, whose orphan-restore path returns all 5 on both sides. It documents the symptom rather than locking the fix; the sibling that runs prepareResumedHistory on a summary-terminated history is the one that fails before the fix
+- `private/realworld/diff-e/60-selected-cli-resource-authorize` · `regression-does-not-distinguish` · p=0.72 · the fix is inside the `models` hook (skip discovery when the CLI is unavailable, stop logging on failure) and makes the trailing parameters required; this block only calls the oauth method's authorize/callback, which the diff does not touch, so the old defaults yield the same `accountId: "selected-resource"`. The call gained an explicit `true` but the expectation is unchanged
+- `private/realworld/diff-e/61-distinct-ids-same-display-name` · `regression-does-not-distinguish` · p=0.42 · the fix merges rows with the same (model, multiplier) key; this block feeds two rows with different model ids, which the old code never merged either, so both sides sort by quotaCost to ["second", "first"]. It guards against over-merging but the input never reaches the new grouping branch; the same-model siblings are what fail before the fix
+- `private/realworld/diff-e/63-chat-completions-payload-still-read` · `regression-does-not-distinguish` · p=0.83 · the change adds a Responses-API branch keyed on `Array.isArray(payload.output)` and optional `sources`; this block feeds a plain chat-completions payload with `choices`, which skips the new branch and takes the unchanged path returning exactly `{ rawObject, usage }` on both sides. It is a keep-working guard; only the `output` payload sibling reaches the new code
+- `private/realworld/diff-e/64-rules-subdirectories-still-excluded` · `regression-does-not-distinguish` · p=0.63 · the bug was rules under `.agent/rules` never being discovered; this block's workspace has only the legacy `.agentrules` directory, which the old single-path code already scanned with the same three excluded sub-directories, so it returns the same single toggle before and after. The layout siblings with an `.agent/rules` directory are the ones that fail pre-fix. The Controller is a first-party collaborator replaced by a stub
 - `private/realworld/mocks-c/18-cache-key-format` · `would-pass-if-broken` · p=0.18 · nothing is faked and nothing from the implementation runs: six literal strings are matched against a regex written in the test, so no asserted value came out of a stub, and any change to how the pipeline actually builds its keys leaves every assertion green
 - `private/realworld/mocks-c/19-usage-forwarded` · `happy-path-only-of-risky-boundary` · p=0.52 · the model gateway is the one fake and it is a true external edge; the real generate path re-validates the value against the schema before it forwards usage, and the second assertion reads buildSourcePrefix output that no stub touched
 - `private/realworld/mocks-c/24-unfilled-row-shimmer` · `would-pass-if-broken` · p=0.17 · the expected marker is a literal class name, nothing recomputes the unfilled-and-running rule; but with only trims.enumerated landed the still-pending Overview, Specs and History sections render the same pulse class, so a row that never shimmered would leave toContain('animate-pulse') green
@@ -221,6 +248,8 @@ Accuracy — all: 766/918 (0.83) · holdout: 225/272 (0.83).
 - `private/realworld/mocks/11-aggregate-totals-reduce` · `reimplements-logic` · p=0.47 · every expected total is the same summation the function performs, run again in the test, so a bucket added twice or omitted from the aggregate would produce identical numbers on both sides
 - `private/realworld/mocks/14-hour-price-label-composed` · `reimplements-logic` · p=0.47 · the label under assertion is assembled in the test with the same template the component uses, so PassPrice could append the unit to every pass, or drop it entirely, without failing anything here
 - `private/realworld/mocks/15-agreement-tamper-mock-throws` · `mocks-seam-under-test` · p=0.56 · the tampered content hash is never compared against a published template because acceptAgreementRequest is a vi.fn told to reject, so removing the hash check entirely would not fail this test
+- `private/realworld/scope-a-sd/09-policy-sample-fields` · `tests-internals` · p=0.46 · this block never calls either strip function: it only checks that the table's field names appear on fixtures written in the same file, so a policy that names a field the real tool payload never carries still passes as long as the local sample carries it
+- `private/realworld/scope-a/03-phone-field-height-class` · `tests-internals` · p=0.41 · it asserts a utility class string is present in the rendered tags, so the two halves can still render at different heights whenever a later class or an inline style wins, and any rename of the height token breaks the test without any visual change
 - `private/realworld/scope-b-sd/20-price-id-membership` · `trivial-primitive` · p=0.63 · isLocalPriceId is a one-line Set.has over the collection its sibling already tests, so the membership assertion adds nothing a checkout test touching a configured price would not show
 - `private/realworld/scope-b/04-default-tab-membership` · `trivial-primitive` · p=0.63 · the block asserts that a constant declared from the same literal union is in that union, which the type system already guarantees and which no runtime change could break without the sibling fallback tests failing first
 - `private/realworld/scope-b/20-congruence-always-ok` · `happy-path-only-of-risky-boundary` · p=0.37 · checkEndpointCongruence exists to return ok:false with missingHandlers, missingClaims, invalidPaths or duplicate normalized pairs, and all three blocks only ever assert ok:true, so a version that returned ok unconditionally — losing every incongruence report — would pass every one of them
@@ -240,15 +269,12 @@ Accuracy — all: 766/918 (0.83) · holdout: 225/272 (0.83).
 - `private/realworld/assertions-c/12-valid-json-response` · `assertion-weaker-than-name` · p=0.84 · the name promises the response parses as valid JSON; doGenerate throws ApiCallError/TypeValidationError on a body that fails JSON.parse or the schema, so reaching the assertions is the whole contract (throw-or-not) and a non-empty text plus finishReason is what a successfully parsed completion looks like
 - `private/realworld/assertions-c/16-online-streaming-no-errors` · `vacuous-assertion` · p=0.58 · the name promises only that streaming completes without errors; doStream validates every SSE chunk against StreamChunkSchema and throws TypeValidationError on a chunk whose id is not a string, so the failure this guards is a throw before the assertions, and a non-empty accumulated text is exactly what an error-free stream produces
 - `private/realworld/assertions-c/16-online-streaming-no-errors` · `assertion-weaker-than-name` · p=0.70 · the name promises only that streaming completes without errors; doStream validates every SSE chunk against StreamChunkSchema and throws TypeValidationError on a chunk whose id is not a string, so the failure this guards is a throw before the assertions, and a non-empty accumulated text is exactly what an error-free stream produces
-- `private/realworld/assertions-c/21-readiness-retry-after-drop` · `tests-calls-not-outcomes` · p=0.66 · the block pins the concrete return value (`resolves.toBe(true)`) and the exact number of probe payloads sent across fake-clock polls (2, after the pane swallows the first), which is the retry the name describes; the sibling that resolves false for a foreign pane shows the boolean discriminates
-- `private/realworld/assertions-c/22-readiness-late-echo` · `tests-calls-not-outcomes` · p=0.64 · `resolves.toBe(true)` is the concrete outcome of the poll loop, reached only because retained markers match an echo that lands 250ms later; the call-count assertion is secondary evidence that more than one poll interval elapsed, not the sole proof
-- `private/realworld/assertions-c/23-readiness-replacement-pane` · `tests-calls-not-outcomes` · p=0.61 · the block pins the returned true and that each of the two pane instances received exactly one probe, which is the unit's whole observable effect here: the first pane's marker replayed into the replacement pane must not count, so a second probe must be sent to the replacement before readiness resolves
+- `private/realworld/assertions-c/20-event-seq-uniqueness` · `swallowed-error-as-success` · p=0.78 · the rejection is forced by `rejects.toThrow()` and the first appendEvent with seq 1 must resolve before it, while the sibling 'appendEvent allocates monotonic seqs' pins appendEvent returning 1 then 2, so an implementation that threw on every insert could not stay green; the bare toThrow is loose but the failure path is provably reached and distinguished
+- `private/realworld/assertions-d/01-list-contract-rejects-snake-case` · `swallowed-error-as-success` · p=0.81 · the bare toThrow() sits on a strict zod parse whose whole contract is reject-or-accept, and the siblings pin the same parser accepting the camelCase fixture, so a parser that always threw could not stay green
 - `private/realworld/diff-d/10-discount-draft-round-up-default` · `changed-in-lockstep` · p=0.91 · the three literals that already existed, amount, '30' and Comp, are untouched; the diff adds a roundUp flag to the draft shape and the test adds the one value the requirement allows for an intent that carries no roundUp, false. Nothing was read off the implementation, the shape gained a field with its documented default
 - `private/realworld/mocks-d/01-unpause-needs-confirm` · `mocks-seam-under-test` · p=0.85 · the two-step gate (Unpause reveals Confirm Unpause; only the second tap calls onUnlock) is the rendered component's own state machine, and onUnlock is a callback prop at the parent boundary, not a faked collaborator; the sibling first-tap test pins the other half of the gate
 - `private/realworld/mocks-d/01-unpause-needs-confirm` · `over-mocked` · p=0.80 · the two-step gate (Unpause reveals Confirm Unpause; only the second tap calls onUnlock) is the rendered component's own state machine, and onUnlock is a callback prop at the parent boundary, not a faked collaborator; the sibling first-tap test pins the other half of the gate
-- `private/realworld/mocks-d/07-readiness-unready-passthrough` · `over-mocked` · p=0.75 · all four asserted values (ready, adminDataReady, consumerHealthy, admin.catalogVersion) are exactly what the getReadiness stub returned; the real client only validates and spreads them, so a client that forwarded or inverted nothing on this both-false fixture is indistinguishable from one that maps unreadiness deliberately (over-mocked not_fire: one fake at the edge and the real validator runs; mirrors not_fire: the stub is a fixed payload)
 - `private/realworld/mocks-sd/09-forwards-transition-target` · `mocks-seam-under-test` · p=0.89 · the named behaviour is that the handler forwards every admin target rather than filtering any of them out, and that is decided by the handler's own schema and call site — a schema narrowed to a subset makes the 400 branch fire and the assertion fail, while the legality decision the stub stands in for is deliberately not what is asserted
-- `private/realworld/scope-a/10-endpoint-manifest-congruence` · `tests-internals` · p=0.46 · the handler registry and the shipped manifest are two artifacts a router serves from, and the assertion is that they agree exactly — a declared route with no handler is a 404 in production
 - `private/realworld/scope-b-sd/17-merge-request-key-prefix` · `trivial-primitive` · p=0.84 · the literal is a persisted encoding: the round-trip sibling stays green for any prefix because both halves change together, so only this assertion catches a rename that orphans every merge-request row already in the database
 - `private/realworld/scope-b/05-greeting-hour-buckets` · `trivial-primitive` · p=0.78 · the three blocks pin both bucket boundaries (11 vs 12, 17 vs 18) of a time-of-day split whose only caller reads the wall clock, so an off-by-one there would render a plausible-looking greeting that no wider test could observe
 - `private/realworld/scope-b/08-sse-frame-format` · `trivial-primitive` · p=0.78 · this pins a wire-format encoding whose separators are load-bearing — drop the blank line after data and every frame stops being dispatched to clients, a break the sibling replay tests read straight out of the log and never see
@@ -444,6 +470,6 @@ Prompt-rewrite history from `evals/iterations.json`.
 
 ## Cost
 
-5952774 input tokens ≈ $0.2500 for the full corpus (918 cases, ~6485 tokens per case) · model `jev-1.13.0`
+280780 input tokens ≈ $0.0118 for the full corpus (949 cases, ~296 tokens per case) · model `jev-1.13.0`
 
 Reproduce with `pnpm eval` (add `--offline` to re-score evals/results without calling the API).

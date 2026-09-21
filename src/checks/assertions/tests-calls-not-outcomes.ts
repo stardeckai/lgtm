@@ -9,5 +9,5 @@ export default {
     true: "The unit derives a value or selection that no assertion pins; the only evidence is that a double was touched.",
     false: "The call or its absence is the unit's whole effect, or a concrete result, error or state is pinned.",
   },
-  threshold: 0.55,
+  threshold: 0.75,
 } satisfies Check;

@@ -9,5 +9,5 @@ export default {
     true: "The asserted value is reachable only by peeking at internals, and the contract surface goes unasserted.",
     false: "The asserted value is a return, thrown error, rendered text/role/state, persisted state, or a payload, argument or count recorded at a collaborator or injected boundary.",
   },
-  threshold: 0.35,
+  threshold: 0.55,
 } satisfies Check;
