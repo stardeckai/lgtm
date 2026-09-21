@@ -19,7 +19,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node -e \"require('node:fs').chmodSync('dist/cli.js', 0o755)\"",
     "gen:skill": "tsx scripts/gen-skill.ts",
     "prepack": "pnpm gen:skill && pnpm build",
     "typecheck": "tsc --noEmit",
