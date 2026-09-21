@@ -23,6 +23,15 @@ describe("usageReport", () => {
     expect(report).toMatch(/this worktree\s+\$0\.0433\s+1030000 tokens · 2 runs/);
   });
 
+  it("excludes Vercel tokens from dollar totals while keeping them in token totals", () => {
+    const home = tmpHome();
+    const at = "2026-09-20T11:00:00Z";
+    recordRun({ at, tokens: 1_000_000, provider: "openrouter" }, home);
+    recordRun({ at, tokens: 2_000_000, provider: "vercel" }, home);
+    expect(usageReport(Date.parse("2026-09-20T12:00:00Z"), undefined, home))
+      .toMatch(/all time\s+\$0\.0420\s+3000000 tokens · 2 runs · Vercel billing excluded/);
+  });
+
   it("says nothing is recorded when the log is missing", () => {
     expect(usageReport(Date.now(), "/w/a", tmpHome())).toContain("no runs recorded yet");
   });

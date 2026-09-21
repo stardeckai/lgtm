@@ -28,6 +28,7 @@ const GUIDELINE_FILES = ["CLAUDE.md", "AGENTS.md", "CONTRIBUTING.md", ".cursorru
 /** Lowest priority first — what fitBudget eats before it touches anything above it. */
 const TRIM_ORDER = ["diff", "repo_guidelines", "test_file", "implementation", "file_context"] as const;
 const MODEL_TAG = "jev-latest";
+export const VERCEL_REQUEST_INTERVAL_MS = 6_000;
 const CACHE_REVISION = 2;
 const SOURCE_EXTS = [".ts", ".tsx", ".js", ".jsx", ".mts", ".cts"];
 export const TEST_FILE = /\.(test|spec)\.(ts|tsx|js|jsx|mts|cts)$/;
@@ -67,12 +68,15 @@ export type Finding = {
 };
 
 export type AnalyzeOptions = {
+  model?: string;
   threshold?: number;
   only?: string[];
   /** also send the checks marked `optIn` (the eval runner does; the CLI only when --only names them) */
   optIn?: boolean;
   skip?: string[];
   concurrency?: number;
+  /** Minimum time between starting live requests; cache hits take no slot. */
+  minRequestIntervalMs?: number;
   /** called after each block finishes (answered, cached or skipped) with the running totals */
   onProgress?: (done: number, total: number, inputTokens: number) => void;
   /** called with the running input-token total the moment a request is billed, so a later throw does not lose the spend */
@@ -435,7 +439,7 @@ function gitDiff(base: string, files: string[]): string | undefined {
   }
 }
 
-/** Retry a request on 429 with backoff (1s, 2s, 4s); anything else propagates. */
+/** Retry a request on 429, honoring the server's delay when it provides one. */
 async function withRateLimitRetry<T>(fn: () => Promise<T>, attempts = 4): Promise<T> {
   for (let i = 0; ; i++) {
     try {
@@ -444,7 +448,12 @@ async function withRateLimitRetry<T>(fn: () => Promise<T>, attempts = 4): Promis
       const status = (err as { status?: number }).status;
       const limited = status === 429 || /429|rate limit/i.test((err as Error).message ?? "");
       if (!limited || i >= attempts - 1) throw err;
-      await new Promise((r) => setTimeout(r, 1000 * 2 ** i));
+      const header = err instanceof APIError ? err.headers.get("retry-after") : null;
+      const seconds = header === null ? NaN : Number(header);
+      const date = header === null ? NaN : Date.parse(header);
+      const retryAfter = Number.isFinite(seconds) && seconds >= 0 ? seconds * 1000
+        : Number.isFinite(date) ? Math.max(0, date - Date.now()) : undefined;
+      await new Promise((r) => setTimeout(r, retryAfter ?? 1000 * 2 ** i));
     }
   }
 }
@@ -534,13 +543,13 @@ export function checksFor(state: State, opts: AnalyzeOptions, touched = true) {
 export function isCached(job: Job, opts: AnalyzeOptions): boolean {
   if (!opts.cacheDir) return false;
   const checks = checksFor(job.state, opts, job.touched);
-  return readCache(cachePath(opts.cacheDir, requestFor(job.state, checks)), checks) !== undefined;
+  return readCache(cachePath(opts.cacheDir, requestFor(job.state, checks, opts.model)), checks) !== undefined;
 }
 
-function requestFor(state: State, checks: Check[]): SystemOneRequest<Questions> {
+export function requestFor(state: State, checks: Check[], model = MODEL_TAG): SystemOneRequest<Questions> {
   const questions: Questions = { test_class: choice("Which kind of test is `test_code`?", TEST_CLASSES) };
   for (const check of checks) questions[check.id] = noul(check.instructions, check.criteria);
-  return { state, questions, model: MODEL_TAG };
+  return { state, questions, model };
 }
 
 function cachePath(dir: string, request: SystemOneRequest<Questions>): string {
@@ -594,10 +603,20 @@ export async function analyze(jobs: Job[], opts: AnalyzeOptions, client: Client)
   let skipped = 0;
   let inputTokens = 0;
   let model: string | undefined;
+  let nextRequestAt = 0;
+  const send = async (request: SystemOneRequest<Questions>) => {
+    if (opts.minRequestIntervalMs) {
+      const now = Date.now();
+      const startAt = Math.max(now, nextRequestAt);
+      nextRequestAt = startAt + opts.minRequestIntervalMs;
+      if (startAt > now) await new Promise((r) => setTimeout(r, startAt - now));
+    }
+    return client.systemOne(request);
+  };
 
   const run = async (job: Job) => {
     const checks = checksFor(job.state, opts, job.touched);
-    const request = requestFor(job.state, checks);
+    const request = requestFor(job.state, checks, opts.model);
     const file = opts.cacheDir ? cachePath(opts.cacheDir, request) : undefined;
 
     const cached = file ? readCache(file, checks) : undefined;
@@ -609,7 +628,7 @@ export async function analyze(jobs: Job[], opts: AnalyzeOptions, client: Client)
       model ??= answerModel;
     } else {
       try {
-        const result = await withRateLimitRetry(() => client.systemOne(request));
+        const result = await withRateLimitRetry(() => send(request));
         answers = result.answers;
         inputTokens += result.usage.input_tokens;
         opts.onSpend?.(inputTokens);

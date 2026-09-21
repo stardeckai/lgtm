@@ -18,6 +18,7 @@ export type Summary = {
   files: number;
   skipped: number;
   inputTokens: number;
+  provider?: "typesafe" | "vercel" | "openrouter";
   /** wall-clock time spent in analyze(); 0 when nothing ran */
   durationMs: number;
   classes: Classified[];
@@ -142,7 +143,7 @@ export function formatReport(findings: Finding[], format: Format, summary: Summa
   const perTest = summary.tests > 0 ? ` (${secs(summary.durationMs / summary.tests)} per test)` : "";
   const perTestCost = summary.tests > 0 ? ` (${usd(summary.inputTokens / summary.tests)} per test)` : "";
   out.push("");
-  out.push(c("dim", `${summary.inputTokens} input tokens used ≈ ${usd(summary.inputTokens)}${perTestCost}`));
+  out.push(c("dim", `${summary.inputTokens} input tokens used${summary.provider === "vercel" ? " · billed by Vercel" : ` ≈ ${usd(summary.inputTokens)}${perTestCost}`}`));
   out.push(c("dim", `${secs(summary.durationMs)}${perTest}`));
   return out.join("\n");
 }

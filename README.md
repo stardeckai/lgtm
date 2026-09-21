@@ -4,14 +4,14 @@
 [![ci](https://img.shields.io/github/actions/workflow/status/stardeckai/lgtm/ci.yml?label=ci)](https://github.com/stardeckai/lgtm/actions/workflows/ci.yml)
 [![license](https://img.shields.io/github/license/stardeckai/lgtm?color=blue)](LICENSE)
 
-Prove that your tests actually test something. Powered by Jev and your own TypeSafe API key.
+Prove that your tests actually test something. Bring your own TypeSafe, Vercel AI Gateway, or OpenRouter API key.
 
 <img src="public/findings.png" alt="lgtm findings: file:line, the check and a one-line reason">
 
 Your agent wrote 40 tests. They're all green. What do they prove? lgtm reads every test block with its
 implementation and tells you which ones are useless.
 
-It runs on [Jev by TypeSafe](https://typesafe.ai), with your own `TYPESAFE_API_KEY`.
+It runs on [Jev by TypeSafe](https://typesafe.ai), directly or through [Vercel AI Gateway](https://vercel.com/ai-gateway/models/jev) or [OpenRouter](https://openrouter.ai/typesafe/jev-1.13).
 
 With this, you can prove that your agent actually wrote code that actually works, so you can say it lgtm 😐👍.
 
@@ -44,13 +44,13 @@ Run `npm prefix -g` (or `pnpm bin -g`, `bun pm bin -g`) and add its `bin` to PAT
 ## Setup
 
 ```sh
-lgtm init                    # paste your API key, then install the /lgtm and /actually-test skills
+lgtm init                    # choose TypeSafe, Vercel, or OpenRouter, then install the skills
 ```
 
-It asks for your TypeSafe API key (get one at <https://typesafe.ai>), then asks whether to install the
+Bring your own TypeSafe API key (<https://typesafe.ai>), Vercel AI Gateway key (<https://vercel.com/ai-gateway>), or OpenRouter key (<https://openrouter.ai/settings/keys>). `lgtm init` asks which one to use, then whether to install the
 `/lgtm` and `/actually-test` skills with `npx skills`.
 
-The key lands in `~/.config/lgtm/config.json` (mode 0600); `TYPESAFE_API_KEY` in the environment wins over it.
+All three provider keys can live in `~/.config/lgtm/config.json` (mode 0600), with one selected as the default. The matching `TYPESAFE_API_KEY`, `AI_GATEWAY_API_KEY`, or `OPENROUTER_API_KEY` environment variable wins over its saved key. Existing TypeSafe configs still work.
 
 Skip the prompts with `--skill <where>`:
 
@@ -72,7 +72,7 @@ lgtm .                     # every *.test.* / *.spec.* file under a directory (a
 lgtm src/user.test.ts      # one file, or a directory
 lgtm --diff origin/main    # only tests changed vs a base, with the diff as evidence
 lgtm --diff                # just what you're working on: changed and new tests, plus tests of changed code, vs the default branch
-lgtm --dry-run src         # only the plan: files, estimated cost and runtime; no key needed
+lgtm --dry-run src         # only the plan: files, API mode, estimated cost and runtime; no key needed
 ```
 
 Every run starts with that plan and asks `Run? [Y/n]`. Outside a terminal (CI, an agent) it stops after the plan
@@ -123,7 +123,8 @@ until it proves the code is actually tested.
 | `--threshold <0..1>` | override every check's threshold |
 | `--only <ids,…>` / `--skip <ids,…>` | pick checks |
 | `--format text\|github\|json` | `github` emits `::warning` annotations |
-| `--concurrency <n>` | parallel requests, default 4 |
+| `--concurrency <n>` | parallel requests, default 4 for TypeSafe and OpenRouter, 1 for Vercel |
+| `--rate <n>` | maximum live request starts per minute; Vercel defaults to 10, TypeSafe and OpenRouter have no pacing by default |
 | `--no-impl` | don't send implementation source |
 | `--ignore <pattern>` | skip paths; repeatable. Also reads `.lgtmignore` in the cwd, one gitignore-style pattern per line (`evals/`, `**/fixtures/**`, `*.stories.test.ts`) |
 | `--lean` | send ~3x fewer tokens (8k of implementation, no test file or guidelines). Thresholds are calibrated on full context, so expect several times more false positives; only for rate limits or enormous test files |
@@ -231,7 +232,7 @@ lgtm is advisory by default: it prints findings and exits 0. Fetch enough histor
 
 ## Cost
 
-TypeSafe bills $0.042 per million input tokens and nothing for output, so lgtm is cheap enough to run on every PR.
+TypeSafe and [OpenRouter Jev 1.13](https://openrouter.ai/typesafe/jev-1.13) list $0.042 per million input tokens and nothing for output. Vercel billing follows its own model pricing; lgtm shows token estimates without a dollar estimate in Vercel mode.
 One request per test block. Each state is trimmed to at most 100,000 chars (~25,000 tokens, under TypeSafe's 32k
 state limit): the test code, the whole test file with the block fenced, the file's imports and sibling test names,
 up to 60,000 chars of the directly imported implementation and the test sections of any CLAUDE.md/AGENTS.md
@@ -250,17 +251,23 @@ so editing one test can invalidate every block in that file; edits to shared imp
 Malformed or incomplete cache entries are treated as misses by both the plan and the executor; cache I/O errors
 stop the run before sending the affected request. A cache-revision
 change requires a fresh run; `--no-cache` bypasses reuse, and `clear-cache` removes stored answers. The model tag
-is `jev-latest`, so cached answers do not automatically refresh when the provider changes the model behind it.
+is `jev-latest` for TypeSafe, `typesafe-ai/jev` for Vercel, and `typesafe/jev-1.13` for OpenRouter. Cached answers do not automatically refresh when a provider changes a model behind a tag.
 
 The implementation source is the main cost lever: `--no-impl` cuts the bulk of each request at the price of weaker
 `would-pass-if-broken` and `reimplements-logic` answers. Every run prints its input tokens and the estimated cost.
 
 ## Config
 
-The key lives in `~/.config/lgtm/config.json`. `TYPESAFE_API_KEY` in the environment always wins over it.
+All saved keys and the default provider live in `~/.config/lgtm/config.json`. The selected provider’s matching environment variable (`TYPESAFE_API_KEY`, `AI_GATEWAY_API_KEY`, or `OPENROUTER_API_KEY`) wins over its saved key. With no saved key, an environment key selects its provider. `lgtm --dry-run` shows the selected mode and pace. Vercel requests start at most 10 per minute by default; use `--rate <n>` to adjust. The existing SDK retries 503 responses, while 429 responses also honor `Retry-After`. Vercel requests use its [TypeSafe-compatible API](https://vercel.com/docs/ai-gateway/sdks-and-apis/typesafe). OpenRouter uses its [Decisions API](https://openrouter.ai/docs/api/api-reference/alphadecisions/submit-a-decisions-questions-and-answers-request) with model `typesafe/jev-1.13` and the normal four-worker limit; use `--rate` if needed.
 
 ```sh
-lgtm key <new-key>           # swap the saved key; `lgtm key` alone prompts
+lgtm key                     # choose provider and paste a new key
+lgtm key <new-key>           # replace the key for the default provider
+lgtm key <new-key> --provider vercel  # save a Vercel key and make it the default
+lgtm key <new-key> --provider openrouter  # save an OpenRouter key
+lgtm key default             # show the default provider
+lgtm key default set typesafe  # switch the default, keeping all keys
+lgtm --provider vercel --dry-run src  # use Vercel for one run
 lgtm usage                   # cost so far: all time, last day, last week, this worktree
 lgtm clear-cache             # drop this project's cached answers (node_modules/.cache/lgtm)
 lgtm skill                   # (re)install the /lgtm and /actually-test skills, e.g. to add another agent

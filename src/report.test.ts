@@ -22,6 +22,12 @@ const finding = (over: Partial<Finding> = {}): Finding => ({
 });
 
 describe("formatReport", () => {
+  it("reports Vercel token usage without claiming a dollar price", () => {
+    const out = formatReport([], "text", { ...summary, provider: "vercel", inputTokens: 2_000_000 });
+    expect(out).toContain("2000000 input tokens used · billed by Vercel");
+    expect(out).not.toContain("$0.0840");
+  });
+
   it("pluralizes the verdict: 1 test proves nothing, 2 tests prove nothing", () => {
     const one = formatReport([finding()], "text", { ...summary, tests: 1 });
     expect(one).toContain("😐🫵  1 test proves nothing, out of 1 test case.");
