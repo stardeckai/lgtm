@@ -15,7 +15,7 @@
     "happy-path-only-of-risky-boundary": 0.04,
     "trivial-primitive": 0.66,
     "over-mocked": 0.09,
-    "regression-does-not-distinguish": 0.11,
+    "regression-does-not-distinguish": 0.09,
     "changed-in-lockstep": 0.94
   },
   "model": "jev-1.13.0",

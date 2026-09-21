@@ -1002,5 +1002,25 @@
     "fitted_t": 0.85,
     "kept": false,
     "note": "everything compresses toward 0.5: corpus AUC 0.97\u21920.89, real train 0.91\u21920.89, real holdout 0.70\u21920.64; reverted to v5"
+  },
+  {
+    "check": "regression-does-not-distinguish",
+    "variant": "simulate both sides on the fixture; rename/reformat/dropped-unsupplied-field diffs have no fix to lock (round 5, real cases)",
+    "instructions": "\u20262. Run this test's fixture through the pre-change code\u2026 3. Compare the pre-change output with every assertion\u2026 4. If the two outputs are identical on this fixture, ask whether the diff changes what any caller could observe\u2026",
+    "train_f1": 0.57,
+    "holdout_f1": 0.6,
+    "fitted_t": 0.8,
+    "kept": true,
+    "note": "real train AUC 0.57\u21920.84, real holdout 0.57\u21920.89, corpus 0.85\u21920.95; real negatives mean 0.61\u21920.40 (customer rename negatives 0.82/0.78\u21920.53/0.41); fit 0.90\u21920.80, holdout P/R 1.00/0.43"
+  },
+  {
+    "check": "regression-does-not-distinguish",
+    "variant": "v1 + removed-default-now-passed-explicitly and assertions-unchanged shapes named as yes (round 5)",
+    "instructions": "\u2026Two shapes of that are easy to miss: the test now passes explicitly the very value a removed default used to supply\u2026; and the test edit only added a now-required argument or a comment while the assertions stayed byte-identical.",
+    "train_f1": 0.67,
+    "holdout_f1": 0.67,
+    "fitted_t": 0.75,
+    "kept": true,
+    "note": "real train AUC 0.57\u21920.89, real holdout 0.57\u21920.94, corpus 0.85\u21920.96; real negatives mean 0.61\u21920.36, none \u22650.7; fit 0.90\u21920.75, holdout P/R 1.00/0.50"
   }
 ]
