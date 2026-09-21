@@ -76,8 +76,11 @@ and reports the ones that come back confident. Read `README.md` first; this file
 
 ## Rules that are easy to break
 
-- **Changing any check's `instructions`/`criteria`, `TEST_CLASSES`, or the package version invalidates every cached
-  answer** (they are part of the cache key). After such a change run the full `LGTM_EVALS_EXTRA=… pnpm eval` before quoting numbers.
+- **The exact ordered request, model tag and cache revision define cache identity.** Changing a check's
+  `instructions`/`criteria` invalidates batches containing it; changing `TEST_CLASSES` invalidates all batches.
+  Package version alone does not invalidate answers. Preserve question and choice order in both hashing and
+  sending. Bump `CACHE_REVISION` for interpretation changes not represented in the request. After prompt or
+  context changes run the full `LGTM_EVALS_EXTRA=… pnpm eval` before quoting quality numbers.
 - **Thresholds are fitted, not hand-picked.** `pnpm eval --fit-thresholds --write` rewrites `threshold:` in each check
   file from the TRAIN cases: the lowest grid point (0.30–0.95) that fires on no real negative (private + dogfood)
   and keeps precision ≥ 0.95 over all train cases, plus one step of margin; recall is whatever that leaves,

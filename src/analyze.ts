@@ -1,5 +1,4 @@
 import { execFileSync } from "node:child_process";
-import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -29,8 +28,7 @@ const GUIDELINE_FILES = ["CLAUDE.md", "AGENTS.md", "CONTRIBUTING.md", ".cursorru
 /** Lowest priority first — what fitBudget eats before it touches anything above it. */
 const TRIM_ORDER = ["diff", "repo_guidelines", "test_file", "implementation", "file_context"] as const;
 const MODEL_TAG = "jev-latest";
-// Reword a check and the cached answers for it must not be reused.
-const VERSION: string = createRequire(import.meta.url)("../package.json").version;
+const CACHE_REVISION = 2;
 const SOURCE_EXTS = [".ts", ".tsx", ".js", ".jsx", ".mts", ".cts"];
 export const TEST_FILE = /\.(test|spec)\.(ts|tsx|js|jsx|mts|cts)$/;
 
@@ -98,7 +96,7 @@ export type AnalyzeResult = {
   classes: Classified[];
   skipped: number;
   inputTokens: number;
-  /** model that answered the live requests; undefined when every answer came from cache */
+  /** last live response's model, or the first cached model on a fully cached run; not a list of every revision */
   model?: string;
 };
 
@@ -536,15 +534,58 @@ export function checksFor(state: State, opts: AnalyzeOptions, touched = true) {
 export function isCached(job: Job, opts: AnalyzeOptions): boolean {
   if (!opts.cacheDir) return false;
   const checks = checksFor(job.state, opts, job.touched);
-  return checks.length > 0 && fs.existsSync(cachePath(opts.cacheDir, job.state, checks));
+  return readCache(cachePath(opts.cacheDir, requestFor(job.state, checks)), checks) !== undefined;
 }
 
-function cachePath(dir: string, state: State, checks: Check[]): string {
-  const questions = checks.map((c) => c.id + c.instructions + JSON.stringify(c.criteria ?? null)).join(",");
+function requestFor(state: State, checks: Check[]): SystemOneRequest<Questions> {
+  const questions: Questions = { test_class: choice("Which kind of test is `test_code`?", TEST_CLASSES) };
+  for (const check of checks) questions[check.id] = noul(check.instructions, check.criteria);
+  return { state, questions, model: MODEL_TAG };
+}
+
+function cachePath(dir: string, request: SystemOneRequest<Questions>): string {
   const hash = createHash("sha256")
-    .update(JSON.stringify(state) + questions + JSON.stringify(TEST_CLASSES) + MODEL_TAG + VERSION)
+    .update(JSON.stringify({ revision: CACHE_REVISION, model: MODEL_TAG, request }))
     .digest("hex");
   return path.join(dir, `${hash}.json`);
+}
+
+type CacheEntry = { answers: Answers; model: string };
+
+function readCache(file: string, checks: Check[]): CacheEntry | undefined {
+  let entry: CacheEntry;
+  try {
+    entry = JSON.parse(fs.readFileSync(file, "utf8")) as CacheEntry;
+  } catch (err) {
+    if (err instanceof SyntaxError || (err as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+    throw err;
+  }
+  return validEntry(entry, checks) ? entry : undefined;
+}
+
+function validEntry(entry: CacheEntry, checks: Check[]): boolean {
+  const answers = entry?.answers;
+  if (!answers || typeof answers !== "object" || Array.isArray(answers) || typeof entry.model !== "string") return false;
+  const testClass = answers.test_class;
+  if (testClass?.type !== "choice" || typeof testClass.choice !== "string" ||
+      !Object.hasOwn(TEST_CLASSES, testClass.choice)) return false;
+  for (const check of checks) {
+    const answer = answers[check.id];
+    if (answer?.type !== "noul" || typeof answer.noul !== "number" ||
+        !Number.isFinite(answer.noul) || answer.noul < 0 || answer.noul > 1) return false;
+  }
+  return true;
+}
+
+function writeCache(file: string, entry: CacheEntry): void {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const temp = `${file}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`;
+  try {
+    fs.writeFileSync(temp, JSON.stringify(entry));
+    fs.renameSync(temp, file);
+  } finally {
+    if (fs.existsSync(temp)) fs.unlinkSync(temp);
+  }
 }
 
 export async function analyze(jobs: Job[], opts: AnalyzeOptions, client: Client): Promise<AnalyzeResult> {
@@ -556,22 +597,24 @@ export async function analyze(jobs: Job[], opts: AnalyzeOptions, client: Client)
 
   const run = async (job: Job) => {
     const checks = checksFor(job.state, opts, job.touched);
-    const file = opts.cacheDir ? cachePath(opts.cacheDir, job.state, checks) : undefined;
+    const request = requestFor(job.state, checks);
+    const file = opts.cacheDir ? cachePath(opts.cacheDir, request) : undefined;
 
-    let answers: Answers | undefined;
-    if (file && fs.existsSync(file)) {
-      answers = JSON.parse(fs.readFileSync(file, "utf8"));
+    const cached = file ? readCache(file, checks) : undefined;
+    let answers: Answers;
+    let answerModel: string | undefined;
+    if (cached) {
+      answers = cached.answers;
+      answerModel = cached.model;
+      model ??= answerModel;
     } else {
-      const questions: Questions = {
-        test_class: choice("Which kind of test is `test_code`?", TEST_CLASSES),
-      };
-      for (const c of checks) questions[c.id] = noul(c.instructions, c.criteria);
       try {
-        const result = await withRateLimitRetry(() => client.systemOne({ state: job.state, questions }));
+        const result = await withRateLimitRetry(() => client.systemOne(request));
         answers = result.answers;
         inputTokens += result.usage.input_tokens;
         opts.onSpend?.(inputTokens);
-        model = result.model;
+        answerModel = result.model;
+        model = answerModel;
       } catch (err) {
         if (err instanceof AuthenticationError) throw err;
         if (err instanceof APIError || err instanceof APIConnectionError) {
@@ -582,12 +625,11 @@ export async function analyze(jobs: Job[], opts: AnalyzeOptions, client: Client)
         throw err;
       }
       if (file) {
-        fs.mkdirSync(path.dirname(file), { recursive: true });
-        fs.writeFileSync(file, JSON.stringify(answers));
+        const entry = { answers, model: answerModel ?? "" };
+        if (validEntry(entry, checks)) writeCache(file, entry);
       }
     }
 
-    if (!answers) return;
     const testClass = answers.test_class?.choice;
     if (testClass && testClass in TEST_CLASSES) {
       classes.push({

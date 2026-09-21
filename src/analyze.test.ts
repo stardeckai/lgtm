@@ -2,10 +2,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { APIError, AuthenticationError, type Questions } from "@typesafe-ai/sdk";
-import { analyze, buildStates, fitBudget, implFiles, type Client, type Job, type State } from "./analyze.js";
+import { APIError, AuthenticationError, TypeSafeClient, type Questions } from "@typesafe-ai/sdk";
+import { analyze, buildStates, fitBudget, implFiles, isCached, type Client, type Job, type State } from "./analyze.js";
 import { certain } from "./report.js";
-import { CHECKS, type TestClass } from "./checks/index.js";
+import { CHECKS, TEST_CLASSES, type TestClass } from "./checks/index.js";
 
 const tmpDirs: string[] = [];
 const tmp = () => {
@@ -152,12 +152,17 @@ describe("analyze", () => {
   });
 
   it("reports spend the moment a request is billed, so a later throw does not lose it", async () => {
-    // A cache dir that is a file: the answer is billed, then the cache write throws. The caller still knows the cost.
+    // Storage becomes unwritable while the request is in flight; the caller still knows the billed cost.
     const cacheDir = path.join(tmp(), "not-a-dir");
-    fs.writeFileSync(cacheDir, "");
     const spends: number[] = [];
+    const fake = fakeClient(0.9);
+    const client: Client = { async systemOne(request) {
+      const result = await fake.client.systemOne(request);
+      fs.writeFileSync(cacheDir, "");
+      return result;
+    } };
 
-    await expect(analyze([job()], { cacheDir, onSpend: (t) => spends.push(t) }, fakeClient(0.9).client)).rejects.toThrow();
+    await expect(analyze([job()], { cacheDir, onSpend: (t) => spends.push(t) }, client)).rejects.toThrow();
     expect(spends).toEqual([42]);
   });
 
@@ -197,6 +202,124 @@ describe("analyze", () => {
     const secondRun = await analyze([job()], { cacheDir }, second.client);
     expect(second.seen).toHaveLength(0);
     expect(secondRun.findings).toEqual(firstRun.findings);
+  });
+
+  it("stops before billing when cache storage cannot be read", async () => {
+    const cacheDir = tmp();
+    const opts = { cacheDir, only: ["vacuous-assertion"] };
+    await analyze([job()], opts, fakeClient(0).client);
+    const file = path.join(cacheDir, fs.readdirSync(cacheDir).find((name) => name.endsWith(".json"))!);
+    fs.unlinkSync(file);
+    fs.mkdirSync(file); // Real I/O failure, distinct from a missing entry or malformed JSON.
+    expect(() => isCached(job(), opts)).toThrow();
+    const next = fakeClient(0);
+    const spends: number[] = [];
+    await expect(analyze([job()], { ...opts, onSpend: (n) => spends.push(n) }, next.client)).rejects.toThrow();
+    expect(next.seen).toHaveLength(0);
+    expect(spends).toEqual([]);
+  });
+
+  it("keys the same ordered request body sent by the SDK", async () => {
+    const bodies: unknown[] = [];
+    const client = new TypeSafeClient({ apiKey: "fake", defaultModel: "different-default", fetch: async (_url, init) => {
+      bodies.push(JSON.parse(String(init?.body)));
+      const questions = (bodies.at(-1) as { questions: Questions }).questions;
+      return new Response(JSON.stringify({ model: "fake", usage: { input_tokens: 1, output_tokens: 0 }, answers: Object.fromEntries(
+        Object.keys(questions).map((id) => [id, id === "test_class"
+          ? { type: "choice", choice: "pure_logic", confidence: 1, probabilities: {} }
+          : { type: "noul", noul: 0 }]),
+      ) }), { status: 200, headers: { "content-type": "application/json" } });
+    } });
+    const opts = { cacheDir: tmp(), only: ["setup-dominates", "vacuous-assertion"] };
+    await analyze([job()], opts, client);
+    expect(bodies).toHaveLength(1);
+    expect(Object.keys((bodies[0] as { questions: Questions }).questions)).toEqual([
+      "test_class", "vacuous-assertion", "setup-dominates",
+    ]);
+    expect((bodies[0] as { model: string }).model).toBe("jev-latest");
+    await analyze([job()], { ...opts, only: [...opts.only].reverse() }, client);
+    expect(bodies).toHaveLength(1);
+    const original = Object.entries(TEST_CLASSES);
+    const choices = TEST_CLASSES as Record<string, string>;
+    try {
+      for (const key of Object.keys(choices)) delete choices[key];
+      Object.assign(choices, Object.fromEntries([...original].reverse()));
+      expect(isCached(job(), opts)).toBe(false);
+      await analyze([job()], opts, client);
+      expect(bodies).toHaveLength(2);
+      const sent = bodies[1] as { questions: { test_class: { criteria: Record<string, string> } } };
+      expect(Object.keys(sent.questions.test_class.criteria)).toEqual(original.map(([key]) => key).reverse());
+    } finally {
+      for (const key of Object.keys(choices)) delete choices[key];
+      Object.assign(choices, Object.fromEntries(original));
+    }
+  });
+
+  it("reuses only complete answers for the exact ordered request and evidence", async () => {
+    const dir = tmp();
+    const cacheDir = path.join(dir, "cache");
+    const test = path.join(dir, "unit.test.ts");
+    const impl = path.join(dir, "unit.ts");
+    fs.writeFileSync(impl, "export const value = () => 1;\n");
+    fs.writeFileSync(test, 'import { value } from "./unit";\nit("works", () => { expect(value()).toBe(1); });\n');
+    const jobs = () => buildStates([test], { impl: true });
+    const options = { cacheDir, only: ["vacuous-assertion", "setup-dominates"], threshold: 0.95 };
+    const first = fakeClient(0.8);
+    const initial = await analyze(jobs(), options, first.client);
+    expect(first.seen).toHaveLength(1);
+    expect(initial.findings).toEqual([]);
+    expect(isCached(jobs()[0]!, options)).toBe(true);
+    const reused = fakeClient(0);
+    const changedThreshold = await analyze(jobs(), { ...options, only: [...options.only].reverse(), threshold: 0.7 }, reused.client);
+    expect(reused.seen).toHaveLength(0);
+    expect(changedThreshold.findings).toHaveLength(2);
+    expect(changedThreshold.model).toBe("fake");
+
+    const changedSelection = { ...options, only: ["vacuous-assertion"] };
+    expect(isCached(jobs()[0]!, changedSelection)).toBe(false);
+    const selected = fakeClient(0);
+    await analyze(jobs(), changedSelection, selected.client);
+    expect(selected.seen).toHaveLength(1);
+
+    fs.writeFileSync(impl, "export const value = () => 2;\n");
+    expect(isCached(jobs()[0]!, options)).toBe(false);
+    const changedEvidence = fakeClient(0);
+    await analyze(jobs(), options, changedEvidence.client);
+    expect(changedEvidence.seen).toHaveLength(1);
+
+    const cacheFile = fs.readdirSync(cacheDir).find((name) => name.endsWith(".json") &&
+      JSON.parse(fs.readFileSync(path.join(cacheDir, name), "utf8")).answers["setup-dominates"]?.noul === 0);
+    expect(cacheFile).toBeDefined();
+    const good = JSON.parse(fs.readFileSync(path.join(cacheDir, cacheFile!), "utf8"));
+    // Corruption is a miss for planning and execution alike.
+    for (const bad of [
+      "{",
+      JSON.stringify({ model: "fake", answers: { test_class: { type: "choice", choice: "pure_logic" } } }),
+      JSON.stringify({ ...good, answers: { ...good.answers, test_class: { type: "choice", choice: "unknown" } } }),
+      JSON.stringify({ ...good, answers: { ...good.answers, "setup-dominates": { type: "noul", noul: 2 } } }),
+      JSON.stringify({ ...good, answers: { ...good.answers, "setup-dominates": { type: "noul", noul: "NaN" } } }),
+    ]) {
+      fs.writeFileSync(path.join(cacheDir, cacheFile!), bad);
+      expect(isCached(jobs()[0]!, options)).toBe(false);
+      const replacement = fakeClient(0.8);
+      await analyze(jobs(), options, replacement.client);
+      expect(replacement.seen).toHaveLength(1);
+    }
+  });
+
+  it("invalidates an access test when another suite's refusal coverage changes", async () => {
+    const dir = tmp();
+    const test = path.join(dir, "access.test.ts");
+    const cacheDir = path.join(dir, "cache");
+    const source = (refusal: string) => `describe("access", () => { it("allows", () => { expect(true).toBe(true); }); });\n` +
+      `describe("refusal", () => { it("denies", () => { ${refusal} }); });\n`;
+    fs.writeFileSync(test, source("expect(false).toBe(false);"));
+    const access = () => buildStates([test], { impl: true })[0]!;
+    const options = { cacheDir, only: ["happy-path-only-of-risky-boundary"] };
+    await analyze([access()], options, fakeClient(0).client);
+    expect(isCached(access(), options)).toBe(true);
+    fs.writeFileSync(test, source("expect(false).toBe(true);"));
+    expect(isCached(access(), options)).toBe(false);
   });
 });
 

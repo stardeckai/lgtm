@@ -221,9 +221,10 @@ Per-check numbers on the same held-out set, every miss and false positive, the c
     TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
 ```
 
-The cache step is optional: `--diff` already limits a PR run to the tests it touched, and answers are keyed by the
-full state (test, imports, implementation, guidelines) plus the check wording and lgtm version, so a hit means
-nothing relevant changed. Do not commit the cache directory; it churns on every refactor and never shrinks.
+The cache step is optional: `--diff` already limits a PR run to the tests it touched. Answers are keyed by the
+exact ordered request (test and evidence, selected questions, criteria and choices), model tag, and cache revision.
+An unrelated lgtm version bump does not invalidate answers. Question and choice order are preserved; changing
+the selected checks still needs a fresh request. Do not commit the cache directory; it never shrinks automatically.
 
 lgtm is advisory by default: it prints findings and exits 0. Fetch enough history for the base ref
 (`fetch-depth: 0`) and add `--fail` once the findings are clean enough that you want them blocking.
@@ -243,10 +244,16 @@ above it. `--lean` cuts that back to an 8,000-char implementation and no test fi
 | a large monorepo suite | 5,000 | ~25M | ~$1.05 |
 | the eval corpus (`pnpm eval`, cold) | 868 | see the Evals section | |
 
-Answers are cached by state hash under `node_modules/.cache/lgtm`, so a re-run after editing one test only pays for
-that test. The implementation source is the main cost lever: `--no-impl` cuts the bulk of each request at the price
-of weaker `would-pass-if-broken` and `reimplements-logic` answers. Every run prints its input tokens and the
-estimated cost.
+Answers are cached under `node_modules/.cache/lgtm`. An unchanged request costs no API calls, and changing only
+thresholds or output format reuses the stored probabilities. Each block's evidence includes the whole test file,
+so editing one test can invalidate every block in that file; edits to shared implementation can invalidate more.
+Malformed or incomplete cache entries are treated as misses by both the plan and the executor; cache I/O errors
+stop the run before sending the affected request. A cache-revision
+change requires a fresh run; `--no-cache` bypasses reuse, and `clear-cache` removes stored answers. The model tag
+is `jev-latest`, so cached answers do not automatically refresh when the provider changes the model behind it.
+
+The implementation source is the main cost lever: `--no-impl` cuts the bulk of each request at the price of weaker
+`would-pass-if-broken` and `reimplements-logic` answers. Every run prints its input tokens and the estimated cost.
 
 ## Config
 
@@ -285,6 +292,7 @@ node dist/cli.js --dry-run src   # no API key needed
 npm link                         # expose this checkout as the global `lgtm` (symlink to dist/cli.js; rebuild to update)
 pnpm gen:skill                   # regenerate skills/*/SKILL.md after changing a check or a skill (a test guards drift)
 pnpm eval                        # run the labelled corpus against Jev; --offline re-scores, --fit-thresholds refits
+node --import tsx scripts/cache-replay.ts # reproduce cache hit/miss scenarios without paid API calls
 ```
 
 ## License
