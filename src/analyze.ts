@@ -50,8 +50,7 @@ export type State = {
 export type Job = {
   block: TestBlock;
   state: State;
-  /** false for a block the diff did not touch (an old block of a touched file, or a test pulled in by changed
-   *  implementation): it still gets the diff and every other check, but not the diff-only ones. */
+  /** false for an old block included by --diff-all-blocks; it skips diff-only checks. */
   touched?: boolean;
 };
 
@@ -348,17 +347,6 @@ export function implFiles(file: string, imports: string[]): string[] {
   return out;
 }
 
-/** Does this test file reach any of `changed`, through the same files the state would carry? */
-function importsAny(file: string, changed: Set<string>): boolean {
-  let source: string;
-  try {
-    source = fs.readFileSync(file, "utf8");
-  } catch {
-    return false;
-  }
-  return implFiles(file, extractTests(source, file).imports).some((p) => changed.has(p));
-}
-
 export type DiffSelection = {
   /** the ref as printed in the plan, e.g. "origin/main" */
   label: string;
@@ -373,13 +361,10 @@ export type DiffSelection = {
 };
 
 /**
- * The tests affected by the work in progress: test files changed vs the merge base (tracked or untracked),
- * plus tests whose one-hop imports include a changed implementation file. `candidates` is only walked when
- * there is a changed implementation file to match against.
+ * Test files changed vs the merge base (tracked or untracked), narrowed to changed blocks by default.
  */
 export function diffSelection(
   ref: string | undefined,
-  candidates: () => string[],
   opts: { allBlocks?: boolean } = {},
   run: GitRun = gitRun,
 ): DiffSelection {
@@ -397,24 +382,16 @@ export function diffSelection(
     .map((f) => path.resolve(root, f))
     .filter((f) => fs.existsSync(f));
 
-  const changedTests = changed.filter((f) => TEST_FILE.test(f));
-  const changedImpl = new Set(changed.filter((f) => !TEST_FILE.test(f) && SOURCE_EXTS.includes(path.extname(f))));
-  // The test did not move but the code under it did, so the whole file is back in scope.
-  const viaImpl =
-    changedImpl.size === 0
-      ? []
-      : candidates().filter((f) => !changedTests.includes(f) && importsAny(f, changedImpl));
-  const files = [...changedTests, ...viaImpl];
+  const files = changed.filter((f) => TEST_FILE.test(f));
 
   const ranges = new Map<string, Range[]>();
   // Untracked files diff to nothing; an empty range list means the whole file is new.
-  for (const file of changedTests) ranges.set(file, changedRanges(run(["diff", "-U0", base, "--", file])));
+  for (const file of files) ranges.set(file, changedRanges(run(["diff", "-U0", base, "--", file])));
   const touched = (file: string, block: TestBlock) => {
     const hit = ranges.get(path.resolve(file));
     return hit !== undefined && (hit.length === 0 || blockTouched(block, hit));
   };
-  // A file pulled in by its changed implementation has no ranges: keep all of its blocks, touched or not.
-  const blockFilter = (file: string, block: TestBlock) => !ranges.has(path.resolve(file)) || touched(file, block);
+  const blockFilter = (file: string, block: TestBlock) => touched(file, block);
   return { label, base, files, touched, ...(opts.allBlocks ? {} : { blockFilter }) };
 }
 

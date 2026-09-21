@@ -243,11 +243,7 @@ async function main(): Promise<number> {
   const selection =
     values.diff === undefined
       ? undefined
-      : diffSelection(
-          values.diff || undefined,
-          () => discover(positionals, ignore).map((f) => path.resolve(f)),
-          { allBlocks: values["diff-all-blocks"] },
-        );
+      : diffSelection(values.diff || undefined, { allBlocks: values["diff-all-blocks"] });
   const files = selection
     ? selection.files.map((f) => path.relative(process.cwd(), f)).filter((f) => !ignore(f))
     : discover(positionals, ignore);

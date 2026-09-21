@@ -107,7 +107,7 @@ describe("diffSelection in a real repo", () => {
     `import { f } from "${imp}";\n` +
     names.map((n) => `it("${n}", () => {\n  expect(f()).toBe("${n}");\n});\n`).join("\n");
 
-  it("selects changed blocks, untracked files and the tests of changed implementation, and nothing else", () => {
+  it("selects changed blocks and untracked files, but not tests of changed implementation", () => {
     const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "lgtm-diff-")));
     dirs.push(dir);
     const git = gitIn(dir);
@@ -126,8 +126,7 @@ describe("diffSelection in a real repo", () => {
     write(dir, "new.test.ts", testFile("./impl", "five", "six"));
     write(dir, "other.ts", "export const f = () => 'three!';\n");
 
-    const candidates = () => fs.readdirSync(dir).filter((f) => f.endsWith(".test.ts")).map((f) => path.join(dir, f));
-    const selection = diffSelection(undefined, candidates, {}, git);
+    const selection = diffSelection(undefined, {}, git);
     expect(selection.label).toBe("main");
     expect(selection.base).toBe(git(["rev-parse", "HEAD"]));
 
@@ -141,18 +140,15 @@ describe("diffSelection in a real repo", () => {
       "impl.test.ts:two changed", // only the block that moved; "one" is untouched
       "new.test.ts:five", // untracked file: every block
       "new.test.ts:six",
-      "other.test.ts:three", // the test did not change but other.ts did
     ]);
-    // quiet.test.ts is untouched and imports nothing that changed.
-    expect(picked.some((p) => p.startsWith("quiet"))).toBe(false);
+    // Neither untouched test file is selected, even when its implementation changed.
+    expect(picked.some((p) => p.startsWith("other") || p.startsWith("quiet"))).toBe(false);
 
-    // The diff-only checks are for blocks the diff touched; other.test.ts came along for its implementation.
     const touched = Object.fromEntries(jobs.map((j) => [`${path.basename(j.block.file)}:${j.block.name}`, j.touched]));
     expect(touched).toEqual({
       "impl.test.ts:two changed": true,
       "new.test.ts:five": true,
       "new.test.ts:six": true,
-      "other.test.ts:three": false,
     });
 
     // An untracked file has no diff against the base, so it is shown as wholly added.
@@ -183,7 +179,7 @@ describe("diffSelection in a real repo", () => {
     git(["commit", "-m", "base"]);
     write(dir, "impl.test.ts", testFile("./impl", "one", "two changed"));
 
-    const selection = diffSelection(undefined, () => [], { allBlocks: true }, git);
+    const selection = diffSelection(undefined, { allBlocks: true }, git);
     expect(selection.blockFilter).toBeUndefined();
     const jobs = buildStates(selection.files, { impl: false, touched: selection.touched });
     // Both blocks are audited, but only the changed one is new enough for the diff-only checks.
@@ -212,6 +208,6 @@ describe("diffSelection refusals", () => {
       if (args[0] === "rev-parse" && args.includes("nope")) throw new Error("fatal: bad revision");
       throw new Error(`unexpected git ${args.join(" ")}`);
     };
-    expect(() => diffSelection("nope", () => [], {}, run)).toThrow("--diff: unknown ref nope");
+    expect(() => diffSelection("nope", {}, run)).toThrow("--diff: unknown ref nope");
   });
 });
