@@ -14,7 +14,7 @@
     "impossible-fixture": 0.08,
     "happy-path-only-of-risky-boundary": 0.35,
     "trivial-primitive": 0.14,
-    "over-mocked": 0.4
+    "over-mocked": 0.41
   },
   "model": "jev-1.13.0",
   "class": "mocked_seam_unit"

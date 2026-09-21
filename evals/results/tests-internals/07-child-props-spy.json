@@ -4,7 +4,7 @@
     "vacuous-assertion": 0.65,
     "assertion-weaker-than-name": 0.86,
     "reimplements-logic": 0.09,
-    "mocks-seam-under-test": 0.81,
+    "mocks-seam-under-test": 0.77,
     "mock-mirrors-implementation": 0.15,
     "tests-calls-not-outcomes": 0.87,
     "tests-internals": 0.32,
@@ -14,7 +14,7 @@
     "impossible-fixture": 0.08,
     "happy-path-only-of-risky-boundary": 0.04,
     "trivial-primitive": 0.17,
-    "over-mocked": 0.42
+    "over-mocked": 0.36
   },
   "model": "jev-1.13.0",
   "class": "mocked_seam_unit"

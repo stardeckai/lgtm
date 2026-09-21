@@ -10,11 +10,11 @@
     "tests-internals": 0.05,
     "setup-dominates": 0.22,
     "broad-snapshot": 0.03,
-    "swallowed-error-as-success": 0.18,
+    "swallowed-error-as-success": 0.19,
     "impossible-fixture": 0.57,
     "happy-path-only-of-risky-boundary": 0.68,
     "trivial-primitive": 0.41,
-    "over-mocked": 0.11
+    "over-mocked": 0.12
   },
   "model": "jev-1.13.0",
   "class": "pure_logic"

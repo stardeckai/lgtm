@@ -14,7 +14,7 @@
     "impossible-fixture": 0.09,
     "happy-path-only-of-risky-boundary": 0.3,
     "trivial-primitive": 0.53,
-    "over-mocked": 0.15
+    "over-mocked": 0.14
   },
   "model": "jev-1.13.0",
   "class": "pure_logic"

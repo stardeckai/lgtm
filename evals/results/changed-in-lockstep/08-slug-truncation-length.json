@@ -1,22 +1,22 @@
 {
   "probabilities": {
-    "would-pass-if-broken": 0.04,
-    "vacuous-assertion": 0.13,
-    "assertion-weaker-than-name": 0.3,
+    "would-pass-if-broken": 0.05,
+    "vacuous-assertion": 0.12,
+    "assertion-weaker-than-name": 0.27,
     "reimplements-logic": 0.11,
-    "mocks-seam-under-test": 0.4,
+    "mocks-seam-under-test": 0.41,
     "mock-mirrors-implementation": 0.04,
     "tests-calls-not-outcomes": 0.11,
-    "tests-internals": 0.05,
+    "tests-internals": 0.06,
     "setup-dominates": 0.11,
-    "broad-snapshot": 0.03,
-    "swallowed-error-as-success": 0.15,
-    "impossible-fixture": 0.11,
-    "happy-path-only-of-risky-boundary": 0.1,
-    "trivial-primitive": 0.47,
+    "broad-snapshot": 0.04,
+    "swallowed-error-as-success": 0.16,
+    "impossible-fixture": 0.1,
+    "happy-path-only-of-risky-boundary": 0.11,
+    "trivial-primitive": 0.5,
     "over-mocked": 0.08,
     "regression-does-not-distinguish": 0.08,
-    "changed-in-lockstep": 0.92
+    "changed-in-lockstep": 0.93
   },
   "model": "jev-1.13.0",
   "class": "pure_logic"

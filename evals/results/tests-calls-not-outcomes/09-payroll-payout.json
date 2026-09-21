@@ -10,11 +10,11 @@
     "tests-internals": 0.08,
     "setup-dominates": 0.11,
     "broad-snapshot": 0.04,
-    "swallowed-error-as-success": 0.24,
+    "swallowed-error-as-success": 0.29,
     "impossible-fixture": 0.09,
     "happy-path-only-of-risky-boundary": 0.06,
     "trivial-primitive": 0.14,
-    "over-mocked": 0.55
+    "over-mocked": 0.52
   },
   "model": "jev-1.13.0",
   "class": "mocked_seam_unit"

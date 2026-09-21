@@ -4,17 +4,17 @@
     "vacuous-assertion": 0.06,
     "assertion-weaker-than-name": 0.14,
     "reimplements-logic": 0.3,
-    "mocks-seam-under-test": 0.22,
+    "mocks-seam-under-test": 0.21,
     "mock-mirrors-implementation": 0.73,
     "tests-calls-not-outcomes": 0.1,
     "tests-internals": 0.05,
     "setup-dominates": 0.12,
     "broad-snapshot": 0.03,
-    "swallowed-error-as-success": 0.1,
+    "swallowed-error-as-success": 0.11,
     "impossible-fixture": 0.09,
     "happy-path-only-of-risky-boundary": 0.04,
     "trivial-primitive": 0.16,
-    "over-mocked": 0.66
+    "over-mocked": 0.62
   },
   "model": "jev-1.13.0",
   "class": "mocked_seam_unit"

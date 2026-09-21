@@ -4,7 +4,7 @@
     "vacuous-assertion": 0.16,
     "assertion-weaker-than-name": 0.32,
     "reimplements-logic": 0.09,
-    "mocks-seam-under-test": 0.3,
+    "mocks-seam-under-test": 0.38,
     "mock-mirrors-implementation": 0.08,
     "tests-calls-not-outcomes": 0.12,
     "tests-internals": 0.06,
@@ -14,7 +14,7 @@
     "impossible-fixture": 0.12,
     "happy-path-only-of-risky-boundary": 0.68,
     "trivial-primitive": 0.36,
-    "over-mocked": 0.12
+    "over-mocked": 0.14
   },
   "model": "jev-1.13.0",
   "class": "pure_logic"
