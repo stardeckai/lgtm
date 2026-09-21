@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { evalRoots, findCases, fitThreshold, loadCase, resultPath, writeReadme } from "./run.js";
+import { evalRoots, findCases, fitThreshold, loadCase, resultPath, writeReadme, computeSplit } from "./run.js";
 
 describe("fitThreshold", () => {
   it("sits one step above the lowest threshold that keeps 0.95 precision, sacrificing recall", () => {
@@ -33,6 +33,19 @@ describe("fitThreshold", () => {
 
   it("has nothing to fit without positives", () => {
     expect(fitThreshold([], [0.1, 0.2])).toBeUndefined();
+  });
+
+  it("holds a case out by its own slug hash, so neighbours never move it", () => {
+    const mk = (id: string, priv: boolean): any => ({ id, root: { private: priv }, expect: { fire: [], not_fire: [], class: "pure_logic", why: "" }, job: {} });
+    const a = mk("private/realworld/x/01-alpha", true), b = mk("private/realworld/x/02-beta", true), c = mk("clean/03-gamma", false);
+    const alone = computeSplit([a]), together = computeSplit([a, b, c]);
+    expect(alone.has(a.id)).toBe(together.has(a.id));
+    // about half the real cases and a tenth of the synthetic ones over a large draw
+    const reals = Array.from({ length: 2000 }, (_, i) => mk(`private/realworld/x/${i}-r`, true));
+    const syns = Array.from({ length: 2000 }, (_, i) => mk(`clean/${i}-s`, false));
+    const r = computeSplit(reals).size / reals.length, s = computeSplit(syns).size / syns.length;
+    expect(r).toBeGreaterThan(0.45); expect(r).toBeLessThan(0.55);
+    expect(s).toBeGreaterThan(0.07); expect(s).toBeLessThan(0.14);
   });
 
   it("never fires on a real negative, whatever the synthetic precision says", () => {

@@ -10,4 +10,8 @@ export default {
     false: "The fixture is the bad input the rule under test is asked to reject, or no rule can be named: production writes this state too, or the impossible part is never read.",
   },
   threshold: 0.50,
+  // Off by default (Sept 2026): the shape is rare in real suites (2 positives in 3,256 scored blocks and 45 files
+  // read across four repos) and the model ranks the two real positives (0.44, 0.45) under two real negatives
+  // (0.61, 0.70). Back on after a wording round against those cases; see TODO.md.
+  optIn: true,
 } satisfies Check;

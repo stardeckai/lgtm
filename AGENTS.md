@@ -85,9 +85,13 @@ and reports the ones that come back confident. Read `README.md` first; this file
   is the one unrecoverable cost; a 0.95 floor on the synthetic ones because there are hundreds and one contested
   label would otherwise switch a check off.) Do not edit thresholds by hand; refit after changing wording. Fit
   thresholds last, after prompt changes.
-- **The holdout is a test set, mostly real.** Every 2nd real case and every 10th synthetic one, by slug hash.
+- **The holdout is a test set, mostly real.** About half the real cases and a tenth of the synthetic ones, each
+  chosen by its own slug hash, so adding or removing cases never moves an existing case across the split.
   Nothing is fitted or tuned on it: not thresholds, not prompts. Its numbers are the ones the README leads with.
-  When the real corpus grows, the test set grows with it; do not move a case between sides by hand.
+  Do not move a case between sides by hand. History: the split was rank-based until Sept 2026; switching it moved
+  294 cases (226 real), so `holdout_f1` entries in `evals/iterations.json` from before that are on the old draw.
+- **Public files never name a private case.** RESULTS.md and the atlas call them `private/NNN`, numbered in corpus
+  order, and print no label reason for them; the reasons stay with the cases in the private repo.
 - **Labels never go in fixture `.ts` files.** Ground truth lives only in `expect.json`; the `.ts` files are sent to
   the model verbatim. No comments, names or strings that hint at the smell.
 - **Unscored is the default.** A case scores a check only if that id is in its `fire` or `not_fire` list. Do not add

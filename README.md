@@ -187,11 +187,11 @@ Retiring three unit tests for one wider test that really fails is a win, not a c
 | 😐&#8288;🤌 | `setup-dominates` | Most of the setup never reaches the assertion; cut it to what the assertion depends on, or assert more of it. |
 | 😐&#8288;🤏 | `broad-snapshot` | The assertion is a snapshot of the whole output, so any change re-records it and nobody reads what changed; pin the fields that matter. |
 | 😐&#8288;🤏 | `swallowed-error-as-success` | The test passes whether the error is thrown, caught or never raised; assert the specific failure by class, code or message. |
-| 😐&#8288;🤌 | `impossible-fixture` | The fixture is a state production validation could never produce, so the branch it exercises cannot happen; build it through the real constructor or validator. |
+| 😐&#8288;🤌 | `impossible-fixture` | The fixture is a state production validation could never produce, so the branch it exercises cannot happen; build it through the real constructor or validator. *(off by default; name it in `--only`)* |
 | 😐&#8288;🤌 | `happy-path-only-of-risky-boundary` | The refusal path this code exists for (the reject, the limit, the wrong tenant) has no test here or among its siblings; add one. |
 | 😐&#8288;🤌 | `trivial-primitive` | A one-line helper tested on its own; any real test of the feature that uses it would catch the same break. Delete it, or test the feature. |
 | 😐&#8288;👏 | `over-mocked` | Every asserted value came out of a fake; the only real code left is glue between stubs. Fake fewer collaborators, or test the integration. |
-| 😐&#8288;🫸 | `regression-does-not-distinguish` | This regression test also passes on the pre-fix code, so it does not lock the fix; assert the value the bug got wrong. *(needs `--diff`)* *(off by default; name it in `--only`)* |
+| 😐&#8288;🫸 | `regression-does-not-distinguish` | This regression test also passes on the pre-fix code, so it does not lock the fix; assert the value the bug got wrong. *(needs `--diff`)* |
 | 😐&#8288;🫸 | `changed-in-lockstep` | The expected values changed in the same diff as the code that produces them, so the test may only mirror the new behaviour; derive them from the requirement. *(needs `--diff`)* *(off by default; name it in `--only`)* |
 <!-- checks:end -->
 
@@ -202,8 +202,8 @@ Numbers on the held-out test set, which nothing was fitted or tuned on. lgtm pri
 
 | held-out | high-confidence findings | all flagged findings |
 |---|---|---|
-| precision | **0.97** (67 findings, 2 wrong) | 0.93 (112 findings, 8 wrong) |
-| recall | **0.46** | 0.74 |
+| precision | **0.92** (49 findings, 4 wrong) | 0.87 (99 findings, 13 wrong) |
+| recall | **0.33** | 0.63 |
 
 Per-check numbers on the same held-out set, every miss and false positive, the corpus composition and the class confusion matrix are in [`evals/RESULTS.md`](evals/RESULTS.md); every scored case is a dot in [`evals/atlas.html`](evals/atlas.html), per check, with both lines drawn. The public cases reproduce with `pnpm eval`.
 <!-- evals:end -->

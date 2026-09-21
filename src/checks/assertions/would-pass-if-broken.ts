@@ -9,6 +9,6 @@ export default {
     true: "The obvious broken version changes at least one asserted value on this fixture, so the test would go red.",
     false: "Every assertion still holds under the obvious broken version, or there is no assertion this fixture is sure to reach.",
   },
-  threshold: 0.35,
+  threshold: 0.50,
   invert: true,
 } satisfies Check;

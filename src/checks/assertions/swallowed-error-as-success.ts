@@ -10,5 +10,5 @@ export default {
     false:
       "The asserted result names this failure rather than the neighbouring one — its class, code, status, failing step, echoed reason, attempt count, or a status a sibling running the same fixture without this failure does not return — or it is the declared output of a fail-closed mapping; a sibling pins a non-fallback result from the same unit so a blanket fallback could not stay green; the block drives the accepting path or no failure path at all; or `expect.assertions(n)`, a rethrow of unexpected types, or a read-back proving nothing was written forces the failure path.",
   },
-  threshold: 0.70,
+  threshold: 0.75,
 } satisfies Check;
