@@ -4,10 +4,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { AuthenticationError, TypeSafeClient } from "@typesafe-ai/sdk";
-import { analyze, buildStates, checksFor, diffSelection, isCached, normalizeDiffFlag, TEST_FILE, type AnalyzeOptions, type Job } from "./analyze.js";
+import { AuthenticationError } from "@typesafe-ai/sdk";
+import { analyze, buildStates, checksFor, diffSelection, isCached, normalizeDiffFlag, requestFor, TEST_FILE, VERCEL_REQUEST_INTERVAL_MS, type AnalyzeOptions, type Job } from "./analyze.js";
 import { CATEGORY_OF, CHECKS, GESTURE, usd } from "./checks/index.js";
-import { askKey, askSkillMode, init, installSkill, resolveApiKey, saveKey, SKILL_MODES, type SkillMode } from "./init.js";
+import { askKey, askSkillMode, createClient, init, installSkill, PROVIDER_LABEL, providerModel, resolveApiConfig, saveKey, selectedProvider, setDefaultProvider, SKILL_MODES, type Provider, type SkillMode } from "./init.js";
 import { c, certain, formatClasses, formatReport, tests, type Format } from "./report.js";
 import { ignoreMatcher } from "./ignore.js";
 import { recordRun, usageReport, worktreeRoot } from "./usage.js";
@@ -17,12 +17,15 @@ const IGNORED_DIRS = new Set(["node_modules", "dist", "build", ".git"]);
 
 const USAGE = `lgtm <files|dirs...>   (e.g. lgtm .)
 
-  init                 save your TypeSafe API key, then install the /lgtm and /actually-test skills
-  key [value]          swap the saved API key (prompts when no value is given)
+  init                 choose a TypeSafe, Vercel, or OpenRouter key, then install skills
+  key [value]          swap the saved API key (choose provider when no value is given)
+  key default          show the default API provider
+  key default set <provider>  use typesafe | vercel | openrouter by default
   usage                total cost so far: all time, last day, last week, this worktree
   clear-cache          delete cached answers for this project (node_modules/.cache/lgtm)
   skill                install the /lgtm and /actually-test skills again (to add more agents)
   --key <value>        (init) use this key instead of prompting
+  --provider <name>    (init/key/run) typesafe | vercel | openrouter; selects the run mode
   --skill <where>      (init/skill) global | project | claude | none — skip the prompt
   --yes                run without the confirmation prompt (also: init/skill defaults)
   --diff [base]        only the tests your change touches (base defaults to the repo's default branch)
@@ -31,7 +34,8 @@ const USAGE = `lgtm <files|dirs...>   (e.g. lgtm .)
   --only <ids,...>     run only these checks
   --skip <ids,...>     skip these checks
   --format <fmt>       text | github | json (default text)
-  --concurrency <n>    parallel requests (default 4)
+  --concurrency <n>    parallel requests (default 4; Vercel defaults to 1)
+  --rate <n>           maximum live request starts per minute (Vercel defaults to 10)
   --no-impl            don't send implementation source
   --lean               smaller states (8k of implementation, no test file or guidelines); ~3x cheaper, many more false positives
   --no-cache           ignore the answer cache
@@ -65,11 +69,11 @@ function discover(targets: string[], ignore: (file: string) => boolean = () => f
 }
 
 /** The plan for a run: files, checks, estimated cost and runtime. Printed before every run and by --dry-run. */
-function printPlan(jobs: Job[], files: string[], diffLabel: string | undefined, opts: AnalyzeOptions, log = console.log): void {
+function printPlan(jobs: Job[], files: string[], diffLabel: string | undefined, opts: AnalyzeOptions, provider: Provider, log = console.log): void {
   const byFile = [...new Set(jobs.map((j) => j.block.file))];
   const fresh = jobs.filter((j) => !isCached(j, opts));
   const cached = jobs.length - fresh.length;
-  const tokensOf = (list: Job[]) => Math.round(list.reduce((n, j) => n + JSON.stringify(j.state).length, 0) / 4);
+  const tokensOf = (list: Job[]) => Math.round(list.reduce((n, j) => n + JSON.stringify(requestFor(j.state, checksFor(j.state, opts, j.touched), opts.model)).length, 0) / 4);
   const tokens = tokensOf(fresh);
   // Measured on live runs: ~1s of connection setup, then rounds of `concurrency` requests where each request
   // takes ~0.4s plus ~0.015s per 1k input tokens (7 blocks/1 worker 5.0s, 36 blocks/4 workers 5.3s full, 4.4s lean).
@@ -79,7 +83,7 @@ function printPlan(jobs: Job[], files: string[], diffLabel: string | undefined, 
     const perRequest = 0.4 + 0.015 * (totalTokens / list.length / 1000);
     return 1 + Math.ceil(list.length / workers) * perRequest;
   };
-  const seconds = estimate(fresh, tokens);
+  const seconds = Math.max(estimate(fresh, tokens), Math.max(0, fresh.length - 1) * (opts.minRequestIntervalMs ?? 0) / 1000);
   const listed = byFile.slice(0, 8).map((f) => `  ${f}`);
   if (byFile.length > 8) listed.push(`  … and ${byFile.length - 8} more`);
   const runtime = seconds < 60 ? `${seconds.toFixed(0)}s` : `${(seconds / 60).toFixed(1)} min`;
@@ -90,10 +94,12 @@ function printPlan(jobs: Job[], files: string[], diffLabel: string | undefined, 
   const high = Math.max(...counts);
   const checkCount = low === high ? `${high}` : `${low} to ${high}`;
   log(`will run on ${c("bold", tests(jobs.length))} in ${c("bold", `${byFile.length} ${byFile.length === 1 ? "file" : "files"}`)}, ${checkCount} checks each${cachedNote}`);
+  log(`API mode: ${PROVIDER_LABEL[provider]}`);
   if (diffLabel) log(c("dim", `changed vs ${diffLabel}`));
   log(c("cyan", listed.join("\n")));
-  log(`\nestimated cost:    ${c("yellow", `~${tokens} input tokens`)} ≈ ${c(["green", "bold"], usd(tokens))}`);
-  log(`estimated runtime: ${c("yellow", `~${runtime}`)} ${c("dim", `at concurrency ${opts.concurrency ?? 4}`)}`);
+  log(`\nestimated cost:    ${c("yellow", `~${tokens} input tokens`)}${provider === "vercel" ? " · billed by Vercel" : ` ≈ ${c(["green", "bold"], usd(tokens))}`}`);
+  log(`estimated runtime: ${c("yellow", `${opts.minRequestIntervalMs ? "at least " : "~"}${runtime}`)} ${c("dim", `at concurrency ${opts.concurrency ?? 4}`)}`);
+  if (opts.minRequestIntervalMs) log(c("dim", `paced at ${60_000 / opts.minRequestIntervalMs} requests/minute`));
   log(c("dim", "(--json prints the states that would be sent)"));
 }
 
@@ -103,6 +109,7 @@ async function main(): Promise<number> {
     allowPositionals: true,
     options: {
       key: { type: "string" },
+      provider: { type: "string" },
       skill: { type: "string" },
       yes: { type: "boolean" },
       diff: { type: "string" },
@@ -112,6 +119,7 @@ async function main(): Promise<number> {
       skip: { type: "string" },
       format: { type: "string", default: "text" },
       concurrency: { type: "string" },
+      rate: { type: "string" },
       "no-impl": { type: "boolean" },
       lean: { type: "boolean" },
       "no-cache": { type: "boolean" },
@@ -137,9 +145,14 @@ async function main(): Promise<number> {
     return 2;
   }
   const skill = values.skill as SkillMode | undefined;
+  if (values.provider !== undefined && !Object.hasOwn(PROVIDER_LABEL, values.provider)) {
+    console.error(`--provider must be typesafe | vercel | openrouter, got ${values.provider}`);
+    return 2;
+  }
+  const provider = values.provider as Provider | undefined;
 
   if (positionals[0] === "init") {
-    for (const file of await init({ key: values.key, skill, yes: values.yes })) console.log(`wrote ${file}`);
+    for (const file of await init({ key: values.key, provider, skill, yes: values.yes })) console.log(`wrote ${file}`);
     console.log("😐👍  You're set. Run: lgtm --diff");
     return 0;
   }
@@ -164,13 +177,34 @@ async function main(): Promise<number> {
   }
 
   if (positionals[0] === "key") {
-    const key = positionals[1] ?? values.key ?? (await askKey());
+    if (positionals[1] === "default") {
+      if (positionals.length === 2) {
+        console.log(`Default API mode: ${PROVIDER_LABEL[selectedProvider()]}`);
+        return 0;
+      }
+      const next = positionals[3];
+      if (positionals[2] !== "set" || !next || !Object.hasOwn(PROVIDER_LABEL, next) || positionals.length !== 4) {
+        console.error("Usage: lgtm key default set typesafe|vercel|openrouter");
+        return 2;
+      }
+      try {
+        setDefaultProvider(next as Provider);
+      } catch (err) {
+        console.error((err as Error).message);
+        return 2;
+      }
+      console.log(`Default API mode: ${PROVIDER_LABEL[next as Provider]}`);
+      return 0;
+    }
+    const given = positionals[1] ?? values.key;
+    const selected = given ? { apiKey: given, provider: provider ?? selectedProvider() } : await askKey(provider);
+    const key = selected.apiKey;
     if (!key) {
       console.error("No key given. Run: lgtm key <value>");
       return 2;
     }
-    console.log(`wrote ${saveKey(key)}`);
-    console.log("Key swapped.");
+    console.log(`wrote ${saveKey(key, os.homedir(), selected.provider)}`);
+    console.log(`${PROVIDER_LABEL[selected.provider]} key saved and set as default.`);
     return 0;
   }
 
@@ -227,17 +261,32 @@ async function main(): Promise<number> {
     return 0;
   }
 
+  const mode = provider ?? selectedProvider();
+  const apiConfig = resolveApiConfig(os.homedir(), mode);
+  const concurrency = values.concurrency === undefined ? (mode === "vercel" ? 1 : 4) : Number(values.concurrency);
+  if (!Number.isInteger(concurrency) || concurrency < 1) {
+    console.error("--concurrency must be a positive integer");
+    return 2;
+  }
+  const rate = values.rate === undefined ? (mode === "vercel" ? 60_000 / VERCEL_REQUEST_INTERVAL_MS : undefined) : Number(values.rate);
+  if (rate !== undefined && (!Number.isFinite(rate) || rate < 1 || rate > 60_000)) {
+    console.error("--rate must be between 1 and 60000 requests per minute");
+    return 2;
+  }
   const opts = {
+    model: providerModel(mode),
     threshold,
     only: values.only?.split(","),
     skip: values.skip?.split(","),
-    concurrency: values.concurrency === undefined ? undefined : Number(values.concurrency),
+    concurrency,
+    minRequestIntervalMs: rate === undefined ? undefined : 60_000 / rate,
     verbose: values.verbose,
     cacheDir: values["no-cache"] ? undefined : cacheDir(),
   };
 
   if (values["dry-run"] && values.json) {
       // The raw states, for piping into a file or jq.
+    console.error(`API mode: ${PROVIDER_LABEL[mode]}`);
     console.log(JSON.stringify(jobs.map((job) => ({
       file: job.block.file,
       line: job.block.line,
@@ -248,7 +297,7 @@ async function main(): Promise<number> {
   }
 
   // The plan always prints; on json/github it goes to stderr so stdout stays machine-readable.
-  printPlan(jobs, files, selection?.label, opts, values["dry-run"] || format === "text" ? console.log : console.error);
+  printPlan(jobs, files, selection?.label, opts, mode, values["dry-run"] || format === "text" ? console.log : console.error);
   if (values["dry-run"]) return 0;
   if (!values.yes) {
     if (!process.stdin.isTTY) {
@@ -262,9 +311,8 @@ async function main(): Promise<number> {
     console.log("");
   }
 
-  const apiKey = resolveApiKey();
-  if (!apiKey) {
-    console.error("No API key. Run: lgtm init");
+  if (!apiConfig) {
+    console.error(`No ${PROVIDER_LABEL[mode]} API key. Run: lgtm key`);
     return 2;
   }
 
@@ -276,7 +324,7 @@ async function main(): Promise<number> {
   let spent = 0;
   try {
     // 10s per attempt is the SDK default; states can be large, so allow more.
-    const client = new TypeSafeClient({ apiKey, timeout: 60_000 });
+    const client = createClient(apiConfig);
     const startedAt = Date.now();
     const progress = process.stderr.isTTY
       ? (done: number, total: number, tokens: number) => {
@@ -290,12 +338,12 @@ async function main(): Promise<number> {
     durationMs = Date.now() - startedAt;
   } catch (err) {
     if (err instanceof AuthenticationError) {
-      console.error("TypeSafe rejected the API key. Run: lgtm init");
+      console.error(`${PROVIDER_LABEL[mode]} rejected the API key. Run: lgtm key`);
       return 2;
     }
     throw err;
   } finally {
-    if (spent > 0) recordRun({ at: new Date().toISOString(), tokens: spent, worktree: worktreeRoot() });
+    if (spent > 0) recordRun({ at: new Date().toISOString(), tokens: spent, provider: mode, worktree: worktreeRoot() });
   }
 
   if (values.classes && format === "text") console.log(formatClasses(result.classes) + "\n");
@@ -307,6 +355,7 @@ async function main(): Promise<number> {
       files: new Set(jobs.map((j) => j.block.file)).size,
       skipped: result.skipped,
       inputTokens: result.inputTokens,
+      provider: mode,
       durationMs,
       verbose: Boolean(values.verbose),
     }),

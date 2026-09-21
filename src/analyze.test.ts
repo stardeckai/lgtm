@@ -237,8 +237,11 @@ describe("analyze", () => {
       "test_class", "vacuous-assertion", "setup-dominates",
     ]);
     expect((bodies[0] as { model: string }).model).toBe("jev-latest");
+    expect(isCached(job(), { ...opts, model: "typesafe-ai/jev" })).toBe(false);
+    await analyze([job()], { ...opts, model: "typesafe-ai/jev" }, client);
+    expect((bodies.at(-1) as { model: string }).model).toBe("typesafe-ai/jev");
     await analyze([job()], { ...opts, only: [...opts.only].reverse() }, client);
-    expect(bodies).toHaveLength(1);
+    expect(bodies).toHaveLength(2);
     const original = Object.entries(TEST_CLASSES);
     const choices = TEST_CLASSES as Record<string, string>;
     try {
@@ -246,8 +249,8 @@ describe("analyze", () => {
       Object.assign(choices, Object.fromEntries([...original].reverse()));
       expect(isCached(job(), opts)).toBe(false);
       await analyze([job()], opts, client);
-      expect(bodies).toHaveLength(2);
-      const sent = bodies[1] as { questions: { test_class: { criteria: Record<string, string> } } };
+      expect(bodies).toHaveLength(3);
+      const sent = bodies[2] as { questions: { test_class: { criteria: Record<string, string> } } };
       expect(Object.keys(sent.questions.test_class.criteria)).toEqual(original.map(([key]) => key).reverse());
     } finally {
       for (const key of Object.keys(choices)) delete choices[key];
@@ -628,6 +631,48 @@ describe("analyze API errors", () => {
       expect(flaky.calls()).toBe(3);
       expect(result.skipped).toBe(0);
       expect(result.findings.map((f) => [f.checkId, f.probability])).toEqual([["vacuous-assertion", 0.9]]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("honors Retry-After", async () => {
+    vi.useFakeTimers();
+    try {
+      const calls: number[] = [];
+      const good = fakeClient(0.9);
+      let first = true;
+      const client: Client = { async systemOne(request) {
+        calls.push(Date.now());
+        if (first) {
+          first = false;
+          throw new APIError(429, {}, new Headers({ "retry-after": "8" }), "429 rate limit");
+        }
+        return good.client.systemOne(request);
+      } };
+      const pending = analyze([job()], {}, client);
+      await vi.runAllTimersAsync();
+      expect((await pending).skipped).toBe(0);
+      expect(calls[1]! - calls[0]!).toBe(8_000);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("spaces concurrent live requests", async () => {
+    vi.useFakeTimers();
+    try {
+      const calls: number[] = [];
+      const good = fakeClient(0.9);
+      const client: Client = { async systemOne(request) {
+        calls.push(Date.now());
+        return good.client.systemOne(request);
+      } };
+      const pending = analyze([job(), job({ test_code: "it('other', () => {})" })],
+        { concurrency: 2, minRequestIntervalMs: 6_000 }, client);
+      await vi.runAllTimersAsync();
+      expect((await pending).skipped).toBe(0);
+      expect(calls[1]! - calls[0]!).toBe(6_000);
     } finally {
       vi.useRealTimers();
     }

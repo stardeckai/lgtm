@@ -4,10 +4,28 @@ import os from "node:os";
 import path from "node:path";
 import readline from "node:readline/promises";
 import { fileURLToPath } from "node:url";
+import { TypeSafeClient } from "@typesafe-ai/sdk";
 import { SKILLS } from "./skill.js";
 
 export type SkillMode = "global" | "project" | "claude" | "none";
+export type Provider = "typesafe" | "vercel" | "openrouter";
+export type ApiConfig = { provider: Provider; apiKey: string };
+type SavedConfig = { provider?: Provider; keys?: Partial<Record<Provider, string>>; apiKey?: string };
 export const SKILL_MODES: SkillMode[] = ["global", "project", "claude", "none"];
+export const PROVIDER_LABEL: Record<Provider, string> = {
+  typesafe: "TypeSafe", vercel: "Vercel AI Gateway", openrouter: "OpenRouter",
+};
+export const providerModel = (provider: Provider) => provider === "vercel" ? "typesafe-ai/jev"
+  : provider === "openrouter" ? "typesafe/jev-1.13" : "jev-latest";
+
+export function createClient(config: ApiConfig): TypeSafeClient {
+  if (config.provider === "openrouter") {
+    return new TypeSafeClient({ apiKey: config.apiKey, timeout: 60_000,
+      fetch: (_url, init) => fetch("https://openrouter.ai/api/alpha/decisions", init) });
+  }
+  return new TypeSafeClient({ apiKey: config.apiKey, timeout: 60_000,
+    ...(config.provider === "vercel" ? { baseURL: "https://ai-gateway.vercel.sh/typesafe" } : {}) });
+}
 
 /** Package root — `dist/..` when installed, the repo root under vitest. Holds `skills/`. */
 export const pkgRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -18,29 +36,64 @@ export const skillPath = (home: string = os.homedir(), name = "lgtm") =>
 export const projectSkillPath = (cwd: string = process.cwd(), name = "lgtm") =>
   path.join(cwd, ".claude", "skills", name, "SKILL.md");
 
-/** Key from the environment, else the global config file. */
-export function resolveApiKey(home: string = os.homedir()): string | undefined {
-  if (process.env.TYPESAFE_API_KEY) return process.env.TYPESAFE_API_KEY;
+function readConfig(home: string): SavedConfig {
   try {
-    return JSON.parse(fs.readFileSync(configPath(home), "utf8")).apiKey ?? undefined;
-  } catch {
-    return undefined;
+    const value: unknown = JSON.parse(fs.readFileSync(configPath(home), "utf8"));
+    return value && typeof value === "object" && !Array.isArray(value) ? value as SavedConfig : {};
+  } catch { return {}; }
+}
+
+/** The selected provider's environment key wins over its saved key. Legacy configs use TypeSafe. */
+export function resolveApiConfig(home: string = os.homedir(), selected?: Provider): ApiConfig | undefined {
+  const saved = readConfig(home);
+  const provider = selected ?? saved.provider ?? (process.env.TYPESAFE_API_KEY || saved.apiKey ? "typesafe"
+    : process.env.AI_GATEWAY_API_KEY ? "vercel" : process.env.OPENROUTER_API_KEY ? "openrouter" : "typesafe");
+  const envKey = provider === "vercel" ? process.env.AI_GATEWAY_API_KEY
+    : provider === "openrouter" ? process.env.OPENROUTER_API_KEY : process.env.TYPESAFE_API_KEY;
+  const apiKey = envKey || saved.keys?.[provider] || (provider === "typesafe" ? saved.apiKey : undefined);
+  if (!apiKey) return undefined;
+  return { provider, apiKey };
+}
+
+export function selectedProvider(home = os.homedir()): Provider {
+  const saved = readConfig(home);
+  return saved.provider ?? (saved.apiKey || process.env.TYPESAFE_API_KEY ? "typesafe"
+    : process.env.AI_GATEWAY_API_KEY ? "vercel" : process.env.OPENROUTER_API_KEY ? "openrouter" : "typesafe");
+}
+
+/** Prompt for the provider and its key. */
+export async function askKey(selected?: Provider): Promise<ApiConfig> {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const answer = selected ? "" : (await rl.question("API key provider: (t)ypeSafe, (v)ercel AI Gateway, or (o)penRouter? [t] ")).trim().toLowerCase();
+    const provider = selected ?? (answer.startsWith("v") ? "vercel" : answer.startsWith("o") ? "openrouter" : "typesafe");
+    const url = provider === "vercel" ? "https://vercel.com/ai-gateway"
+      : provider === "openrouter" ? "https://openrouter.ai/settings/keys" : "https://typesafe.ai";
+    const apiKey = (await rl.question(`Paste your ${PROVIDER_LABEL[provider]} API key (${url}): `)).trim();
+    return { provider, apiKey };
+  } finally {
+    rl.close();
   }
 }
 
-/** Prompt for a key unless one was given. */
-export async function askKey(): Promise<string> {
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  const key = (await rl.question("Paste your TypeSafe API key (https://typesafe.ai): ")).trim();
-  rl.close();
-  return key;
-}
-
-/** Write (or replace) the saved key; returns the config path. `lgtm key` uses this directly. */
-export function saveKey(key: string, home = os.homedir()): string {
+/** Write one key and make it active, preserving the other provider's key. */
+export function saveKey(key: string, home = os.homedir(), provider: Provider = "typesafe"): string {
   const config = configPath(home);
   fs.mkdirSync(path.dirname(config), { recursive: true, mode: 0o700 });
-  fs.writeFileSync(config, JSON.stringify({ apiKey: key }, null, 2) + "\n", { mode: 0o600 });
+  const saved = readConfig(home);
+  const keys = { ...(saved.apiKey ? { typesafe: saved.apiKey } : {}), ...saved.keys, [provider]: key };
+  fs.writeFileSync(config, JSON.stringify({ provider, keys }, null, 2) + "\n", { mode: 0o600 });
+  fs.chmodSync(config, 0o600);
+  return config;
+}
+
+export function setDefaultProvider(provider: Provider, home = os.homedir()): string {
+  if (!resolveApiConfig(home, provider)) throw new Error(`No ${provider} API key saved or set in the environment`);
+  const config = configPath(home);
+  const saved = readConfig(home);
+  const keys = { ...(saved.apiKey ? { typesafe: saved.apiKey } : {}), ...saved.keys };
+  fs.mkdirSync(path.dirname(config), { recursive: true, mode: 0o700 });
+  fs.writeFileSync(config, JSON.stringify({ provider, keys }, null, 2) + "\n", { mode: 0o600 });
   fs.chmodSync(config, 0o600);
   return config;
 }
@@ -98,18 +151,22 @@ export function installSkill(mode: SkillMode, opts: { home?: string; cwd?: strin
 
 /** Step 1: save the key. Step 2: install the skills. Returns the files worth printing. */
 export async function init(
-  opts: { key?: string; home?: string; cwd?: string; skill?: SkillMode; yes?: boolean; spawn?: Spawn } = {},
+  opts: { key?: string; provider?: Provider; home?: string; cwd?: string; skill?: SkillMode; yes?: boolean; spawn?: Spawn } = {},
 ): Promise<string[]> {
   const home = opts.home ?? os.homedir();
   const written: string[] = [];
 
-  let key = opts.key;
-  if (!key && process.env.TYPESAFE_API_KEY) {
-    console.log("TYPESAFE_API_KEY is already set in the environment — keeping it, not writing a config file.");
-  } else if (!key) {
-    key = await askKey();
+  let config: ApiConfig | undefined = opts.key ? { provider: opts.provider ?? selectedProvider(home), apiKey: opts.key } : undefined;
+  const envKey = opts.provider === "typesafe" ? process.env.TYPESAFE_API_KEY
+    : opts.provider === "vercel" ? process.env.AI_GATEWAY_API_KEY
+    : opts.provider === "openrouter" ? process.env.OPENROUTER_API_KEY
+    : process.env.TYPESAFE_API_KEY || process.env.AI_GATEWAY_API_KEY || process.env.OPENROUTER_API_KEY;
+  if (!config && envKey) {
+    console.log("An API key is already set in the environment — keeping it, not writing a config file.");
+  } else if (!config) {
+    config = await askKey(opts.provider);
   }
-  if (key) written.push(saveKey(key, home));
+  if (config?.apiKey) written.push(saveKey(config.apiKey, home, config.provider));
 
   const mode = opts.skill ?? (opts.yes ? "global" : await askSkillMode());
   written.push(...installSkill(mode, { home, cwd: opts.cwd, spawn: opts.spawn }));

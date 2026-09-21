@@ -7,14 +7,13 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { TypeSafeClient } from "@typesafe-ai/sdk";
-import { analyze, buildStates, type Job } from "../src/analyze.js";
+import { analyze, buildStates, VERCEL_REQUEST_INTERVAL_MS, type Job } from "../src/analyze.js";
 import { CERTAIN_MARGIN, highLine } from "../src/report.js";
 import { CHECKS, TEST_CLASSES, type TestClass } from "../src/checks/index.js";
 import { DEFAULT_THRESHOLD } from "../src/checks/types.js";
 import { extractTests } from "../src/extract.js";
 import { usd } from "../src/checks/index.js";
-import { resolveApiKey } from "../src/init.js";
+import { createClient, providerModel, resolveApiConfig } from "../src/init.js";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const CASES = path.join(ROOT, "evals", "cases");
@@ -185,14 +184,16 @@ function readAnswers(cases: Case[]): Map<string, Answered> {
 }
 
 async function runLive(cases: Case[], only?: string[]): Promise<{ answers: Map<string, Answered>; inputTokens: number; model?: string }> {
-  const apiKey = resolveApiKey();
-  if (!apiKey) throw new Error("no API key — run `lgtm init` or set TYPESAFE_API_KEY");
-  const client = new TypeSafeClient({ apiKey, timeout: 60_000 });
+  const config = resolveApiConfig();
+  if (!config) throw new Error("no API key — run `lgtm init` or set TYPESAFE_API_KEY / AI_GATEWAY_API_KEY / OPENROUTER_API_KEY");
+  const client = createClient(config);
   // Two cases may name the same test block (dogfood); send that state once.
   const jobs = [...new Map(cases.map((c) => [`${c.job.block.file}:${c.job.block.line}`, c.job])).values()];
   const result = await analyze(
     jobs,
-    { threshold: 0, verbose: false, optIn: true, cacheDir: path.join(ROOT, "evals", ".cache"), concurrency: 8, ...(only ? { only } : {}) },
+    { threshold: 0, verbose: false, optIn: true, cacheDir: path.join(ROOT, "evals", ".cache"), concurrency: config.provider === "vercel" ? 1 : 8,
+      model: providerModel(config.provider),
+      ...(config.provider === "vercel" ? { minRequestIntervalMs: VERCEL_REQUEST_INTERVAL_MS } : {}), ...(only ? { only } : {}) },
     client,
   );
 

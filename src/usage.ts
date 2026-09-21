@@ -5,7 +5,7 @@ import path from "node:path";
 import { usd } from "./checks/index.js";
 import { c } from "./report.js";
 
-export type Run = { at: string; tokens: number; worktree?: string };
+export type Run = { at: string; tokens: number; provider?: "typesafe" | "vercel" | "openrouter"; worktree?: string };
 
 /** The log is a file on disk anything can corrupt: `null`, `{}` and string tokens all parse, and would throw or total to NaN. */
 const isRun = (v: unknown): v is Run =>
@@ -57,7 +57,7 @@ export function usageReport(now: number, worktree: string | undefined, home: str
   const sum = (list: Run[]) => list.reduce((n, r) => n + r.tokens, 0);
   const since = (ms: number) => runs.filter((r) => Date.parse(r.at) >= now - ms);
   const line = (label: string, list: Run[]) =>
-    `${label.padEnd(14)} ${c(["green", "bold"], usd(sum(list)).padStart(9))}  ${c("dim", `${sum(list)} tokens · ${list.length} ${list.length === 1 ? "run" : "runs"}`)}`;
+    `${label.padEnd(14)} ${c(["green", "bold"], usd(sum(list.filter((r) => r.provider !== "vercel"))).padStart(9))}  ${c("dim", `${sum(list)} tokens · ${list.length} ${list.length === 1 ? "run" : "runs"}${list.some((r) => r.provider === "vercel") ? " · Vercel billing excluded" : ""}`)}`;
   const out = [line("all time", runs), line("last day", since(DAY)), line("last week", since(7 * DAY))];
   if (worktree) out.push(line("this worktree", runs.filter((r) => r.worktree === worktree)));
   return out.join("\n");

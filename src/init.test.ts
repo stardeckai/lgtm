@@ -3,13 +3,17 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   configPath,
+  createClient,
   init,
   pkgRoot,
   projectSkillPath,
-  resolveApiKey,
+  providerModel,
+  resolveApiConfig,
+  selectedProvider,
+  setDefaultProvider,
   skillPath,
   type Spawn,
 } from "./init.js";
@@ -25,6 +29,8 @@ const tmp = (): string => {
 afterEach(() => {
   for (const dir of dirs.splice(0)) fs.rmSync(dir, { recursive: true, force: true });
   delete process.env.TYPESAFE_API_KEY;
+  delete process.env.AI_GATEWAY_API_KEY;
+  delete process.env.OPENROUTER_API_KEY;
 });
 
 /** A shell script named `npx` that records its argv and exits with `code`. */
@@ -43,9 +49,9 @@ describe("init", () => {
     const written = await init({ key: "sk-test-123", home, skill: "claude" });
 
     expect(written).toEqual([configPath(home), skillPath(home), skillPath(home, "actually-test")]);
-    expect(JSON.parse(fs.readFileSync(configPath(home), "utf8"))).toEqual({ apiKey: "sk-test-123" });
+    expect(JSON.parse(fs.readFileSync(configPath(home), "utf8"))).toEqual({ provider: "typesafe", keys: { typesafe: "sk-test-123" } });
     expect(fs.statSync(configPath(home)).mode & 0o777).toBe(0o600);
-    expect(resolveApiKey(home)).toBe("sk-test-123");
+    expect(resolveApiConfig(home)).toEqual({ provider: "typesafe", apiKey: "sk-test-123" });
     for (const { name, markdown } of SKILLS) {
       expect(fs.readFileSync(skillPath(home, name), "utf8")).toBe(markdown());
     }
@@ -91,7 +97,112 @@ describe("init", () => {
     const home = tmp();
     await init({ key: "sk-from-config", home, skill: "none" });
     process.env.TYPESAFE_API_KEY = "sk-from-env";
-    expect(resolveApiKey(home)).toBe("sk-from-env");
+    expect(resolveApiConfig(home)).toEqual({ provider: "typesafe", apiKey: "sk-from-env" });
+  });
+
+  it("uses the Vercel key and ignores a TypeSafe key after switching modes", async () => {
+    const home = tmp();
+    await init({ key: "gateway-key", provider: "vercel", home, skill: "none" });
+    process.env.TYPESAFE_API_KEY = "old-typesafe-key";
+    process.env.AI_GATEWAY_API_KEY = "gateway-env-key";
+    expect(resolveApiConfig(home)).toEqual({ provider: "vercel", apiKey: "gateway-env-key" });
+  });
+
+  it("keeps both keys and switches the active provider", async () => {
+    const home = tmp();
+    await init({ key: "typesafe-key", home, skill: "none" });
+    await init({ key: "gateway-key", provider: "vercel", home, skill: "none" });
+    expect(JSON.parse(fs.readFileSync(configPath(home), "utf8"))).toEqual({
+      provider: "vercel", keys: { typesafe: "typesafe-key", vercel: "gateway-key" },
+    });
+    expect(resolveApiConfig(home)).toEqual({ provider: "vercel", apiKey: "gateway-key" });
+    expect(resolveApiConfig(home, "typesafe")).toEqual({ provider: "typesafe", apiKey: "typesafe-key" });
+    setDefaultProvider("typesafe", home);
+    expect(selectedProvider(home)).toBe("typesafe");
+    expect(resolveApiConfig(home)).toEqual({ provider: "typesafe", apiKey: "typesafe-key" });
+    expect(resolveApiConfig(home, "vercel")).toEqual({ provider: "vercel", apiKey: "gateway-key" });
+  });
+
+  it("stores an OpenRouter key alongside the others and selects its endpoint and model", async () => {
+    const home = tmp();
+    await init({ key: "typesafe-key", home, skill: "none" });
+    await init({ key: "router-key", provider: "openrouter", home, skill: "none" });
+    expect(resolveApiConfig(home)).toEqual({ provider: "openrouter", apiKey: "router-key" });
+    expect(resolveApiConfig(home, "typesafe")).toEqual({ provider: "typesafe", apiKey: "typesafe-key" });
+    expect(providerModel("openrouter")).toBe("typesafe/jev-1.13");
+
+    let url = "";
+    let body: Record<string, unknown> = {};
+    let authorization = "";
+    vi.stubGlobal("fetch", async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+      url = String(input);
+      body = JSON.parse(String(init?.body));
+      authorization = new Headers(init?.headers).get("authorization") ?? "";
+      return new Response(JSON.stringify({ model: "typesafe/jev-1.13", answers: { yes: { type: "noul", noul: 0.9 } },
+        usage: { input_tokens: 42, output_tokens: 0 } }),
+        { status: 200, headers: { "content-type": "application/json" } });
+    });
+    try {
+      const result = await createClient({ provider: "openrouter", apiKey: "router-key" }).systemOne({
+        model: providerModel("openrouter"), state: "state", questions: { yes: { type: "noul", instructions: "yes?" } },
+      });
+      expect(url).toBe("https://openrouter.ai/api/alpha/decisions");
+      expect(body.model).toBe("typesafe/jev-1.13");
+      expect(body.state).toBe("state");
+      expect(authorization).toBe("Bearer router-key");
+      expect(result.answers.yes).toEqual({ type: "noul", noul: 0.9 });
+      expect(result.usage.input_tokens).toBe(42);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("sends Vercel requests to its gateway with the selected key and model", async () => {
+    let url = "";
+    let authorization = "";
+    let model = "";
+    vi.stubGlobal("fetch", async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+      url = String(input);
+      authorization = new Headers(init?.headers).get("authorization") ?? "";
+      model = JSON.parse(String(init?.body)).model;
+      return new Response(JSON.stringify({ model: "typesafe-ai/jev", answers: { yes: { type: "noul", noul: 0.9 } },
+        usage: { input_tokens: 42, output_tokens: 0 } }),
+        { status: 200, headers: { "content-type": "application/json" } });
+    });
+    try {
+      const result = await createClient({ provider: "vercel", apiKey: "gateway-key" }).systemOne({
+        model: providerModel("vercel"), state: "state", questions: { yes: { type: "noul", instructions: "yes?" } },
+      });
+      expect(url).toBe("https://ai-gateway.vercel.sh/typesafe/v1/systemone");
+      expect(authorization).toBe("Bearer gateway-key");
+      expect(model).toBe("typesafe-ai/jev");
+      expect(result.answers.yes).toEqual({ type: "noul", noul: 0.9 });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("refuses to select a provider without a key", async () => {
+    const home = tmp();
+    await init({ key: "typesafe-key", home, skill: "none" });
+    expect(() => setDefaultProvider("vercel", home)).toThrow("No vercel API key");
+    expect(selectedProvider(home)).toBe("typesafe");
+  });
+
+  it("reads legacy TypeSafe configs and an environment-only Vercel key", () => {
+    const home = tmp();
+    process.env.AI_GATEWAY_API_KEY = "gateway-env-key";
+    expect(resolveApiConfig(home)).toEqual({ provider: "vercel", apiKey: "gateway-env-key" });
+    fs.mkdirSync(path.dirname(configPath(home)), { recursive: true });
+    fs.writeFileSync(configPath(home), JSON.stringify({ apiKey: "legacy-key" }));
+    expect(resolveApiConfig(home)).toEqual({ provider: "typesafe", apiKey: "legacy-key" });
+    expect(resolveApiConfig(home, "vercel")).toEqual({ provider: "vercel", apiKey: "gateway-env-key" });
+  });
+
+  it("uses an environment-only OpenRouter key", () => {
+    const home = tmp();
+    process.env.OPENROUTER_API_KEY = "router-env-key";
+    expect(resolveApiConfig(home)).toEqual({ provider: "openrouter", apiKey: "router-env-key" });
   });
 });
 
